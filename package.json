@@ -1,0 +1,64 @@
+{
+  "name": "newssystempro",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "News management system built with Vite and React",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "concurrently \"npm run dev\" \"npm run server\"",
+    "server": "json-server --watch db/db.json --port 8000",
+    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint src --ext js,jsx --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jye10032/NewsSystemPro.git"
+  },
+  "keywords": ["react", "vite", "news", "management", "antd"],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jye10032/NewsSystemPro/issues"
+  },
+  "homepage": "https://github.com/Jye10032/NewsSystemPro#readme",
+  "dependencies": {
+    "@ant-design/compatible": "^5.1.1",
+    "@ant-design/pro-layout": "^7.6.1",
+    "antd": "^5.1.7",
+    "axios": "^1.3.1",
+    "draft-js": "^0.11.7",
+    "draftjs-to-html": "^0.9.1",
+    "echarts": "^5.4.1",
+    "html-to-draftjs": "^1.5.0",
+    "moment": "^2.29.4",
+    "nprogress": "^0.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-draft-wysiwyg": "^1.15.0",
+    "react-redux": "^8.0.5",
+    "react-router": "^6.21.3",
+    "react-router-dom": "^6.21.3",
+    "react-tsparticles": "^2.8.0",
+    "redux": "^5.0.1",
+    "redux-persist": "^6.0.0",
+    "redux-thunk": "^3.1.0",
+    "tsparticles": "^2.8.0",
+    "web-vitals": "^2.1.4"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.3",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "vite": "^4.4.5",
+    "concurrently": "^8.2.2",
+    "json-server": "^0.17.3",
+    "sass": "^1.58.0"
+  }
+}
