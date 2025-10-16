@@ -15,6 +15,8 @@ export default function App() {
         components: {
           Layout: {
             siderBg: '#ffff',    // 你的侧边栏背景色
+            // bodyBg: '#0463f1ff',  // 你的主体内容背景色
+            padding: 0
           },
         },
       }}
