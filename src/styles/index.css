@@ -16,7 +16,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f0f2f5;
+  background-color: #ecece8;
 }
 
 code {
@@ -26,6 +26,13 @@ code {
 
 /* Ant Design 全局样式定制 */
 .ant-layout {
+  min-height: 100vh;
+}
+
+.ant-layout-content {
+  padding: 0 !important;
+  /* !important 确保覆盖默认样式 */
+  background-color: #f5f5f5;
   min-height: 100vh;
 }
 

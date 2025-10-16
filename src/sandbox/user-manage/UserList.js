@@ -79,7 +79,7 @@ export default function UserList() {
             }
         },
         {
-            title: '角色名称',
+            title: '角色类别',
             dataIndex: 'role',
             render: (role) => {
                 return role?.roleName
