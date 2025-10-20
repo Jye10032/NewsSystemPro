@@ -2,6 +2,8 @@ import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { Table, Button, Tag, notification, message } from 'antd'
 import { Link } from 'react-router-dom'
+import '../../styles/TableStyles.css'
+
 
 export default function AuditList(props) {
   const auditList = ['未审核', '审核中', '已通过', '未通过']
@@ -127,14 +129,19 @@ export default function AuditList(props) {
   ]
   return (
     <div>
+      <div className="table-header">
+        <h2>审核列表</h2>
+      </div>
       <Table
+        className="audit-list-table"
         dataSource={newsList}
         columns={columns}
         rowKey={(item) => {
           return item.id
         }}
         pagination={{
-          pageSize: 5
+          pageSize: 5,
+          position: ['bottomCenter']
         }}
       />
     </div>

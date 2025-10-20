@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button } from 'antd'
-import NewsPublish from '../../publish-manage/NewsPublish'
+ tableimport NewsPublish from '../../publish-manage/NewsPublish'
 import usePublish from '../../publish-manage/usePublish'
 
 export default function Sunset() {
@@ -8,6 +8,7 @@ export default function Sunset() {
   return (
     <div>
       <NewsPublish
+        title="已下线"
         newsList={newsList}
         button={(id) => (
           <Button
