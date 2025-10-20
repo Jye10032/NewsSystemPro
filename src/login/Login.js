@@ -161,7 +161,7 @@ export default function Login() {
 
     // 提交表单数据验证成功后的回调事件
     function onFinish(user) {
-        axios.get(`http://localhost:8000/users?_expand=role&username=${user.username}&password=${user.password}&roleState=true`).then(
+        axios.get(`/users?_expand=role&username=${user.username}&password=${user.password}&roleState=true`).then(
             (res) => {
                 if (res.data.length === 0) {
                     return message.error('用户名或密码错误')

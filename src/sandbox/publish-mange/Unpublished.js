@@ -8,6 +8,7 @@ export default function Unpublished() {
   return (
     <div>
       <NewsPublish
+        title="待发布"
         newsList={newsList}
         button={(id) => (
           <Button

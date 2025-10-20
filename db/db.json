@@ -170,7 +170,7 @@
     },
     {
       "id": 2,
-      "roleName": "区域管理员",
+      "roleName": "分类管理员",
       "roleType": 2,
       "rights": [
         "/home",
@@ -197,7 +197,7 @@
     },
     {
       "id": 3,
-      "roleName": "区域编辑",
+      "roleName": "分类编辑",
       "roleType": 3,
       "rights": [
         "/home",
