@@ -47,7 +47,6 @@ export default function NewsUpdate(props) {
       .post('/news', {
         ...formInfo,
         content,
-        region: userInfo.region ? userInfo.region : '全球',
         author: userInfo.username,
         roleId: userInfo.roleId,
         auditState: auditState,

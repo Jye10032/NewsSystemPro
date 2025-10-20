@@ -37,7 +37,6 @@ export default function NewsPreivew(props) {
               <Descriptions.Item label="发布时间">
                 {newsInfo.publishTime ? moment(newsInfo.publishTime).format('YYYY-MM-DD HH:mm:ss') : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="区域">{newsInfo.region}</Descriptions.Item>
               <Descriptions.Item label="审核状态">
                 <span style={{ color: colorList[newsInfo.auditState] }}>{auditList[newsInfo.auditState]}</span>
               </Descriptions.Item>

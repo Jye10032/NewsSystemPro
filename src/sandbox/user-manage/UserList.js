@@ -1,15 +1,15 @@
 import UserForm from './UserForm'
 import React, { useEffect, useState, useRef } from 'react'
-import { Table, Switch, Button, Modal, message } from 'antd'
+import { Table, Switch, Button, Modal, message, Tag } from 'antd'
 import axios from 'axios'
-import { EditOutlined, DeleteOutlined, ExclamationCircleFilled } from '@ant-design/icons'
+import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, UserAddOutlined } from '@ant-design/icons'
 const { confirm } = Modal
 
 export default function UserList() {
     const addForm = useRef()
     const editForm = useRef()
     const [userList, setUserList] = useState([])
-    const [regionList, setRegionList] = useState([])
+    const [categoryList, setCategoryList] = useState([])
     const [roleList, setRoleList] = useState([])
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -24,7 +24,7 @@ export default function UserList() {
         }
         axios.get('http://localhost:8000/users?_expand=role').then((res) => {
             //过滤权限比登录用户大的用户
-            const { roleId, username, region } = JSON.parse(localStorage.getItem('token'))
+            const { roleId, username, allowedCategoryIds } = JSON.parse(localStorage.getItem('token'))
             const list = res.data
             setUserList(
                 rank[roleId] === 'superAdmin'
@@ -34,14 +34,15 @@ export default function UserList() {
                             return user.username === username
                         }),
                         ...list.filter((user) => {
-                            return user.region === region && rank[user.roleId] === 'editor'
+                            // 只显示与当前用户有相同分类权限且角色为编辑的用户
+                            return user.allowedCategoryIds?.some(id => allowedCategoryIds.includes(id)) && rank[user.roleId] === 'editor'
                         })
                     ]
             )
             setUserList(res.data)
         })
-        axios.get('http://localhost:8000/regions').then((res) => {
-            setRegionList(res.data)
+        axios.get('http://localhost:8000/categories').then((res) => {
+            setCategoryList(res.data)
         })
         axios.get('http://localhost:8000/roles').then((res) => {
             setRoleList(res.data)
@@ -50,32 +51,38 @@ export default function UserList() {
     // table表格要渲染的数据
     const columns = [
         {
-            title: '区域',
-            dataIndex: 'region',
-            render: (region) => {
-                if (region === '') {
-                    return <p>全球</p>
-                } else {
-                    return <p>{region}</p>
+            title: '可管理的分类',
+            dataIndex: 'allowedCategoryIds',
+            render: (allowedCategoryIds) => {
+                if (!allowedCategoryIds || allowedCategoryIds.length === 0) {
+                    return <Tag>无</Tag>
                 }
+                // 定义分类颜色映射
+                const colorMap = ['blue', 'green', 'orange', 'red', 'purple', 'cyan']
+
+                // 显示分类标签
+                return (
+                    <>
+                        {allowedCategoryIds.map((id) => {
+                            const category = categoryList.find(cat => cat.id === id)
+                            if (!category) return null
+                            return (
+                                <Tag color={colorMap[(id - 1) % colorMap.length]} key={id} bordered={false}>
+                                    {category.title}
+                                </Tag>
+                            )
+                        })}
+                    </>
+                )
             },
-            filters: [
-                ...regionList.map((region) => {
-                    return {
-                        value: region.value,
-                        text: region.title
-                    }
-                }),
-                {
-                    text: '全球',
-                    value: '全球'
+            filters: categoryList.map((category) => {
+                return {
+                    value: category.id,
+                    text: category.title
                 }
-            ],
+            }),
             onFilter: (value, item) => {
-                if (value === '全球') {
-                    return item.region === ''
-                }
-                return item.region === value
+                return item.allowedCategoryIds?.includes(value)
             }
         },
         {
@@ -248,15 +255,35 @@ export default function UserList() {
     }
     return (
         <div>
-            <Button
-                type="primary"
-                size="large"
-                style={{ marginBottom: '15px' }}
-                onClick={() => setIsAddModalOpen(!isAddModalOpen)}
-            >
-                添加用户
-            </Button>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                backgroundColor: '#f5f5f5',
+                padding: '16px 24px',
+                marginBottom: '0',
+                // borderRadius: '8px 8px 0 0'
+            }}>
+                <h2 style={{ margin: 0 }}>用户列表</h2>
+                <Button
+                    type="primary"
+                    size="large"
+                    icon={<UserAddOutlined />}
+                    onClick={() => setIsAddModalOpen(!isAddModalOpen)}
+                >
+                    添加用户
+                </Button>
+            </div>
+            <style>{`
+                .user-table .ant-table-thead > tr > th:first-child {
+                    border-top-left-radius: 0 !important;
+                }
+                .user-table .ant-table-thead > tr > th:last-child {
+                    border-top-right-radius: 0 !important;
+                }
+            `}</style>
             <Table
+                className="user-table"
                 dataSource={userList}
                 columns={columns}
                 rowKey={(item) => {
@@ -278,7 +305,7 @@ export default function UserList() {
                 <UserForm
                     isUpdate={isUpdate}
                     roleList={roleList}
-                    regionList={regionList}
+                    categoryList={categoryList}
                     ref={addForm}
                 ></UserForm>
             </Modal>
@@ -297,7 +324,7 @@ export default function UserList() {
                 <UserForm
                     isUpdate={isUpdate}
                     roleList={roleList}
-                    regionList={regionList}
+                    categoryList={categoryList}
                     ref={editForm}
                     isSelectDisabled={isSelectDisabled}
                 ></UserForm>

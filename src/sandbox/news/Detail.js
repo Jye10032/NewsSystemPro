@@ -68,7 +68,6 @@ export default function Detail(props) {
               <Descriptions.Item label="发布时间">
                 {newsInfo.publishTime ? moment(newsInfo.publishTime).format('YYYY-MM-DD HH:mm:ss') : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="区域">{newsInfo.region}</Descriptions.Item>
               <Descriptions.Item label="访问数量">
                 <span style={{ color: 'green' }}>{newsInfo.view}</span>
               </Descriptions.Item>

@@ -5,22 +5,26 @@ import { Table, Button, notification, message } from 'antd'
 
 export default function Audit() {
   const [newsList, setNewsList] = useState([])
-  const { roleId, username, region } = JSON.parse(localStorage.getItem('token'))
+  const { roleId, username, allowedCategoryIds } = JSON.parse(localStorage.getItem('token'))
   useEffect(() => {
     axios.get(`/news?auditState=1&_expand=category`).then((res) => {
       if (roleId === 1) {
         return setNewsList(res.data)
       } else if (roleId === 2) {
         const list = res.data.filter((item) => {
-          if ((item.roleId === 3 && item.region === region) || item.author === username) {
-            return item
+          // 管理员可以审核：1. 自己发布的新闻 2. 编辑发布的且分类在自己权限范围内的新闻
+          if (item.author === username) {
+            return true
           }
-          return null
+          if (item.roleId === 3 && allowedCategoryIds?.includes(item.categoryId)) {
+            return true
+          }
+          return false
         })
         return setNewsList(list)
       }
     })
-  }, [roleId, username, region])
+  }, [roleId, username, allowedCategoryIds])
   // 请求新闻数据
   function getNewsList() {
     axios.get(`/news?auditState=1&_expand=category`).then((res) => {
@@ -28,10 +32,14 @@ export default function Audit() {
         return setNewsList(res.data)
       } else if (roleId === 2) {
         const list = res.data.filter((item) => {
-          if ((item.roleId === 3 && item.region === region) || item.author === username) {
-            return item
+          // 管理员可以审核：1. 自己发布的新闻 2. 编辑发布的且分类在自己权限范围内的新闻
+          if (item.author === username) {
+            return true
           }
-          return null
+          if (item.roleId === 3 && allowedCategoryIds?.includes(item.categoryId)) {
+            return true
+          }
+          return false
         })
         return setNewsList(list)
       }

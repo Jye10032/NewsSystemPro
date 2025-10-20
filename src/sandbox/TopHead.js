@@ -49,6 +49,15 @@ export default function TopHead() {
     // }
     const items = [
         {
+            key: '0',
+            label: (
+                <span>
+                    欢迎<span style={{ color: '#1677ff', margin: '0 5px' }}>{username}</span>回来
+                </span>
+            ),
+            disabled: true
+        },
+        {
             key: '1',
             label: roleName
         },
@@ -84,10 +93,9 @@ export default function TopHead() {
                     height: 64,
                 }}
             /> */}
-            <div style={{ float: "right" }}>
-                欢迎<span style={{ color: '#1677ff', margin: '0 5px' }}>{username}</span>回来
+            <div style={{ float: "right", marginRight: '20px' }}>
                 <Dropdown menu={{ items }} arrow>
-                    <Avatar size="large" icon={<UserOutlined />} />
+                    <UserOutlined style={{ fontSize: '24px', cursor: 'pointer' }} />
                 </Dropdown>
             </div>
         </Header>
