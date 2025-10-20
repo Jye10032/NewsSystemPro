@@ -99,7 +99,7 @@ export default function NewsCategory() {
       onOk() {
         deleteCateogry(item)
       },
-      onCancel() {}
+      onCancel() { }
     })
   }
   // 删除分类
@@ -216,16 +216,28 @@ export default function NewsCategory() {
   ]
   return (
     <div>
-      <Button
-        type="primary"
-        style={{ marginBottom: '15px' }}
-        onClick={() => {
-          setIsModalOpen(true)
-        }}
-      >
-        添加分类
-      </Button>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+        padding: '16px 24px',
+        marginBottom: '0',
+        minHeight: '72px'
+      }}>
+        <h2 style={{ margin: 0 }}>新闻分类</h2>
+        <Button
+          type="primary"
+          size="middle"
+          onClick={() => {
+            setIsModalOpen(true)
+          }}
+        >
+          添加分类
+        </Button>
+      </div>
       <Table
+        className="news-category-table"
         components={{
           body: {
             row: EditableRow,
@@ -238,7 +250,8 @@ export default function NewsCategory() {
           return item.id
         }}
         pagination={{
-          pageSize: 5
+          pageSize: 5,
+          position: ['bottomCenter']
         }}
       />
       <Modal

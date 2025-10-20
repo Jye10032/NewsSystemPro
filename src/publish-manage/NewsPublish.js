@@ -1,6 +1,7 @@
 import React from 'react'
 import { Table } from 'antd'
 import { Link } from 'react-router-dom'
+import '../styles/TableStyles.css'
 
 export default function NewsPublish(props) {
   // table表格要渲染的数据
@@ -33,14 +34,19 @@ export default function NewsPublish(props) {
   ]
   return (
     <div>
+      <div className="table-header">
+        <h2>{props.title}</h2>
+      </div>
       <Table
+        className="news-publish-table"
         dataSource={props.newsList}
         columns={columns}
         rowKey={(item) => {
           return item.id
         }}
         pagination={{
-          pageSize: 5
+          pageSize: 5,
+          position: ['bottomCenter']
         }}
       />
     </div>

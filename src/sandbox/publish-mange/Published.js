@@ -8,6 +8,7 @@ export default function Published() {
   return (
     <div>
       <NewsPublish
+        title="已发布"
         newsList={newsList}
         button={(id) => (
           <Button

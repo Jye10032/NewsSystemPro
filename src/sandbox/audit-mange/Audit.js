@@ -2,6 +2,8 @@ import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Table, Button, notification, message } from 'antd'
+import '../../styles/TableStyles.css'
+
 
 export default function Audit() {
   const [newsList, setNewsList] = useState([])
@@ -117,14 +119,19 @@ export default function Audit() {
   ]
   return (
     <div>
+      <div className="table-header">
+        <h2>审核新闻</h2>
+      </div>
       <Table
+        className="audit-table"
         dataSource={newsList}
         columns={columns}
         rowKey={(item) => {
           return item.id
         }}
         pagination={{
-          pageSize: 5
+          pageSize: 5,
+          position: ['bottomCenter']
         }}
       />
     </div>

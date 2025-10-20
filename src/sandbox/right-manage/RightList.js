@@ -3,6 +3,7 @@ import { Table, Tag, Button, Modal, Popover, Switch } from 'antd'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import { ExclamationCircleFilled } from '@ant-design/icons';
 import axios from 'axios'
+import '../../styles/TableStyles.css'
 
 const { confirm } = Modal;
 
@@ -132,9 +133,19 @@ export default function RightList() {
 
     return (
         <div>
-
-            <Table dataSource={dataSource} columns={columns}
-                pagination={{ pageSize: 5 }} />
+            <div className="table-header">
+                <h2>权限列表</h2>
+            </div>
+            <Table
+                className="right-table"
+                dataSource={dataSource}
+                columns={columns}
+                tableLayout="fixed"
+                pagination={{
+                    pageSize: 5,
+                    position: ['bottomCenter']
+                }}
+            />
         </div>
     )
 }

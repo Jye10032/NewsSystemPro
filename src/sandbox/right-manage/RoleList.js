@@ -4,6 +4,7 @@ import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import { ExclamationCircleFilled } from '@ant-design/icons';
 import axios from 'axios'
 import RightList from './RightList';
+import '../../styles/TableStyles.css'
 
 const { confirm } = Modal;
 
@@ -36,7 +37,7 @@ export default function RoleList() {
         //console.log("delete")
         setdataSource(dataSource.filter(data => data.id !== item.id))
 
-        axios.delete(`http://localhost:8000/roles/${item.id}`).then(res => {
+        axios.delete(`/roles/${item.id}`).then(res => {
             //console.log(res.data)
         })
 
@@ -44,14 +45,14 @@ export default function RoleList() {
 
 
     useEffect(() => {
-        axios.get("http://localhost:8000/roles").then(res => {
+        axios.get("/roles").then(res => {
             setdataSource(res.data)
         })
 
     }, [])
 
     useEffect(() => {
-        axios.get("http://localhost:8000/rights?_embed=children").then(res => {
+        axios.get("/rights?_embed=children").then(res => {
             setRightList(res.data)
         })
 
@@ -111,7 +112,7 @@ export default function RoleList() {
 
         //同步后端
 
-        axios.patch(`http://localhost:8000/roles/${currentId}`, {
+        axios.patch(`/roles/${currentId}`, {
             rights: currentRights
         })
     };
@@ -126,7 +127,19 @@ export default function RoleList() {
 
     return (
         <div>
-            <Table dataSource={dataSource} columns={columns} pagination={{ pageSize: 5 }} rowKey={(item) => item.id}/*item.id充当key值*/ />
+            <div className="table-header">
+                <h2>角色列表</h2>
+            </div>
+            <Table
+                className="role-table"
+                dataSource={dataSource}
+                columns={columns}
+                pagination={{
+                    pageSize: 5,
+                    position: ['bottomCenter']
+                }}
+                rowKey={(item) => item.id}
+            />
 
             <Modal title="权限分配" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
                 <Tree

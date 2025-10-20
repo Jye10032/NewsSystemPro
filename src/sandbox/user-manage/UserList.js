@@ -22,7 +22,7 @@ export default function UserList() {
             2: 'admin',
             3: 'editor'
         }
-        axios.get('http://localhost:8000/users?_expand=role').then((res) => {
+        axios.get('/users?_expand=role').then((res) => {
             //过滤权限比登录用户大的用户
             const { roleId, username, allowedCategoryIds } = JSON.parse(localStorage.getItem('token'))
             const list = res.data
@@ -41,10 +41,10 @@ export default function UserList() {
             )
             setUserList(res.data)
         })
-        axios.get('http://localhost:8000/categories').then((res) => {
+        axios.get('/categories').then((res) => {
             setCategoryList(res.data)
         })
-        axios.get('http://localhost:8000/roles').then((res) => {
+        axios.get('/roles').then((res) => {
             setRoleList(res.data)
         })
     }, [])
@@ -154,7 +154,7 @@ export default function UserList() {
                 }
             })
         )
-        axios.patch(`http://localhost:8000/users/${item.id}`, { roleState: !item.roleState })
+        axios.patch(`/users/${item.id}`, { roleState: !item.roleState })
     }
     // 删除前的确认框
     function confirmMethod(user) {
@@ -175,7 +175,7 @@ export default function UserList() {
         let list = userList.filter((user) => {
             return user.id !== item.id
         })
-        axios.delete(`http://localhost:8000/users/${item.id}`).then(
+        axios.delete(`/users/${item.id}`).then(
             (res) => {
                 setUserList([...list])
                 message.success('删除成功')
@@ -192,7 +192,7 @@ export default function UserList() {
         addForm.current.validateFields().then(
             (value) => {
                 axios
-                    .post('http://localhost:8000/users', {
+                    .post('/users', {
                         ...value,
                         default: false,
                         roleState: true
@@ -200,7 +200,7 @@ export default function UserList() {
                     .then(
                         (res) => {
                             message.success('成功添加用户')
-                            axios.get('http://localhost:8000/users?_expand=role').then((res) => {
+                            axios.get('/users?_expand=role').then((res) => {
                                 setUserList(res.data)
                             })
                             setIsAddModalOpen(false)
@@ -234,13 +234,13 @@ export default function UserList() {
         editForm.current.validateFields().then(
             (value) => {
                 axios
-                    .patch(`http://localhost:8000/users/${currentId}`, {
+                    .patch(`/users/${currentId}`, {
                         ...value
                     })
                     .then(
                         (res) => {
                             message.success('成功编辑用户')
-                            axios.get('http://localhost:8000/users?_expand=role').then((res) => {
+                            axios.get('/users?_expand=role').then((res) => {
                                 setUserList(res.data)
                             })
                             setIsEditModalOpen(false)
@@ -262,35 +262,29 @@ export default function UserList() {
                 backgroundColor: '#f5f5f5',
                 padding: '16px 24px',
                 marginBottom: '0',
-                // borderRadius: '8px 8px 0 0'
+                minHeight: '72px'
             }}>
                 <h2 style={{ margin: 0 }}>用户列表</h2>
                 <Button
                     type="primary"
-                    size="large"
+                    size="middle"
                     icon={<UserAddOutlined />}
                     onClick={() => setIsAddModalOpen(!isAddModalOpen)}
                 >
                     添加用户
                 </Button>
             </div>
-            <style>{`
-                .user-table .ant-table-thead > tr > th:first-child {
-                    border-top-left-radius: 0 !important;
-                }
-                .user-table .ant-table-thead > tr > th:last-child {
-                    border-top-right-radius: 0 !important;
-                }
-            `}</style>
             <Table
                 className="user-table"
                 dataSource={userList}
                 columns={columns}
+                //tableLayout="fixed"
                 rowKey={(item) => {
                     return item.id
                 }}
                 pagination={{
-                    pageSize: 5
+                    pageSize: 5,
+                    position: ['bottomCenter']
                 }}
             />
             {/* 添加用户的对话框 */}
