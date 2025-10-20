@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Table, Button, notification, Modal, message } from 'antd'
 import axios from 'axios'
 import { EditOutlined, DeleteOutlined, VerticalAlignTopOutlined, ExclamationCircleFilled } from '@ant-design/icons'
+import '../../styles/TableStyles.css'
 const { confirm } = Modal
 
 export default function NewsDraft(props) {
@@ -41,7 +42,7 @@ export default function NewsDraft(props) {
       onOk() {
         deleteNews(news)
       },
-      onCancel() {}
+      onCancel() { }
     })
   }
   // 将新闻删除
@@ -125,14 +126,19 @@ export default function NewsDraft(props) {
   ]
   return (
     <div>
+      <div className="table-header">
+        <h2>草稿箱</h2>
+      </div>
       <Table
+        className="news-draft-table"
         dataSource={newsList}
         columns={columns}
         rowKey={(item) => {
           return item.id
         }}
         pagination={{
-          pageSize: 5
+          pageSize: 5,
+          position: ['bottomCenter']
         }}
       />
     </div>
