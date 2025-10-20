@@ -103,19 +103,39 @@ export default function NewsCategory() {
     })
   }
   // 删除分类
-  function deleteCateogry(item) {
-    let list = categoryList.filter((category) => {
-      return category.id !== item.id
-    })
-    axios.delete(`/categories/${item.id}`).then(
-      (res) => {
-        setCategoryList([...list])
-        message.success('删除成功')
-      },
-      (err) => {
-        message.error('删除失败')
-      }
-    )
+  async function deleteCateogry(item) {
+    try {
+      // 1. 先获取所有用户
+      const usersRes = await axios.get('/users')
+      const users = usersRes.data
+
+      // 2. 更新所有包含该分类的用户权限
+      const updatePromises = users
+        .filter(user => user.allowedCategoryIds?.includes(item.id))
+        .map(user => {
+          // 从用户的 allowedCategoryIds 中移除被删除的分类 ID
+          const updatedCategoryIds = user.allowedCategoryIds.filter(id => id !== item.id)
+          return axios.patch(`/users/${user.id}`, {
+            allowedCategoryIds: updatedCategoryIds
+          })
+        })
+
+      // 等待所有用户更新完成
+      await Promise.all(updatePromises)
+
+      // 3. 删除分类
+      await axios.delete(`/categories/${item.id}`)
+
+      // 4. 更新本地列表
+      const list = categoryList.filter((category) => {
+        return category.id !== item.id
+      })
+      setCategoryList([...list])
+      message.success('删除成功，已同步更新用户权限')
+    } catch (err) {
+      console.error('删除失败:', err)
+      message.error('删除失败')
+    }
   }
   // 修改分类
   function handleSave(item) {

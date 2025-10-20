@@ -11,7 +11,7 @@ const UserForm = forwardRef((props, ref) => {
         3: 'editor'
     }
     useEffect(() => {
-        // 若打开的是超级管理员的编辑对话框，不使用下列方法会导致区域可选框可选
+        // 若打开的是超级管理员的编辑对话框，不使用下列方法会导致分类可选框可选
         setIsDisabled(props.isSelectDisabled)
     }, [props])
     // 选择角色的回调函数
@@ -19,29 +19,30 @@ const UserForm = forwardRef((props, ref) => {
         if (value === 1) {
             setIsDisabled(true)
             ref.current.setFieldsValue({
-                region: ''
+                allowedCategoryIds: [1, 2, 3, 4, 5, 6]
             })
         } else {
             setIsDisabled(false)
         }
     }
-    // 根据登录用户的权限来显示可选的区域
-    function checkRegionDisable(item) {
-        const { roleId, region } = JSON.parse(localStorage.getItem('token'))
+    // 根据登录用户的权限来显示可选的分类
+    function checkCategoryDisable(item) {
+        const { roleId, allowedCategoryIds } = JSON.parse(localStorage.getItem('token'))
         // 若打开的是编辑对话框
         if (props.isUpdate) {
-            // 除超级管理员，其他角色不能进行其他区域选择
+            // 除超级管理员，其他角色不能修改分类选择
             if (rank[roleId] === 'superAdmin') {
                 return false
             } else {
                 return true
             }
         } else {
-            // 若打开的是添加对话框，除超级管理员，其他角色只能选择自己所在区域
+            // 若打开的是添加对话框，除超级管理员，其他角色只能选择自己拥有权限的分类
             if (rank[roleId] === 'superAdmin') {
                 return false
             } else {
-                return item.value !== region
+                // 处理 allowedCategoryIds 可能为 undefined 的情况
+                return !allowedCategoryIds?.includes(item.id)
             }
         }
     }
@@ -57,7 +58,7 @@ const UserForm = forwardRef((props, ref) => {
                 return true
             }
         } else {
-            // 若打开的是添加对话框，除超级管理员，其他角色只能选择比自己低一级的角色（即只区域管理员能选区域编辑，区域编辑什么也不能选）
+            // 若打开的是添加对话框，除超级管理员，其他角色只能选择比自己低一级的角色（即只管理员能选编辑，编辑什么也不能选）
             if (rank[roleId] === 'superAdmin') {
                 return false
             } else {
@@ -101,27 +102,28 @@ const UserForm = forwardRef((props, ref) => {
                     <Input />
                 </Form.Item>
                 <Form.Item
-                    name="region"
-                    label="区域"
+                    name="allowedCategoryIds"
+                    label="可管理的分类"
                     rules={
                         isDisabled
                             ? []
                             : [
                                 {
                                     required: true,
-                                    message: 'Please input the title of collection!'
+                                    message: '请选择可管理的分类!'
                                 }
                             ]
                     }
                 >
-                    <Select disabled={isDisabled}>
-                        {props.regionList.map((region) => {
+                    <Select mode="multiple" disabled={isDisabled} placeholder="请选择可管理的分类">
+                        {props.categoryList?.map((category) => {
                             return (
                                 <Option
-                                    key={region.value}
-                                    disabled={checkRegionDisable(region)}
+                                    key={category.id}
+                                    value={category.id}
+                                    disabled={checkCategoryDisable(category)}
                                 >
-                                    {region.title}
+                                    {category.title}
                                 </Option>
                             )
                         })}
@@ -138,7 +140,7 @@ const UserForm = forwardRef((props, ref) => {
                     ]}
                 >
                     <Select onChange={(value) => handleSetRole(value)}>
-                        {props.roleList.map((role) => {
+                        {props.roleList?.map((role) => {
                             return (
                                 <Option
                                     key={role.id}

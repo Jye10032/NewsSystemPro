@@ -188,7 +188,7 @@ export default function Login() {
             />
 
             <div id="loginForm">
-                <h2>全球新闻发布管理系统</h2>
+                <h2>新闻发布管理系统</h2>
                 <Form
                     name="basic"
                     style={{
