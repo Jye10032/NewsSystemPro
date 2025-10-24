@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button } from 'antd'
- tableimport NewsPublish from '../../publish-manage/NewsPublish'
+import NewsPublish from '../../publish-manage/NewsPublish'
 import usePublish from '../../publish-manage/usePublish'
 
 export default function Sunset() {

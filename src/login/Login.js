@@ -168,8 +168,8 @@ export default function Login() {
                 } else {
                     console.log(res.data[0]);
                     localStorage.setItem('token', JSON.stringify(res.data[0]))
-                    nav('/home', { replace: true })
-                    return message.success('登录成功')
+                    message.success('登录成功')
+                    nav('/', { replace: true })
                 }
             },
             (err) => message.error(err)
