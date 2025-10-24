@@ -8,30 +8,36 @@ import '../../styles/TableStyles.css'
 export default function Audit() {
   const [newsList, setNewsList] = useState([])
 
+  /**
++  * NOTE: For a detailed explanation of why allowedCategoryIds should not be placed in the useEffect dependency array,
++  * see the project documentation or README.
++  */
   //   为什么不能将allowedCategoryIds放在useEffect的依赖数组中？
+
+  //   useEffect(() => {
+  //     // ... 发起请求
+  //   }, [roleId, username, allowedCategoryIds])  // ⚠️ 问题在这里
+  // }
+
+  // 执行流程：
+
+  //   第1次渲染：
+  //   1. 执行 JSON.parse(localStorage.getItem('token'))
+  // 2. 创建一个新对象，包含 allowedCategoryIds: [1, 2, 3]（假设是这个值）
+  //   3. 解构出 allowedCategoryIds，它是一个数组，内存地址假设是 0x001
+  // 4. useEffect 记录依赖：allowedCategoryIds 的地址是 0x001
+  // 5. 执行 useEffect，发起请求
+
+  // 第2次渲染（由 setNewsList 触发）：
+  //   1. 再次执行 JSON.parse(localStorage.getItem('token'))
+  // 2. 又创建了一个新对象，虽然内容相同，但这是一个全新的对象
+  // 3. 解构出新的 allowedCategoryIds: [1, 2, 3]，内存地址是 0x002（新地址！）
+  //   4. React 比较依赖：0x002 !== 0x001 → 依赖变化了！
+  //   5. 触发 useEffect → 发起请求 → setNewsList → 触发重新渲染
+  // 6. 回到步骤 1，无限循环！
+
   useEffect(() => {
     const { roleId, username, allowedCategoryIds } = JSON.parse(localStorage.getItem('token'))
-    //   useEffect(() => {
-    //     // ... 发起请求
-    //   }, [roleId, username, allowedCategoryIds])  // ⚠️ 问题在这里
-    // }
-
-    // 执行流程：
-
-    //   第1次渲染：
-    //   1. 执行 JSON.parse(localStorage.getItem('token'))
-    // 2. 创建一个新对象，包含 allowedCategoryIds: [1, 2, 3]（假设是这个值）
-    //   3. 解构出 allowedCategoryIds，它是一个数组，内存地址假设是 0x001
-    // 4. useEffect 记录依赖：allowedCategoryIds 的地址是 0x001
-    // 5. 执行 useEffect，发起请求
-
-    // 第2次渲染（由 setNewsList 触发）：
-    //   1. 再次执行 JSON.parse(localStorage.getItem('token'))
-    // 2. 又创建了一个新对象，虽然内容相同，但这是一个全新的对象
-    // 3. 解构出新的 allowedCategoryIds: [1, 2, 3]，内存地址是 0x002（新地址！）
-    //   4. React 比较依赖：0x002 !== 0x001 → 依赖变化了！
-    //   5. 触发 useEffect → 发起请求 → setNewsList → 触发重新渲染
-    // 6. 回到步骤 1，无限循环！
 
     axios.get(`/news?auditState=1&_expand=category`).then((res) => {
       if (roleId === 1) {
