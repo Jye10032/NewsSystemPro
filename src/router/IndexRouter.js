@@ -4,20 +4,23 @@ import Login from '../login/Login'
 import NewsSandBox from '../sandbox/NewsSandBox'
 import Detail from '../sandbox/news/Detail'
 import News from '../sandbox/news/News'
+import AuthRoute from './AuthRoute'
+
 /**
  * 基础路由，在App.js中引入
- * 
+ *
  */
 export default function IndexRouter() {
     return (
         <Routes>
             <Route path="/login" element={<Login />} />
-            {/* <Route path="/  " element={<NewsSandBox />} />
-                    localStorage.setItem("token","kervin")
-            */}
             <Route path="/news" element={<News />} />
             <Route path="/detail/:id" element={<Detail />} />
-            <Route path="/*" element={localStorage.getItem('token') ? <NewsSandBox /> : <Login />} />
+            <Route path="/*" element={
+                <AuthRoute>
+                    <NewsSandBox />
+                </AuthRoute>
+            } />
         </Routes>
     )
 }
