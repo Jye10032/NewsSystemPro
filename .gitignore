@@ -28,3 +28,10 @@ dist-ssr
 .env.development.local
 .env.test.local
 .env.production.local
+.claude/
+
+# 爬虫
+globaltimes_news_2025-10-24_crawl_by_gy.xls
+scripy.command.txt
+scripy.py
+import-news.py
