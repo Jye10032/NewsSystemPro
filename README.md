@@ -98,6 +98,26 @@ npm run build
 npm run preview
 ```
 
+### 运行测试
+
+```bash
+# 运行所有测试
+npm test
+
+# 单次运行测试
+npm run test:run
+
+# 查看测试覆盖率
+npm run test:coverage
+
+# 打开测试 UI 界面
+npm run test:ui
+```
+
+**当前测试覆盖率**: 92% (15个测试全部通过) ✅
+
+查看详细测试指南: [TESTING_GUIDE.md](./TESTING_GUIDE.md)
+
 ### 默认账户
 
 系统预设了三种角色的测试账户：

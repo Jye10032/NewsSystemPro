@@ -35,3 +35,7 @@ globaltimes_news_2025-10-24_crawl_by_gy.xls
 scripy.command.txt
 scripy.py
 import-news.py
+
+# Test coverage reports
+coverage/
+.nyc_output/

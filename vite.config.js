@@ -77,4 +77,28 @@ export default defineConfig({
       },
     },
   },
+
+  // 测试配置
+  test: {
+    // 使用 jsdom 模拟浏览器环境
+    environment: 'jsdom',
+    // 测试文件匹配规则
+    include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'],
+    // 全局配置
+    globals: true,
+    // 设置文件
+    setupFiles: './src/test/setup.js',
+    // 覆盖率配置
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        '**/*.spec.{js,jsx}',
+        '**/*.test.{js,jsx}',
+        '**/dist/**',
+      ],
+    },
+  },
 })

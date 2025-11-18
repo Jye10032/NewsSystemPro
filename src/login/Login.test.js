@@ -1,0 +1,148 @@
+/**
+ * Login 组件测试
+ * 测试登录表单的核心功能
+ */
+
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { BrowserRouter } from 'react-router-dom';
+import Login from './Login';
+import axios from 'axios';
+
+// Mock axios
+vi.mock('axios');
+
+// Mock react-tsparticles（粒子背景组件，测试时不需要）
+vi.mock('react-tsparticles', () => ({
+  default: () => null,
+}));
+
+vi.mock('tsparticles', () => ({
+  loadFull: vi.fn(),
+}));
+
+// 测试辅助函数：在 Router 上下文中渲染组件
+const renderWithRouter = (component) => {
+  return render(<BrowserRouter>{component}</BrowserRouter>);
+};
+
+describe('Login 组件', () => {
+  beforeEach(() => {
+    // 每个测试前清除 mocks
+    vi.clearAllMocks();
+    // 清除 localStorage
+    localStorage.clear();
+  });
+
+  it('应该渲染登录表单', () => {
+    renderWithRouter(<Login />);
+
+    // 检查标题是否渲染
+    expect(screen.getByText('新闻发布管理系统')).toBeInTheDocument();
+
+    // 检查用户名和密码输入框是否存在
+    expect(screen.getByPlaceholderText('用户名')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('密码')).toBeInTheDocument();
+
+    // 检查登录按钮是否存在
+    expect(screen.getByRole('button', { name: /登/i })).toBeInTheDocument();
+  });
+
+  it('应该能够输入用户名和密码', async () => {
+    const user = userEvent.setup();
+    renderWithRouter(<Login />);
+
+    const usernameInput = screen.getByPlaceholderText('用户名');
+    const passwordInput = screen.getByPlaceholderText('密码');
+
+    // 模拟用户输入
+    await user.type(usernameInput, 'admin');
+    await user.type(passwordInput, '123456');
+
+    // 检查输入值
+    expect(usernameInput).toHaveValue('admin');
+    expect(passwordInput).toHaveValue('123456');
+  });
+
+  it('应该在提交空表单时显示验证错误', async () => {
+    const user = userEvent.setup();
+    renderWithRouter(<Login />);
+
+    const loginButton = screen.getByRole('button', { name: /登/i });
+
+    // 直接点击登录按钮（不输入任何内容）
+    await user.click(loginButton);
+
+    // Ant Design 会显示验证错误消息
+    await waitFor(() => {
+      expect(screen.getByText('请输入用户名!')).toBeInTheDocument();
+    });
+  });
+
+  it('应该在用户名密码正确时登录成功', async () => {
+    const user = userEvent.setup();
+
+    // Mock axios 返回成功的用户数据
+    const mockUserData = {
+      id: 1,
+      username: 'admin',
+      role: { id: 1, roleName: '超级管理员' },
+      region: '全球',
+    };
+
+    axios.get.mockResolvedValueOnce({
+      data: [mockUserData],
+    });
+
+    renderWithRouter(<Login />);
+
+    const usernameInput = screen.getByPlaceholderText('用户名');
+    const passwordInput = screen.getByPlaceholderText('密码');
+    const loginButton = screen.getByRole('button', { name: /登/i });
+
+    // 输入正确的用户名和密码
+    await user.type(usernameInput, 'admin');
+    await user.type(passwordInput, '123456');
+    await user.click(loginButton);
+
+    // 等待异步请求完成
+    await waitFor(() => {
+      // 检查是否调用了正确的 API
+      expect(axios.get).toHaveBeenCalledWith(
+        expect.stringContaining('/users?_expand=role&username=admin&password=123456')
+      );
+
+      // 检查是否保存了 token 到 localStorage
+      const savedToken = JSON.parse(localStorage.getItem('token'));
+      expect(savedToken).toEqual(mockUserData);
+    });
+  });
+
+  it('应该在用户名密码错误时显示错误消息', async () => {
+    const user = userEvent.setup();
+
+    // Mock axios 返回空数组（用户不存在）
+    axios.get.mockResolvedValueOnce({
+      data: [],
+    });
+
+    renderWithRouter(<Login />);
+
+    const usernameInput = screen.getByPlaceholderText('用户名');
+    const passwordInput = screen.getByPlaceholderText('密码');
+    const loginButton = screen.getByRole('button', { name: /登/i });
+
+    // 输入错误的用户名和密码
+    await user.type(usernameInput, 'wronguser');
+    await user.type(passwordInput, 'wrongpass');
+    await user.click(loginButton);
+
+    // 等待错误消息显示
+    await waitFor(() => {
+      expect(axios.get).toHaveBeenCalled();
+      // Ant Design 的 message.error 会显示错误消息
+      // 注意：实际测试中可能需要 mock message.error
+    });
+  });
+});

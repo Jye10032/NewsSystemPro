@@ -11,7 +11,11 @@
     "start": "concurrently \"npm run dev\" \"npm run server\"",
     "server": "json-server --watch db/db.cjs --port 8000",
     "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "lint:fix": "eslint src --ext js,jsx --fix"
+    "lint:fix": "eslint src --ext js,jsx --fix",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -55,16 +59,23 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.0.3",
+    "@vitest/coverage-v8": "^4.0.10",
+    "@vitest/ui": "^4.0.10",
     "concurrently": "^8.2.2",
     "eslint": "^8.45.0",
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
+    "jsdom": "^27.2.0",
     "json-server": "^0.17.3",
     "sass": "^1.58.0",
-    "vite": "^4.4.5"
+    "vite": "^4.4.5",
+    "vitest": "^4.0.10"
   }
 }
