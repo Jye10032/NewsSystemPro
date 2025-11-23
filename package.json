@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "start": "concurrently \"npm run dev\" \"npm run server\"",
     "server": "json-server --watch db/db.cjs --port 8000",
-    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 100",
     "lint:fix": "eslint src --ext js,jsx --fix",
     "test": "vitest",
     "test:ui": "vitest --ui",

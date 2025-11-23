@@ -3,7 +3,7 @@
  * 在所有测试运行前执行
  */
 
-import { expect, afterEach, beforeAll, afterAll, vi } from 'vitest';
+import { afterEach, beforeAll, afterAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
@@ -32,7 +32,7 @@ const localStorageMock = (() => {
   };
 })();
 
-global.localStorage = localStorageMock;
+globalThis.localStorage = localStorageMock;
 
 // 模拟 matchMedia
 Object.defineProperty(window, 'matchMedia', {
