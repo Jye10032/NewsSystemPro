@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
+  // GitHub Pages 部署时需要设置 base
+  // 本地开发时为 '/', 部署到 GitHub Pages 时为 '/仓库名/'
+  base: process.env.NODE_ENV === 'production' ? '/NewsSystemPro/' : '/',
+
   plugins: [
     react({
       include: ['**/*.jsx', '**/*.tsx', '**/*.js'],

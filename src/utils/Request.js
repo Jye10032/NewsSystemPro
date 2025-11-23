@@ -7,7 +7,10 @@ import { store } from '../redux/store'
  * 2. 设置拦截器，加载loading
  */
 
-axios.defaults.baseURL = 'http://localhost:8000'
+// API基础URL配置
+// 开发环境: http://localhost:8000
+// 生产环境: 您部署的后端URL (如: https://your-project.vercel.app)
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 axios.interceptors.request.use(
   function (config) {
