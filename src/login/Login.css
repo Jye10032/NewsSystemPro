@@ -1,24 +1,91 @@
 #login-container {
     height: 100vh;
-    background-color: rgb(35, 39, 65);
-    color: white;
+    /* 清爽的蓝白渐变背景 */
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
 
-    #loginForm {
-        z-index: 999;
-        box-sizing: border-box;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translateX(-50%) translateY(-50%);
-        width: 500px;
-        height: 275px;
-        background-color: rgba(0, 0, 0, 0.5);
-        padding: 10px 20px;
-        border-radius: 15px;
+/* 如果保留粒子，需要调整其容器层级 */
+#tsparticles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
 
-        h2 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+#loginForm {
+    z-index: 99;
+    box-sizing: border-box;
+    width: 440px;
+    padding: 40px 40px;
+
+    /* 毛玻璃效果 */
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+
+    /* 动画效果 */
+    animation: fadeInUp 0.8s ease;
+}
+
+#loginForm h2 {
+    text-align: center;
+    margin-bottom: 32px;
+    font-size: 24px;
+    color: #1f1f1f;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* 定制 Antd 输入框样式以匹配毛玻璃 */
+#loginForm .ant-input-affix-wrapper {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #e0e0e0;
+    padding: 8px 11px;
+    border-radius: 6px;
+}
+
+#loginForm .ant-input-affix-wrapper:hover,
+#loginForm .ant-input-affix-wrapper:focus,
+#loginForm .ant-input-affix-wrapper-focused {
+    border-color: #1677ff;
+    box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+}
+
+#loginForm .ant-btn-primary {
+    height: 40px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 6px;
+    background: #1677ff;
+    box-shadow: 0 4px 14px 0 rgba(22, 119, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+#loginForm .ant-btn-primary:hover {
+    background: #4096ff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px 0 rgba(22, 119, 255, 0.4);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

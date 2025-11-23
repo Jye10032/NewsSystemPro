@@ -13,148 +13,69 @@ export default function Login() {
     }
     useEffect(() => { }, [])
     const nav = useNavigate()
-    //粒子参数
+    // 粒子参数 - 极简风格
     const options = {
         background: {
             color: {
-                value: '#232741'
+                value: 'transparent' // 背景交给 CSS 渐变处理
             },
-            position: '50% 50%',
-            repeat: 'no-repeat',
-            size: 'cover'
         },
-        // 帧数，越低越卡,默认60
         fpsLimit: 120,
         fullScreen: {
             zIndex: 1
         },
         interactivity: {
             events: {
-                onClick: {
-                    enable: true,
-                    mode: 'push'
-                },
                 onHover: {
                     enable: true,
-                    mode: 'slow'
+                    mode: 'grab'
                 }
             },
             modes: {
-                push: {
-                    //点击是添加1个粒子
-                    quantity: 3
-                },
-                bubble: {
-                    distance: 200,
-                    duration: 2,
-                    opacity: 0.8,
-                    size: 20,
-                    divs: {
-                        distance: 200,
-                        duration: 0.4,
-                        mix: false,
-                        selectors: []
-                    }
-                },
                 grab: {
-                    distance: 400
-                },
-                //击退
-                repulse: {
-                    divs: {
-                        //鼠标移动时排斥粒子的距离
-                        distance: 200,
-                        //翻译是持续时间
-                        duration: 0.4,
-                        factor: 100,
-                        speed: 1,
-                        maxSpeed: 50,
-                        easing: 'ease-out-quad',
-                        selectors: []
+                    distance: 140,
+                    links: {
+                        opacity: 0.5
                     }
-                },
-                //缓慢移动
-                slow: {
-                    //移动速度
-                    factor: 2,
-                    //影响范围
-                    radius: 200
-                },
-                //吸引
-                attract: {
-                    distance: 200,
-                    duration: 0.4,
-                    easing: 'ease-out-quad',
-                    factor: 3,
-                    maxSpeed: 50,
-                    speed: 1
                 }
             }
         },
-        //  粒子的参数
         particles: {
-            //粒子的颜色
             color: {
-                value: '#ffffff'
+                value: '#a1a1a1' // 浅灰色粒子
             },
-            //是否启动粒子碰撞
-            collisions: {
-                enable: true
-            },
-            //粒子之间的线的参数
             links: {
-                color: {
-                    value: '#ffffff'
-                },
+                color: '#a1a1a1',
                 distance: 150,
                 enable: true,
-                warp: true
+                opacity: 0.2, // 连线更淡
+                width: 1
             },
             move: {
-                attract: {
-                    rotate: {
-                        x: 600,
-                        y: 1200
-                    }
-                },
+                direction: 'none',
                 enable: true,
                 outModes: {
-                    bottom: 'out',
-                    left: 'out',
-                    right: 'out',
-                    top: 'out'
+                    default: 'bounce'
                 },
-                speed: 6,
-                warp: true
+                random: false,
+                speed: 1, // 移动速度变慢
+                straight: false
             },
             number: {
                 density: {
-                    enable: true
+                    enable: true,
+                    area: 800
                 },
-                //初始粒子数
-                value: 40
+                value: 50
             },
-            //透明度
             opacity: {
-                value: 0.5,
-                animation: {
-                    speed: 3,
-                    minimumValue: 0.1
-                }
+                value: 0.3
             },
-            //大小
+            shape: {
+                type: 'circle'
+            },
             size: {
-                random: {
-                    enable: true
-                },
-                value: {
-                    min: 1,
-                    max: 3
-                },
-                animation: {
-                    speed: 20,
-                    minimumValue: 0.1
-                }
+                value: { min: 1, max: 3 }
             }
         }
     }
@@ -230,9 +151,10 @@ export default function Login() {
 
                     <Form.Item>
                         <Button
-                            style={{ float: 'right' }}
                             type="primary"
                             htmlType="submit"
+                            block
+                            style={{ height: '40px', fontSize: '16px' }}
                         >
                             登录
                         </Button>

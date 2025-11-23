@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Layout, Menu, theme } from 'antd'
-import { AppstoreOutlined, MailOutlined, SettingOutlined } from '@ant-design/icons'
+import { Layout, Menu, theme, Button } from 'antd'
+import { AppstoreOutlined, MailOutlined, SettingOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import {
     HomeOutlined,
     UserOutlined,
@@ -134,7 +134,13 @@ export default function SideMenu() {
     } = theme.useToken();
     //从redux store中获取侧边栏伸缩状态
     const isCollapsible = useSelector(state => state.collapsible);
+    const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    // 切换侧边栏折叠状态
+    const toggleCollapsed = () => {
+        dispatch({ type: 'change_collapsed' });
+    };
 
 
     //跳转路径
@@ -152,10 +158,24 @@ export default function SideMenu() {
     //     getItem(menu)
     // };
     return (
-        <Sider trigger={null} collapsible collapsed={isCollapsible}>
+        <Sider trigger={null} collapsible collapsed={isCollapsible} theme="light">
             <div style={{/*设置范围 滚动条*/ display: "flex", height: "100%", flexDirection: "column" }}>
 
-                <div className="demo-logo-vertical" >新闻发布管理系统</div>
+                {/* <div className="demo-logo-vertical" >{isCollapsible ? 'News' : '新闻发布管理系统'}</div> */}
+
+                {/* 折叠按钮 */}
+                <div className="sider-collapse-button">
+                    <Button
+                        type="text"
+                        icon={isCollapsible ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                        onClick={toggleCollapsed}
+                        style={{
+                            fontSize: '16px',
+                            width: '100%',
+                            height: '48px',
+                        }}
+                    />
+                </div>
                 <div style={{ flex: 1, "overflow": "auto" }}>
                     <Menu
                         //onClick={onClick}
@@ -166,6 +186,7 @@ export default function SideMenu() {
                         {renderMenu(meun)}
                     </Menu>
                 </div>
+
             </div>
         </Sider>
     )

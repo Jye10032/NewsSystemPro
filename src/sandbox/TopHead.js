@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Layout, Button, theme, Dropdown } from 'antd'
-import { MenuUnfoldOutlined, MenuFoldOutlined, SmileOutlined, DownOutlined, UserOutlined } from '@ant-design/icons'
-import { Avatar, Space } from 'antd'
-import { useNavigate } from 'react-router-dom'
-import { useSelector, useDispatch } from 'react-redux';
+import { Layout, theme, Dropdown, Breadcrumb, Avatar, Space } from 'antd'
+import { UserOutlined, HomeOutlined } from '@ant-design/icons'
+import { useNavigate, useLocation } from 'react-router-dom'
 /**
- * 1.侧边栏收缩组件：redux
- * 2.右上角用户名显示、退出按钮
+ * 1.右上角用户名显示、退出按钮
  *  
  */
 
@@ -15,8 +12,8 @@ export default function TopHead() {
 
     const [username, setUsername] = useState('')
     const [roleName, setRoleName] = useState('')
-    const isCollapsible = useSelector(state => state.collapsible);
-    const dispatch = useDispatch();
+    const location = useLocation();
+
     useEffect(() => {
         const userInfo = JSON.parse(localStorage.getItem('token'))
         setRoleName(userInfo.role.roleName)
@@ -26,15 +23,46 @@ export default function TopHead() {
     const {
         token: { colorBgContainer },
     } = theme.useToken();
-    // 侧边栏伸缩按钮回调事件
-
-    //edit
-    function changeCollapsed() {
-        dispatch({ type: 'change_collapsed' });
-    }
 
     const { Header } = Layout
     const navigate = useNavigate()
+
+    // 面包屑映射 (简单示例，实际可提取为配置文件)
+    const breadcrumbNameMap = {
+        '/home': '首页',
+        '/user-manage': '用户管理',
+        '/user-manage/list': '用户列表',
+        '/right-manage': '权限管理',
+        '/right-manage/role/list': '角色列表',
+        '/right-manage/right/list': '权限列表',
+        '/news-manage': '新闻管理',
+        '/news-manage/add': '撰写新闻',
+        '/news-manage/draft': '草稿箱',
+        '/news-manage/category': '新闻分类',
+        '/audit-manage': '审核管理',
+        '/audit-manage/audit': '审核新闻',
+        '/audit-manage/list': '审核列表',
+        '/publish-manage': '发布管理',
+        '/publish-manage/unpublished': '待发布',
+        '/publish-manage/published': '已发布',
+        '/publish-manage/sunset': '已下线',
+    };
+
+    const pathSnippets = location.pathname.split('/').filter((i) => i);
+    const extraBreadcrumbItems = pathSnippets.map((_, index) => {
+        const url = `/${pathSnippets.slice(0, index + 1).join('/')}`;
+        return {
+            key: url,
+            title: breadcrumbNameMap[url] || url,
+        };
+    });
+
+    const breadcrumbItems = [
+        {
+            key: '/home',
+            title: <HomeOutlined />,
+        },
+    ].concat(extraBreadcrumbItems);
 
 
     // 退出登录
@@ -69,33 +97,30 @@ export default function TopHead() {
         },
     ];
 
-    const [collapsed, setCollapsed] = useState(false);
-
     return (
         <Header
             style={{
-                padding: 0,
+                padding: '0 24px',
                 background: colorBgContainer,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                boxShadow: '0 2px 8px #f0f1f2',
+                zIndex: 1,
             }}
+
         >
-            {isCollapsible ? (
-                <MenuUnfoldOutlined onClick={changeCollapsed} />
-            ) : (
-                <MenuFoldOutlined onClick={changeCollapsed} />
-            )}
-            {/* <Button
-                type="text"
-                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                onClick={() => setCollapsed(!collapsed)}
-                style={{
-                    fontSize: '16px',
-                    width: 64,
-                    height: 64,
-                }}
-            /> */}
-            <div style={{ float: "right", marginRight: '20px' }}>
+            {/* <div className="demo-logo-vertical" >{isCollapsible ? 'News' : '新闻发布管理系统'}</div> */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <Breadcrumb items={breadcrumbItems} />
+            </div>
+
+            <div style={{ float: "right" }}>
                 <Dropdown menu={{ items }} arrow>
-                    <UserOutlined style={{ fontSize: '24px', cursor: 'pointer' }} />
+                    <Space style={{ cursor: 'pointer' }}>
+                        <span style={{ color: 'rgba(0,0,0,0.65)' }}>欢迎, {username}</span>
+                        <Avatar style={{ backgroundColor: '#1677ff' }} icon={<UserOutlined />} />
+                    </Space>
                 </Dropdown>
             </div>
         </Header>
