@@ -2,10 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   // GitHub Pages 部署时需要设置 base
   // 本地开发时为 '/', 部署到 GitHub Pages 时为 '/仓库名/'
-  base: process.env.NODE_ENV === 'production' ? '/NewsSystemPro/' : '/',
+  base: mode === 'production' ? '/NewsSystemPro/' : '/',
 
   plugins: [
     react({
@@ -118,4 +118,4 @@ export default defineConfig({
       ],
     },
   },
-})
+}))
