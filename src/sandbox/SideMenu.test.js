@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import { createStore } from 'redux'
 import axios from 'axios'
@@ -13,8 +14,19 @@ vi.mock('axios')
 vi.mock('./index.css', () => ({}))
 
 // 创建测试用的 Redux store
-function createTestStore(initialState = { collapsible: false }) {
-  return createStore((state = initialState) => state)
+function createTestReducer(initialState = { collapsible: false }) {
+  return (state = initialState, action) => {
+    switch (action.type) {
+      case 'change_collapsed':
+        return { ...state, collapsible: !state.collapsible }
+      default:
+        return state
+    }
+  }
+}
+
+function createTestStore(initialState) {
+  return createStore(createTestReducer(initialState))
 }
 
 describe('SideMenu 侧边栏组件', () => {
@@ -91,7 +103,12 @@ describe('SideMenu 侧边栏组件', () => {
 
       // Assert
       await waitFor(() => {
-        expect(screen.getByText('新闻发布管理系统')).toBeInTheDocument()
+        // 验证侧边栏容器存在
+        const sider = document.querySelector('.ant-layout-sider')
+        expect(sider).toBeInTheDocument()
+        // 验证折叠按钮存在
+        const toggleButton = document.querySelector('.sider-collapse-button')
+        expect(toggleButton).toBeInTheDocument()
       })
     })
 
@@ -178,24 +195,6 @@ describe('SideMenu 侧边栏组件', () => {
   })
 
   describe('侧边栏伸缩状态', () => {
-    it('应该在展开状态下显示完整标题', async () => {
-      // Arrange: collapsible = false (展开)
-      const store = createTestStore({ collapsible: false })
-
-      // Act
-      render(
-        <Provider store={store}>
-          <MemoryRouter>
-            <SideMenu />
-          </MemoryRouter>
-        </Provider>
-      )
-
-      // Assert
-      await waitFor(() => {
-        expect(screen.getByText('新闻发布管理系统')).toBeInTheDocument()
-      })
-    })
 
     it('应该根据 Redux 状态控制侧边栏伸缩', async () => {
       // Arrange: collapsible = true (收缩)
@@ -215,6 +214,53 @@ describe('SideMenu 侧边栏组件', () => {
         const sider = container.querySelector('.ant-layout-sider-collapsed')
         expect(sider).toBeInTheDocument()
       })
+    })
+    it('应该在点击折叠按钮时触发 Redux action', async () => {
+      // Arrange
+      const store = createTestStore({ collapsible: false })
+      const user = userEvent.setup()
+
+      // Act
+      const { container } = render(
+        <Provider store={store}>
+          <MemoryRouter>
+            <SideMenu />
+          </MemoryRouter>
+        </Provider>
+      )
+
+      // 找到折叠按钮（假设它有特定的类名或图标）
+      // 注意：SideMenu.js 中的按钮可能没有明确的 aria-label，我们通过图标类名查找
+      const toggleButton = container.querySelector('.sider-collapse-button button')
+      expect(toggleButton).toBeInTheDocument()
+
+      await user.click(toggleButton)
+
+      // Assert: Redux 状态应该更新
+      const state = store.getState()
+      expect(state.collapsible).toBe(true)
+    })
+
+    it('应该在点击展开按钮时触发 Redux action', async () => {
+      // Arrange
+      const store = createTestStore({ collapsible: true })
+      const user = userEvent.setup()
+
+      // Act
+      const { container } = render(
+        <Provider store={store}>
+          <MemoryRouter>
+            <SideMenu />
+          </MemoryRouter>
+        </Provider>
+      )
+
+      const toggleButton = container.querySelector('.sider-collapse-button button')
+      await user.click(toggleButton)
+
+      // Assert: Redux 状态应该更新
+      const state = store.getState()
+      expect(state.collapsible).toBe(false)
     })
   })
 
@@ -282,9 +328,10 @@ describe('SideMenu 侧边栏组件', () => {
         </Provider>
       )
 
-      // Assert: 应该显示标题，但没有菜单项
+      // Assert: 应该显示侧边栏，但没有菜单项
       await waitFor(() => {
-        expect(screen.getByText('新闻发布管理系统')).toBeInTheDocument()
+        const sider = document.querySelector('.ant-layout-sider')
+        expect(sider).toBeInTheDocument()
       })
     })
 
