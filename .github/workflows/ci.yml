@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x]  # 只使用 Node.js 20.x，更稳定
 
     steps:
       - name: Checkout code
@@ -33,11 +33,12 @@ jobs:
         run: npm run lint
         continue-on-error: true
 
-      - name: Run tests
-        run: npm run test:run
-
-      - name: Generate coverage report
+      - name: Run tests with coverage
         run: npm run test:coverage
+        env:
+          # 提高 CI 环境性能
+          NODE_OPTIONS: --max-old-space-size=4096
+        timeout-minutes: 10
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

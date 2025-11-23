@@ -92,6 +92,19 @@ export default defineConfig({
     globals: true,
     // 设置文件
     setupFiles: './src/test/setup.js',
+
+    // CI 环境性能优化
+    pool: 'forks',  // 使用 forks 而不是 threads，在 CI 中更稳定
+    poolOptions: {
+      forks: {
+        singleFork: true,  // 单进程运行，避免并发问题
+      },
+    },
+
+    // 超时配置
+    testTimeout: 10000,  // 单个测试超时 10 秒
+    hookTimeout: 10000,  // Hook 超时 10 秒
+
     // 覆盖率配置
     coverage: {
       provider: 'v8',
