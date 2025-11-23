@@ -7,19 +7,31 @@
 [![Ant Design](https://img.shields.io/badge/Ant%20Design-5.1.7-1890FF.svg)](https://ant.design/)
 [![License](https://img.shields.io/badge/License-ISC-green.svg)](LICENSE)
 
+[![CI/CD Pipeline](https://github.com/Jye10032/NewsSystemPro/actions/workflows/ci.yml/badge.svg)](https://github.com/Jye10032/NewsSystemPro/actions/workflows/ci.yml)
+[![Deploy Status](https://github.com/Jye10032/NewsSystemPro/actions/workflows/deploy.yml/badge.svg)](https://github.com/Jye10032/NewsSystemPro/actions/workflows/deploy.yml)
+[![codecov](https://codecov.io/gh/Jye10032/NewsSystemPro/branch/main/graph/badge.svg)](https://codecov.io/gh/Jye10032/NewsSystemPro)
+
 ## 🎯 项目简介
 
 NewsSystemPro 是一个功能完整的新闻内容管理系统，提供从内容创作、审核流程到发布管理的全流程解决方案。系统采用前后端分离架构，具备完善的权限管理和数据可视化功能。
 
-### 📚 项目来源
+### 📚 项目演进
 
-本项目基于 B站教程 [【React项目实战】React全家桶+Antd新闻管理系统项目](https://www.bilibili.com/video/BV1fw411d7R5) 进行学习和改进，在原有基础上进行了以下优化：
+本项目基于 B站教程 [【React项目实战】React全家桶+Antd新闻管理系统项目](https://www.bilibili.com/video/BV1fw411d7R5) 进行学习和改进，从初始版本 [NewsSystem](https://github.com/Jye10032/NewsSystem) 持续迭代优化而来。
 
+**改进历程**：
+- 🔗 **初始版本**：[NewsSystem](https://github.com/Jye10032/NewsSystem) - 跟随 B站视频完成的基础实现
+- 🚀 **当前版本**：NewsSystemPro - 在初始版本基础上进行了全面升级
+
+**主要升级内容**：
 - ✅ 升级到 Vite 构建工具（原项目使用 Create React App）
 - ✅ 升级 React Router 到 v6（原项目使用 v5）
 - ✅ 升级 Ant Design 到 v5（原项目使用 v4）
 - ✅ 优化数据可视化效果（ECharts 图表）
 - ✅ 改进代码结构和组件复用
+- ✅ 添加完整的测试体系（Vitest + Testing Library）
+- ✅ 集成 CI/CD 自动化流程（GitHub Actions）
+- ✅ 优化 UI/UX 设计（现代化主题和交互）
 - ✅ 添加更多注释和文档说明
 - ✅ 优化用户体验细节
 
