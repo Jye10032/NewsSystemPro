@@ -1,9 +1,14 @@
 name: Deploy to GitHub Pages
 
+# 暂时禁用此工作流，等启用 GitHub Pages 后再取消注释
+# on:
+#   push:
+#     branches: [ main ]
+#   workflow_dispatch:
+
+# 临时禁用部署
 on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch:  # 只允许手动触发
 
 # 设置权限以部署到 GitHub Pages
 permissions:
