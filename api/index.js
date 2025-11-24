@@ -46,4 +46,8 @@ server.use(middlewares);
 server.use(router);
 
 // 导出为 Vercel Serverless 函数
-module.exports = server;
+// Vercel 需要一个函数，而不是 Express 应用实例
+module.exports = (req, res) => {
+  // 让 Express 应用处理请求
+  server(req, res);
+};
