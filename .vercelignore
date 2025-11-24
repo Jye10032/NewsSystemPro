@@ -1,0 +1,42 @@
+# Node modules
+node_modules
+
+# Build outputs
+dist
+dist-ssr
+.vite
+
+# Source files (前端代码不需要部署到 Vercel 后端)
+src
+public
+index.html
+
+# Tests
+coverage
+.vitest-results
+**/*.test.js
+**/*.test.jsx
+
+# Development
+.env.local
+.env.development
+.env.development.local
+
+# Git
+.git
+.gitignore
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Editor
+.vscode
+.idea
+
+# CI/CD
+.github
+
+# Other
+.DS_Store
