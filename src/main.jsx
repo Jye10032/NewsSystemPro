@@ -7,7 +7,7 @@ import './utils/Request.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/NewsSystemPro">
       <App />
     </BrowserRouter>
   </React.StrictMode>
