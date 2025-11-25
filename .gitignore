@@ -49,3 +49,6 @@ playwright-report/
 # 
 TESTING_GUIDE.md
 docs/
+claude.md
+*.md
+test-axios-global.html
