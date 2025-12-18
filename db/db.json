@@ -144,8 +144,8 @@
         "/user-manage/update",
         "/user-manage/list",
         "/right-manage",
-        "/right-manage/role/list",
-        "/right-manage/right/list",
+        "/right-manage/rolelist",
+        "/right-manage/rightlist",
         "/right-manage/role/update",
         "/right-manage/role/delete",
         "/right-manage/right/update",
@@ -250,7 +250,7 @@
       "id": 8,
       "title": "角色列表",
       "rightId": 7,
-      "key": "/right-manage/role/list",
+      "key": "/right-manage/rolelist",
       "pagepermisson": 1,
       "grade": 2
     },
@@ -258,7 +258,7 @@
       "id": 9,
       "title": "权限列表",
       "rightId": 7,
-      "key": "/right-manage/right/list",
+      "key": "/right-manage/rightlist",
       "pagepermisson": 1,
       "grade": 2
     },

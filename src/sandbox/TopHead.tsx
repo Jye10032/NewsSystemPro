@@ -1,7 +1,7 @@
 import React from 'react'
 import { Layout, theme, Dropdown, Breadcrumb, Avatar, Space } from 'antd'
 import { UserOutlined, HomeOutlined } from '@ant-design/icons'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../types'
 
@@ -23,8 +23,8 @@ export default function TopHead() {
         '/user-manage': '用户管理',
         '/user-manage/list': '用户列表',
         '/right-manage': '权限管理',
-        '/right-manage/role/list': '角色列表',
-        '/right-manage/right/list': '权限列表',
+        '/right-manage/rolelist': '角色列表',
+        '/right-manage/rightlist': '权限列表',
         '/news-manage': '新闻管理',
         '/news-manage/add': '撰写新闻',
         '/news-manage/draft': '草稿箱',
@@ -38,19 +38,40 @@ export default function TopHead() {
         '/publish-manage/sunset': '已下线',
     }
 
+    // 有实际页面的路径（可点击）
+    const clickablePaths = new Set([
+        '/home',
+        '/user-manage/list',
+        '/right-manage/rolelist',
+        '/right-manage/rightlist',
+        '/news-manage/add',
+        '/news-manage/draft',
+        '/news-manage/category',
+        '/audit-manage/audit',
+        '/audit-manage/list',
+        '/publish-manage/unpublished',
+        '/publish-manage/published',
+        '/publish-manage/sunset',
+    ])
+
     const pathSnippets = location.pathname.split('/').filter((i) => i)
-    const extraBreadcrumbItems = pathSnippets.map((_, index) => {
-        const url = `/${pathSnippets.slice(0, index + 1).join('/')}`
-        return {
-            key: url,
-            title: breadcrumbNameMap[url] || url,
-        }
-    })
+    const extraBreadcrumbItems = pathSnippets
+        .map((_, index) => {
+            const url = `/${pathSnippets.slice(0, index + 1).join('/')}`
+            if (!breadcrumbNameMap[url]) return null
+            return {
+                key: url,
+                title: clickablePaths.has(url)
+                    ? <Link to={url}>{breadcrumbNameMap[url]}</Link>
+                    : <span>{breadcrumbNameMap[url]}</span>,
+            }
+        })
+        .filter(Boolean)
 
     const breadcrumbItems = [
         {
             key: '/home',
-            title: <HomeOutlined />,
+            title: <Link to="/home"><HomeOutlined /></Link>,
         },
         ...extraBreadcrumbItems
     ]

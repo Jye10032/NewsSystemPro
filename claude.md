@@ -377,6 +377,11 @@ npm start
     - File naming: `YYYY-MM-DD-feature-name.md`
     - Content should include: background, changes made, code snippets, data flow, and follow-up tasks
 
+13. **Test Verification**: After every code modification, ensure related tests pass
+    - Run `npm run test:run` to verify all tests pass
+    - If tests fail due to code changes, update the tests accordingly
+    - Never leave broken tests after modifications
+
 ---
 
 _Last Updated: 2024-12-18_

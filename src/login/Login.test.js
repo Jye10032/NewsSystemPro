@@ -7,11 +7,27 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { legacy_createStore as createStore, combineReducers } from 'redux';
 import Login from './Login';
 import axios from 'axios';
 
 // Mock axios
 vi.mock('axios');
+
+// 创建测试用的 Redux store
+const createTestStore = () => {
+  const rootReducer = combineReducers({
+    user: (state = null, action) => {
+      if (action.type === 'set_user') return action.payload;
+      if (action.type === 'clear_user') return null;
+      return state;
+    },
+    collapsible: (state = false) => state,
+    isLoding: (state = false) => state,
+  });
+  return createStore(rootReducer);
+};
 
 // Mock react-tsparticles（粒子背景组件，测试时不需要）
 vi.mock('react-tsparticles', () => ({
@@ -22,9 +38,13 @@ vi.mock('tsparticles', () => ({
   loadFull: vi.fn(),
 }));
 
-// 测试辅助函数：在 Router 上下文中渲染组件
-const renderWithRouter = (component) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>);
+// 测试辅助函数：在 Router 和 Redux 上下文中渲染组件
+const renderWithProviders = (component, store = createTestStore()) => {
+  return render(
+    <Provider store={store}>
+      <BrowserRouter>{component}</BrowserRouter>
+    </Provider>
+  );
 };
 
 describe('Login 组件', () => {
@@ -36,7 +56,7 @@ describe('Login 组件', () => {
   });
 
   it('应该渲染登录表单', () => {
-    renderWithRouter(<Login />);
+    renderWithProviders(<Login />);
 
     // 检查标题是否渲染
     expect(screen.getByText('新闻发布管理系统')).toBeInTheDocument();
@@ -51,7 +71,7 @@ describe('Login 组件', () => {
 
   it('应该能够输入用户名和密码', async () => {
     const user = userEvent.setup();
-    renderWithRouter(<Login />);
+    renderWithProviders(<Login />);
 
     const usernameInput = screen.getByPlaceholderText('用户名');
     const passwordInput = screen.getByPlaceholderText('密码');
@@ -67,7 +87,7 @@ describe('Login 组件', () => {
 
   it('应该在提交空表单时显示验证错误', async () => {
     const user = userEvent.setup();
-    renderWithRouter(<Login />);
+    renderWithProviders(<Login />);
 
     const loginButton = screen.getByRole('button', { name: /登/i });
 
@@ -95,7 +115,7 @@ describe('Login 组件', () => {
       data: [mockUserData],
     });
 
-    renderWithRouter(<Login />);
+    renderWithProviders(<Login />);
 
     const usernameInput = screen.getByPlaceholderText('用户名');
     const passwordInput = screen.getByPlaceholderText('密码');
@@ -127,7 +147,7 @@ describe('Login 组件', () => {
       data: [],
     });
 
-    renderWithRouter(<Login />);
+    renderWithProviders(<Login />);
 
     const usernameInput = screen.getByPlaceholderText('用户名');
     const passwordInput = screen.getByPlaceholderText('密码');

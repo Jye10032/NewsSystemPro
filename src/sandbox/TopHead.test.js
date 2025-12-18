@@ -6,21 +6,23 @@ import { Provider } from 'react-redux'
 import { createStore } from 'redux'
 import TopHead from './TopHead'
 
-// 创建测试用的 reducer
-function createTestReducer(initialState = { collapsible: false }) {
-  return (state = initialState, action) => {
-    switch (action.type) {
-      case 'change_collapsed':
-        return { ...state, collapsible: !state.collapsible }
-      default:
-        return state
-    }
-  }
-}
+import { combineReducers } from 'redux'
 
 // 创建测试用的 Redux store
-function createTestStore(initialState) {
-  return createStore(createTestReducer(initialState))
+function createTestStore(userInfo = null) {
+  const rootReducer = combineReducers({
+    collapsible: (state = false, action) => {
+      if (action.type === 'change_collapsed') return !state
+      return state
+    },
+    isLoding: (state = false) => state,
+    user: (state = userInfo, action) => {
+      if (action.type === 'set_user') return action.payload
+      if (action.type === 'clear_user') return null
+      return state
+    },
+  })
+  return createStore(rootReducer)
 }
 
 describe('TopHead 顶部栏组件', () => {
@@ -33,8 +35,6 @@ describe('TopHead 顶部栏组件', () => {
   }
 
   beforeEach(() => {
-    // 设置 localStorage
-    localStorage.setItem('token', JSON.stringify(mockUserInfo))
     vi.clearAllMocks()
   })
 
@@ -45,7 +45,7 @@ describe('TopHead 顶部栏组件', () => {
   describe('渲染测试', () => {
     it('应该正确渲染顶部栏', () => {
       // Arrange
-      const store = createTestStore()
+      const store = createTestStore(mockUserInfo)
 
       // Act
       render(
@@ -61,9 +61,9 @@ describe('TopHead 顶部栏组件', () => {
       expect(userIcon).toBeInTheDocument()
     })
 
-    it('应该从 localStorage 读取用户信息', async () => {
+    it('应该从 Redux 读取用户信息', async () => {
       // Arrange
-      const store = createTestStore()
+      const store = createTestStore(mockUserInfo)
 
       // Act
       render(
@@ -86,7 +86,7 @@ describe('TopHead 顶部栏组件', () => {
   describe('用户下拉菜单', () => {
     it('应该在点击用户图标时显示下拉菜单', async () => {
       // Arrange
-      const store = createTestStore()
+      const store = createTestStore(mockUserInfo)
       const user = userEvent.setup()
 
       // Act
@@ -110,7 +110,7 @@ describe('TopHead 顶部栏组件', () => {
 
     it('应该在下拉菜单中显示用户名', async () => {
       // Arrange
-      const store = createTestStore()
+      const store = createTestStore(mockUserInfo)
       const user = userEvent.setup()
 
       // Act
@@ -133,7 +133,7 @@ describe('TopHead 顶部栏组件', () => {
 
     it('应该在下拉菜单中显示角色名', async () => {
       // Arrange
-      const store = createTestStore()
+      const store = createTestStore(mockUserInfo)
       const user = userEvent.setup()
 
       // Act
@@ -156,7 +156,7 @@ describe('TopHead 顶部栏组件', () => {
 
     it('应该在下拉菜单中显示退出按钮', async () => {
       // Arrange
-      const store = createTestStore()
+      const store = createTestStore(mockUserInfo)
       const user = userEvent.setup()
 
       // Act
@@ -181,7 +181,8 @@ describe('TopHead 顶部栏组件', () => {
   describe('退出登录功能', () => {
     it('应该在点击退出时清除 localStorage', async () => {
       // Arrange
-      const store = createTestStore()
+      localStorage.setItem('token', JSON.stringify(mockUserInfo))
+      const store = createTestStore(mockUserInfo)
       const user = userEvent.setup()
 
       // Act
@@ -209,7 +210,8 @@ describe('TopHead 顶部栏组件', () => {
 
     it('应该在退出后跳转到登录页', async () => {
       // Arrange
-      const store = createTestStore()
+      localStorage.setItem('token', JSON.stringify(mockUserInfo))
+      const store = createTestStore(mockUserInfo)
       const user = userEvent.setup()
 
       // Act
@@ -239,12 +241,11 @@ describe('TopHead 顶部栏组件', () => {
   })
 
   describe('错误处理', () => {
-    it('应该处理无效的 localStorage 数据', () => {
-      // Arrange: 设置无效的 localStorage 数据
-      localStorage.setItem('token', 'invalid-json')
-      const store = createTestStore()
+    it('应该处理 user 为 null 的情况', () => {
+      // Arrange: Redux 中没有用户数据
+      const store = createTestStore(null)
 
-      // Act & Assert: 组件应该捕获错误并继续渲染
+      // Act & Assert: 组件应该正常渲染（使用可选链）
       expect(() => {
         render(
           <Provider store={store}>
@@ -253,17 +254,15 @@ describe('TopHead 顶部栏组件', () => {
             </MemoryRouter>
           </Provider>
         )
-      }).toThrow() // JSON.parse 会抛出错误，这是预期的
+      }).not.toThrow()
     })
 
     it('应该处理缺少 role 信息的用户数据', () => {
       // Arrange: 用户数据没有 role
-      localStorage.setItem('token', JSON.stringify({
-        username: 'testuser'
-      }))
-      const store = createTestStore()
+      const userWithoutRole = { username: 'testuser' }
+      const store = createTestStore(userWithoutRole)
 
-      // Act & Assert: 应该抛出错误（因为代码会访问 role.roleName）
+      // Act & Assert: 组件应该正常渲染（使用可选链 user?.role?.roleName）
       expect(() => {
         render(
           <Provider store={store}>
@@ -272,19 +271,19 @@ describe('TopHead 顶部栏组件', () => {
             </MemoryRouter>
           </Provider>
         )
-      }).toThrow()
+      }).not.toThrow()
     })
 
     it('应该处理完整的用户数据', () => {
       // Arrange: 完整的用户数据
-      localStorage.setItem('token', JSON.stringify({
+      const fullUserInfo = {
         username: 'testuser',
         role: {
           roleName: '管理员'
         },
         region: '上海'
-      }))
-      const store = createTestStore()
+      }
+      const store = createTestStore(fullUserInfo)
 
       // Act & Assert: 不应该抛出错误
       expect(() => {
@@ -302,7 +301,7 @@ describe('TopHead 顶部栏组件', () => {
   describe('样式和布局', () => {
     it('应该正确设置 Header 样式', () => {
       // Arrange
-      const store = createTestStore()
+      const store = createTestStore(mockUserInfo)
 
       // Act
       const { container } = render(
@@ -320,7 +319,7 @@ describe('TopHead 顶部栏组件', () => {
 
     it('应该将用户图标放在右侧', () => {
       // Arrange
-      const store = createTestStore()
+      const store = createTestStore(mockUserInfo)
 
       // Act
       const { container } = render(

@@ -33,8 +33,8 @@ import { connect } from 'react-redux'
 const LocalRouterMap = {
     '/home': Home,
     '/user-manage/list': UserList,
-    '/right-manage/role/list': RoleList,
-    '/right-manage/right/list': RightList,
+    '/right-manage/rolelist': RoleList,
+    '/right-manage/rightlist': RightList,
     '/audit-manage/audit': Audit,
     '/audit-manage/list': AuditList,
     '/news-manage/add': NewAdd,
