@@ -3,12 +3,21 @@ import { Button, Form, Input, message } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import Particles from 'react-tsparticles'
 import { loadFull } from 'tsparticles'
+import { Engine } from 'tsparticles-engine'
 import { useNavigate } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
 import './Login.css'
 import axios from 'axios'
+import { User } from '../types'
+
+interface LoginForm {
+    username: string
+    password: string
+}
 
 export default function Login() {
-    const particlesInit = async (main) => {
+    const dispatch = useDispatch()
+    const particlesInit = async (main: Engine) => {
         await loadFull(main)
     }
     useEffect(() => { }, [])
@@ -52,10 +61,10 @@ export default function Login() {
                 width: 1
             },
             move: {
-                direction: 'none',
+                direction: 'none' as const,
                 enable: true,
                 outModes: {
-                    default: 'bounce'
+                    default: 'bounce' as const
                 },
                 random: false,
                 speed: 1, // 移动速度变慢
@@ -81,24 +90,27 @@ export default function Login() {
     }
 
     // 提交表单数据验证成功后的回调事件
-    function onFinish(user) {
-        axios.get(`/users?_expand=role&username=${user.username}&password=${user.password}&roleState=true`).then(
+    function onFinish(formData: LoginForm) {
+        axios.get<User[]>(`/users?_expand=role&username=${formData.username}&password=${formData.password}&roleState=true`).then(
             (res) => {
                 if (res.data.length === 0) {
                     return message.error('用户名或密码错误')
                 } else {
-                    console.log(res.data[0]);
-                    localStorage.setItem('token', JSON.stringify(res.data[0]))
+                    const userData = res.data[0]
+                    // 使用 Redux 存储用户信息（redux-persist 会自动持久化）
+                    dispatch({ type: 'set_user', payload: userData })
+                    // 保留 localStorage 兼容旧代码（可逐步移除）
+                    localStorage.setItem('token', JSON.stringify(userData))
                     message.success('登录成功')
                     nav('/', { replace: true })
                 }
             },
-            (err) => message.error(err)
+            (err) => message.error(String(err))
         )
     }
     // 提交表单数据验证失败后的回调事件
-    function onFinishFailed(a) {
-        console.log(a)
+    function onFinishFailed(errorInfo: unknown) {
+        console.log(errorInfo)
     }
     return (
         <div id="login-container">
@@ -164,4 +176,3 @@ export default function Login() {
         </div>
     )
 }
-

@@ -4,6 +4,7 @@ import { thunk } from 'redux-thunk';
 import storage from 'redux-persist/lib/storage'
 import collapsible from './reducers/CollapsedReducer'
 import isLoding from './reducers/LoadingReducer'
+import user from './reducers/UserReducer'
 //import { configureStore } from '@reduxjs/toolkit';
 
 const persistConfig = {
@@ -14,7 +15,8 @@ const persistConfig = {
 
 const AllReducers = combineReducers({
   collapsible,
-  isLoding
+  isLoding,
+  user
 })
 
 const persistedReducer = persistReducer(persistConfig, AllReducers)

@@ -371,6 +371,12 @@ npm start
 11. **Commit Message**: Follow conventional commits specification
     - feat/fix/docs/style/refactor/perf/test/chore
 
+### Claude Collaboration Rules
+
+12. **Documentation Output**: After every code modification, output a documentation file to `diary/` folder
+    - File naming: `YYYY-MM-DD-feature-name.md`
+    - Content should include: background, changes made, code snippets, data flow, and follow-up tasks
+
 ---
 
-_Last Updated: 2024-11-25_
+_Last Updated: 2024-12-18_
