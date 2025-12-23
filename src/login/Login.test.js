@@ -103,7 +103,7 @@ describe('Login 组件', () => {
   it('应该在用户名密码正确时登录成功', async () => {
     const user = userEvent.setup();
 
-    // Mock axios 返回成功的用户数据
+    // Mock axios 返回成功的用户数据（新 JWT API 格式）
     const mockUserData = {
       id: 1,
       username: 'admin',
@@ -111,8 +111,11 @@ describe('Login 组件', () => {
       region: '全球',
     };
 
-    axios.get.mockResolvedValueOnce({
-      data: [mockUserData],
+    axios.post.mockResolvedValueOnce({
+      data: {
+        token: 'mock-jwt-token',
+        user: mockUserData,
+      },
     });
 
     renderWithProviders(<Login />);
@@ -129,11 +132,14 @@ describe('Login 组件', () => {
     // 等待异步请求完成
     await waitFor(() => {
       // 检查是否调用了正确的 API
-      expect(axios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/users?_expand=role&username=admin&password=123456')
+      expect(axios.post).toHaveBeenCalledWith(
+        '/api/auth/login',
+        { username: 'admin', password: '123456' }
       );
 
-      // 检查是否保存了 token 到 localStorage
+      // 检查是否保存了 JWT 到 localStorage
+      expect(localStorage.getItem('jwt')).toBe('mock-jwt-token');
+      // 检查是否保存了用户信息到 localStorage
       const savedToken = JSON.parse(localStorage.getItem('token'));
       expect(savedToken).toEqual(mockUserData);
     });
@@ -142,9 +148,12 @@ describe('Login 组件', () => {
   it('应该在用户名密码错误时显示错误消息', async () => {
     const user = userEvent.setup();
 
-    // Mock axios 返回空数组（用户不存在）
-    axios.get.mockResolvedValueOnce({
-      data: [],
+    // Mock axios 返回 401 错误
+    axios.post.mockRejectedValueOnce({
+      response: {
+        status: 401,
+        data: { message: '用户名或密码错误' },
+      },
     });
 
     renderWithProviders(<Login />);
@@ -160,9 +169,10 @@ describe('Login 组件', () => {
 
     // 等待错误消息显示
     await waitFor(() => {
-      expect(axios.get).toHaveBeenCalled();
-      // Ant Design 的 message.error 会显示错误消息
-      // 注意：实际测试中可能需要 mock message.error
+      expect(axios.post).toHaveBeenCalledWith(
+        '/api/auth/login',
+        { username: 'wronguser', password: 'wrongpass' }
+      );
     });
   });
 });

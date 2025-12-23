@@ -91,21 +91,22 @@ export default function Login() {
 
     // 提交表单数据验证成功后的回调事件
     function onFinish(formData: LoginForm) {
-        axios.get<User[]>(`/users?_expand=role&username=${formData.username}&password=${formData.password}&roleState=true`).then(
+        axios.post<{ token: string; user: User }>('/api/auth/login', formData).then(
             (res) => {
-                if (res.data.length === 0) {
-                    return message.error('用户名或密码错误')
-                } else {
-                    const userData = res.data[0]
-                    // 使用 Redux 存储用户信息（redux-persist 会自动持久化）
-                    dispatch({ type: 'set_user', payload: userData })
-                    // 保留 localStorage 兼容旧代码（可逐步移除）
-                    localStorage.setItem('token', JSON.stringify(userData))
-                    message.success('登录成功')
-                    nav('/', { replace: true })
-                }
+                const { token, user } = res.data
+                // 存储 JWT token
+                localStorage.setItem('jwt', token)
+                // 使用 Redux 存储用户信息
+                dispatch({ type: 'set_user', payload: user })
+                // 保留 token 兼容旧代码（NewsRouter 等仍在使用）
+                localStorage.setItem('token', JSON.stringify(user))
+                message.success('登录成功')
+                nav('/', { replace: true })
             },
-            (err) => message.error(String(err))
+            (err) => {
+                const errorMsg = err.response?.data?.message || '用户名或密码错误'
+                message.error(errorMsg)
+            }
         )
     }
     // 提交表单数据验证失败后的回调事件
