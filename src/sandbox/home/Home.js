@@ -1,378 +1,179 @@
-import NewsSandBox from '../NewsSandBox'
 import React, { useEffect, useState, useRef } from 'react'
 import axios from 'axios'
-import { Card, Col, Row, List, Avatar, Drawer } from 'antd'
-import { EditOutlined, EllipsisOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons'
+import { Card, Col, Row, List, Avatar, Drawer, Statistic, Progress, Table, Tag } from 'antd'
+import {
+    EditOutlined,
+    EllipsisOutlined,
+    SettingOutlined,
+    UserOutlined,
+    EyeOutlined,
+    FileTextOutlined,
+    LikeOutlined,
+    TeamOutlined,
+    ArrowUpOutlined,
+    ArrowDownOutlined
+} from '@ant-design/icons'
 import { Link } from 'react-router-dom'
 import * as echarts from 'echarts'
 import _ from 'lodash'
-const { Meta } = Card
-/**
- * 后台管理首页
- * 
- */
 
+const { Meta } = Card
 
 export default function Home() {
-
-    // 柱状图引用
     const barRef = useRef()
-    // 饼状图引用
     const pieRef = useRef()
-    // 抽屉状态
+    const categoryChartRef = useRef()
     const [open, setOpen] = useState(false)
-    // 饼状图实例
     const [pieChart, setPieChart] = useState(null)
-    // 新闻浏览数据
     const [newsViewList, setNewsViewList] = useState([])
-    // 新闻点赞数据
     const [newsStarList, setNewsStarList] = useState([])
-    // 所有新闻数据
     const [allList, setAllList] = useState([])
-    useEffect(() => {
+    const [stats, setStats] = useState({
+        totalViews: 0,
+        totalNews: 0,
+        totalLikes: 0,
+        totalUsers: 0
+    })
 
+    useEffect(() => {
         Promise.all([
             axios.get('/news?publishState=2&_expand=category&_sort=view&_order=desc&_limit=7'),
             axios.get('/news?publishState=2&_expand=category&_sort=star&_order=desc&_limit=7'),
-            axios.get('/news?publishState=2&_expand=category')
+            axios.get('/news?publishState=2&_expand=category'),
+            axios.get('/users')
         ]).then((res) => {
-            //renderBarView(_.groupBy(res[2].data, (item) => item.category.title))
-            renderLineView()
             setNewsViewList(res[0].data)
             setNewsStarList(res[1].data)
-
             setAllList(res[2].data)
+
+            const totalViews = res[2].data.reduce((sum, item) => sum + (item.view || 0), 0)
+            const totalLikes = res[2].data.reduce((sum, item) => sum + (item.star || 0), 0)
+            setStats({
+                totalViews,
+                totalNews: res[2].data.length,
+                totalLikes,
+                totalUsers: res[3].data.length
+            })
+
+            renderLineView()
+            renderCategoryChart(_.groupBy(res[2].data, (item) => item.category.title))
         })
         return () => {
             window.onresize = null
         }
     }, [])
+
     const {
         username,
         region,
         role: { roleName }
     } = JSON.parse(localStorage.getItem('token'))
 
-    // 渲染折线图
     function renderLineView() {
-        var myChart = echarts.init(barRef.current);
+        var myChart = echarts.init(barRef.current)
+        window.onresize = () => myChart.resize()
 
-
-        //var option;
-
-        var GRID_TOP = 80;
-        var GRID_BOTTOM = 60;
-        var GRID_LEFT = 60;
-        var GRID_RIGHT = 60;
-
-        // 生成日期和浏览量数据
-        // 生成上升趋势的数据
         function generateSeriesData() {
-            const seriesData = [];
-            const startDate = new Date();
-            const DATA_COUNT = 14; // 14 天
-            let baseViews = 400;   // 起始值
-            let growth = 30;       // 平均每天增长量
+            const seriesData = []
+            const startDate = new Date()
+            const DATA_COUNT = 14
+            let baseViews = 400
+            let growth = 30
 
             for (let i = 0; i < DATA_COUNT; i++) {
-                const date = new Date(startDate);
-                date.setDate(startDate.getDate() - (DATA_COUNT - 1 - i));
-
-                // 👉 格式化为 "MM-DD"
-                const mm = String(date.getMonth() + 1).padStart(2, '0');
-                const dd = String(date.getDate()).padStart(2, '0');
-                const dayStr = `${mm}-${dd}`;
-
-                // 在增长趋势上加一点随机浮动
-                const noise = (Math.random() - 0.5) * 40; // 小幅波动
-                const views = Math.round(baseViews + i * growth + noise);
-                seriesData.push({ date: dayStr, views });
+                const date = new Date(startDate)
+                date.setDate(startDate.getDate() - (DATA_COUNT - 1 - i))
+                const mm = String(date.getMonth() + 1).padStart(2, '0')
+                const dd = String(date.getDate()).padStart(2, '0')
+                const dayStr = `${mm}-${dd}`
+                const noise = (Math.random() - 0.5) * 40
+                const views = Math.round(baseViews + i * growth + noise)
+                seriesData.push({ date: dayStr, views })
             }
-            return seriesData;
+            return seriesData
         }
 
-        const data = generateSeriesData();
+        const data = generateSeriesData()
 
         const option = {
             title: {
-                text: '近两周每日浏览量',
-                subtext: '（单位：次）',
-                left: 'center',
-                textStyle: {
-                    fontSize: 20
-                },
-                subtextStyle: {
-                    color: '#175ce5',
-                    fontSize: 14
-                }
+                text: '近两周访问趋势',
+                left: 'left',
+                textStyle: { fontSize: 16, fontWeight: 500 }
             },
             tooltip: {
                 trigger: 'axis',
                 formatter: (params) => {
-                    const item = params[0];
-                    return `${item.name}<br/>浏览量：<b>${item.value}</b>`;
-                },
-                backgroundColor: '#fff',
-                borderColor: '#ccc',
-                borderWidth: 1,
-                textStyle: { color: '#333' }
-            },
-            grid: {
-                top: GRID_TOP,
-                bottom: GRID_BOTTOM,
-                left: GRID_LEFT,
-                right: GRID_RIGHT
-            },
-            xAxis: {
-                type: 'category',
-                name: '日期',
-                data: data.map(d => d.date),
-                axisTick: { show: false },
-                splitLine: { show: false },
-                axisLabel: {
-                    rotate: 40 // 日期倾斜显示
+                    const item = params[0]
+                    return `${item.name}<br/>浏览量：<b>${item.value}</b>`
                 }
             },
-            yAxis: {
-                type: 'value',
-                name: '浏览量',
-                axisTick: { show: true }
+            grid: { top: 50, bottom: 30, left: 50, right: 20 },
+            xAxis: {
+                type: 'category',
+                data: data.map((d) => d.date),
+                axisTick: { show: false },
+                axisLabel: { rotate: 40 }
             },
+            yAxis: { type: 'value', axisTick: { show: true } },
             series: [
                 {
                     type: 'line',
-                    name: '浏览量',
-                    data: data.map(d => d.views),
-                    symbol: 'circle',
-                    showSymbol: true,
-                    symbolSize: 6,
-                    areaStyle: { opacity: 0.2 },
-                    lineStyle: { width: 2, color: '#175ce5' },
-                    itemStyle: { color: '#175ce5' }
+                    data: data.map((d) => d.views),
+                    smooth: true,
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(24, 144, 255, 0.3)' },
+                            { offset: 1, color: 'rgba(24, 144, 255, 0.05)' }
+                        ])
+                    },
+                    lineStyle: { width: 2, color: '#1890ff' },
+                    itemStyle: { color: '#1890ff' }
                 }
             ]
-        };
-        /**
-         * This is some interaction logic with axis break:
-         *  - Brush to fisheye-magnify an area.
-         *
-         * You can ignore this part if you do not need it.
-         */
-        // 放大 / 拖拽 / fisheye
-        // function initAxisBreakInteraction() {
-        //     var _brushingEl = null;
-        //     myChart.on('click', function (params) {
-        //         if (params.name === 'clearAxisBreakBtn') {
-        //             var option = {
-        //                 xAxis: { breaks: [] },
-        //                 yAxis: { breaks: [] }
-        //             };
-        //             addClearButtonUpdateOption(option, false);
-        //             myChart.setOption(option);
-        //         }
-        //     });
-        //     function addClearButtonUpdateOption(option, show) {
-        //         option.graphic = [
-        //             {
-        //                 elements: [
-        //                     {
-        //                         type: 'rect',
-        //                         ignore: !show,
-        //                         name: 'clearAxisBreakBtn',
-        //                         top: 5,
-        //                         left: 5,
-        //                         shape: { r: 3, width: 70, height: 30 },
-        //                         style: { fill: '#eee', stroke: '#999', lineWidth: 1 },
-        //                         textContent: {
-        //                             type: 'text',
-        //                             style: {
-        //                                 text: 'Reset',
-        //                                 fontSize: 15,
-        //                                 fontWeight: 'bold'
-        //                             }
-        //                         },
-        //                         textConfig: { position: 'inside' }
-        //                     }
-        //                 ]
-        //             }
-        //         ];
-        //     }
-        //     myChart.getZr().on('mousedown', function (params) {
-        //         _brushingEl = new echarts.graphic.Rect({
-        //             shape: { x: params.offsetX, y: params.offsetY },
-        //             style: { stroke: 'none', fill: '#ccc' },
-        //             ignore: true
-        //         });
-        //         myChart.getZr().add(_brushingEl);
-        //     });
-        //     myChart.getZr().on('mousemove', function (params) {
-        //         if (!_brushingEl) {
-        //             return;
-        //         }
-        //         var initX = _brushingEl.shape.x;
-        //         var initY = _brushingEl.shape.y;
-        //         var currPoint = [params.offsetX, params.offsetY];
-        //         _brushingEl.setShape('width', currPoint[0] - initX);
-        //         _brushingEl.setShape('height', currPoint[1] - initY);
-        //         _brushingEl.ignore = false;
-        //     });
-        //     document.addEventListener('mouseup', function (params) {
-        //         if (!_brushingEl) {
-        //             return;
-        //         }
-        //         var initX = _brushingEl.shape.x;
-        //         var initY = _brushingEl.shape.y;
-        //         var currPoint = [params.offsetX, params.offsetY];
-        //         var xPixelSpan = Math.abs(currPoint[0] - initX);
-        //         var yPixelSpan = Math.abs(currPoint[1] - initY);
-        //         if (xPixelSpan > 2 && yPixelSpan > 2) {
-        //             updateAxisBreak(
-        //                 myChart,
-        //                 [initX, initY],
-        //                 currPoint,
-        //                 xPixelSpan,
-        //                 yPixelSpan
-        //             );
-        //         }
-        //         myChart.getZr().remove(_brushingEl);
-        //         _brushingEl = null;
-        //     });
-        //     function updateAxisBreak(myChart, initXY, currPoint, xPixelSpan, yPixelSpan) {
-        //         var dataXY0 = myChart.convertFromPixel({ gridIndex: 0 }, initXY);
-        //         var dataXY1 = myChart.convertFromPixel({ gridIndex: 0 }, currPoint);
-        //         function makeDataRange(v0, v1) {
-        //             var dataRange = [roundXYValue(v0), roundXYValue(v1)];
-        //             if (dataRange[0] > dataRange[1]) {
-        //                 dataRange.reverse();
-        //             }
-        //             return dataRange;
-        //         }
-        //         var xDataRange = makeDataRange(dataXY0[0], dataXY1[0]);
-        //         var yDataRange = makeDataRange(dataXY0[1], dataXY1[1]);
-        //         var xySpan = getXYAxisPixelSpan(myChart);
-        //         var xGapPercentStr = (xPixelSpan / xySpan[0]) * 100 + '%';
-        //         var yGapPercentStr = (yPixelSpan / xySpan[1]) * 100 + '%';
-        //         function makeOption(xGapPercentStr, yGapPercentStr) {
-        //             return {
-        //                 xAxis: {
-        //                     breaks: [
-        //                         {
-        //                             start: xDataRange[0],
-        //                             end: xDataRange[1],
-        //                             gap: xGapPercentStr
-        //                         }
-        //                     ]
-        //                 },
-        //                 yAxis: {
-        //                     breaks: [
-        //                         {
-        //                             start: yDataRange[0],
-        //                             end: yDataRange[1],
-        //                             gap: yGapPercentStr
-        //                         }
-        //                     ]
-        //                 }
-        //             };
-        //         }
-        //         // This is to make a transition animation effect - firstly create axis break
-        //         // on the brushed area, then collapse it to a small gap.
-        //         myChart.setOption(makeOption(xGapPercentStr, yGapPercentStr));
-        //         setTimeout(() => {
-        //             var option = makeOption('80%', '80%');
-        //             addClearButtonUpdateOption(option, true);
-        //             myChart.setOption(option);
-        //         }, 0);
-        //     }
-        //     function getXYAxisPixelSpan(myChart) {
-        //         return [
-        //             myChart.getWidth() - GRID_LEFT - GRID_RIGHT,
-        //             myChart.getHeight() - GRID_BOTTOM - GRID_TOP
-        //         ];
-        //     }
-        // } // End of initAxisBreakInteraction
-
-        // function roundXYValue(val) {
-        //     return +(+val).toFixed(Y_DATA_ROUND_PRECISION);
-        // }
-        // function generateSeriesData() {
-        //     function makeRandom(lastYVal, range, factor) {
-        //         lastYVal = lastYVal - range[0];
-        //         var delta =
-        //             (Math.random() - 0.5 * Math.sin(lastYVal / factor)) *
-        //             (range[1] - range[0]) *
-        //             0.8;
-        //         return roundXYValue(lastYVal + delta + range[0]);
-        //     }
-        //     var seriesData = [];
-        //     var DATA_COUNT = 13;
-        //     var reset1 = true;
-        //     var reset2 = true;
-        //     let yVal = 0;
-        //     for (var idx = 0; idx < DATA_COUNT; idx++) {
-        //         if (idx < DATA_COUNT / 4) {
-        //             yVal = makeRandom(yVal, [100, 10000], 50000);
-        //         } else if (idx < (2 * DATA_COUNT) / 3) {
-        //             if (reset1) {
-        //                 yVal = 110010;
-        //                 reset1 = false;
-        //             }
-        //             yVal = makeRandom(yVal, [100000, 105000], 50000);
-        //         } else {
-        //             if (reset2) {
-        //                 yVal = 300100;
-        //                 reset2 = false;
-        //             }
-        //             yVal = makeRandom(yVal, [300000, 305000], 20000);
-        //         }
-        //         seriesData.push([idx, yVal]);
-        //     }
-        //     return seriesData;
-        // }
-        // setTimeout(initAxisBreakInteraction, 0);
-
-        //option && myChart.setOption(option);
-        myChart.setOption(option);
-
+        }
+        myChart.setOption(option)
     }
-    // // 渲染柱状图
-    // function renderBarView(obj) {
-    //     const myChart = echarts.init(barRef.current)
-    //     window.onresize = () => {
-    //         myChart.resize()
-    //     }
-    //     // 绘制图表
-    //     myChart.setOption({
-    //         title: {
-    //             text: '新闻分类图示'
-    //         },
-    //         tooltip: {},
-    //         xAxis: {
-    //             data: Object.keys(obj)
-    //         },
-    //         yAxis: {
-    //             minInterval: 1
-    //         },
-    //         series: [
-    //             {
-    //                 name: '销量',
-    //                 type: 'bar',
-    //                 data: Object.values(obj).map((item) => item.length)
-    //             }
-    //         ]
-    //     })
-    // }
 
+    function renderCategoryChart(groupObj) {
+        const myChart = echarts.init(categoryChartRef.current)
+        const data = Object.entries(groupObj).map(([name, items]) => ({
+            name,
+            value: items.length
+        }))
 
-    // 渲染饼状图
+        const option = {
+            title: {
+                text: '新闻分类分布',
+                left: 'left',
+                textStyle: { fontSize: 16, fontWeight: 500 }
+            },
+            tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+            legend: { orient: 'vertical', right: 10, top: 'center' },
+            series: [
+                {
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    center: ['40%', '55%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
+                    label: { show: false },
+                    emphasis: {
+                        label: { show: true, fontSize: 14, fontWeight: 'bold' }
+                    },
+                    data
+                }
+            ]
+        }
+        myChart.setOption(option)
+    }
+
     function renderPieView() {
         const currentList = allList.filter((item) => item.author === username)
         const groupObj = _.groupBy(currentList, (item) => item.category.title)
         let list = []
         for (let i in groupObj) {
-            list.push({
-                name: i,
-                value: groupObj[i].length
-            })
+            list.push({ name: i, value: groupObj[i].length })
         }
         var myChart
         if (!pieChart) {
@@ -383,17 +184,9 @@ export default function Home() {
         }
 
         const option = {
-            title: {
-                text: '当前用户新闻分类图示',
-                left: 'center'
-            },
-            tooltip: {
-                trigger: 'item'
-            },
-            legend: {
-                orient: 'vertical',
-                left: 'left'
-            },
+            title: { text: '个人新闻分类', left: 'center' },
+            tooltip: { trigger: 'item' },
+            legend: { orient: 'vertical', left: 'left' },
             series: [
                 {
                     name: '发布数量',
@@ -410,113 +203,231 @@ export default function Home() {
                 }
             ]
         }
-
         option && myChart.setOption(option)
     }
+
+    const recentNewsColumns = [
+        {
+            title: '标题',
+            dataIndex: 'title',
+            key: 'title',
+            ellipsis: true,
+            render: (text, record) => (
+                <Link to={{ pathname: `/news-manage/preview/${record.id}` }}>{text}</Link>
+            )
+        },
+        {
+            title: '分类',
+            dataIndex: ['category', 'title'],
+            key: 'category',
+            width: 100,
+            render: (text) => <Tag color="blue">{text}</Tag>
+        },
+        {
+            title: '浏览',
+            dataIndex: 'view',
+            key: 'view',
+            width: 80,
+            render: (val) => <span style={{ color: '#1890ff' }}>{val || 0}</span>
+        }
+    ]
+
     return (
+        <div style={{ padding: '24px', backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
+            {/* 统计卡片 */}
+            <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                <Col xs={24} sm={12} lg={6}>
+                    <Card hoverable>
+                        <Statistic
+                            title="总浏览量"
+                            value={stats.totalViews}
+                            prefix={<EyeOutlined style={{ color: '#1890ff' }} />}
+                            suffix={
+                                <span style={{ fontSize: 14, color: '#52c41a' }}>
+                                    <ArrowUpOutlined /> 12%
+                                </span>
+                            }
+                        />
+                        <Progress percent={75} showInfo={false} strokeColor="#1890ff" size="small" />
+                    </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                    <Card hoverable>
+                        <Statistic
+                            title="新闻总数"
+                            value={stats.totalNews}
+                            prefix={<FileTextOutlined style={{ color: '#722ed1' }} />}
+                            suffix={
+                                <span style={{ fontSize: 14, color: '#52c41a' }}>
+                                    <ArrowUpOutlined /> 8%
+                                </span>
+                            }
+                        />
+                        <Progress percent={60} showInfo={false} strokeColor="#722ed1" size="small" />
+                    </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                    <Card hoverable>
+                        <Statistic
+                            title="总点赞数"
+                            value={stats.totalLikes}
+                            prefix={<LikeOutlined style={{ color: '#eb2f96' }} />}
+                            suffix={
+                                <span style={{ fontSize: 14, color: '#52c41a' }}>
+                                    <ArrowUpOutlined /> 15%
+                                </span>
+                            }
+                        />
+                        <Progress percent={85} showInfo={false} strokeColor="#eb2f96" size="small" />
+                    </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                    <Card hoverable>
+                        <Statistic
+                            title="用户总数"
+                            value={stats.totalUsers}
+                            prefix={<TeamOutlined style={{ color: '#13c2c2' }} />}
+                            suffix={
+                                <span style={{ fontSize: 14, color: '#ff4d4f' }}>
+                                    <ArrowDownOutlined /> 2%
+                                </span>
+                            }
+                        />
+                        <Progress percent={45} showInfo={false} strokeColor="#13c2c2" size="small" />
+                    </Card>
+                </Col>
+            </Row>
 
-        <div
-            style={{
-                width: '100%',
-                minHeight: '100vh',
-                backgroundColor: '#f5f5f5',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                padding: '40px 60px'
-            }}>
-            <Row gutter={[24, 24]} style={{ width: '100%', maxWidth: '1400px' }}>
-                {/* 左半部分：折线图和列表 */}
-                <Col span={12}>
-                    {/* 折线图 */}
-                    <Card
-                        ref={barRef}
-                        style={{ width: '100%', height: '400px', marginBottom: '24px' }}
-                    ></Card>
+            {/* 图表区域 */}
+            <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                <Col xs={24} lg={16}>
+                    <Card>
+                        <div ref={barRef} style={{ width: '100%', height: 300 }}></div>
+                    </Card>
+                </Col>
+                <Col xs={24} lg={8}>
+                    <Card>
+                        <div ref={categoryChartRef} style={{ width: '100%', height: 300 }}></div>
+                    </Card>
+                </Col>
+            </Row>
 
-                    {/* 用户最常浏览 */}
+            {/* 内容区域 */}
+            <Row gutter={[16, 16]}>
+                <Col xs={24} lg={8}>
                     <Card
-                        title="用户最常浏览"
-                        style={{ marginBottom: '24px' }}
+                        title="热门浏览"
+                        extra={<Link to="/news-manage/draft">更多</Link>}
+                        bodyStyle={{ padding: 0 }}
                     >
-                        <List
+                        <Table
                             dataSource={newsViewList}
-                            renderItem={(item) => (
-                                <List.Item>
-                                    <Link to={{ pathname: `/news-manage/preview/${item.id}` }}>{item.title}</Link>
-                                </List.Item>
-                            )}
+                            columns={recentNewsColumns}
+                            pagination={false}
+                            size="small"
+                            rowKey="id"
                         />
                     </Card>
-
-                    {/* 用户点赞最多 */}
+                </Col>
+                <Col xs={24} lg={8}>
                     <Card
-                        title="用户点赞最多"
+                        title="热门点赞"
+                        extra={<Link to="/news-manage/draft">更多</Link>}
+                        bodyStyle={{ padding: 0 }}
                     >
                         <List
                             dataSource={newsStarList}
-                            renderItem={(item) => (
-                                <List.Item>
-                                    <Link to={{ pathname: `/news-manage/preview/${item.id}` }}>{item.title}</Link>
+                            size="small"
+                            renderItem={(item, index) => (
+                                <List.Item style={{ padding: '8px 16px' }}>
+                                    <span
+                                        style={{
+                                            display: 'inline-block',
+                                            width: 20,
+                                            height: 20,
+                                            lineHeight: '20px',
+                                            textAlign: 'center',
+                                            borderRadius: '50%',
+                                            backgroundColor: index < 3 ? '#1890ff' : '#f0f0f0',
+                                            color: index < 3 ? '#fff' : '#666',
+                                            marginRight: 8,
+                                            fontSize: 12
+                                        }}
+                                    >
+                                        {index + 1}
+                                    </span>
+                                    <Link
+                                        to={{ pathname: `/news-manage/preview/${item.id}` }}
+                                        style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                    >
+                                        {item.title}
+                                    </Link>
+                                    <LikeOutlined style={{ color: '#eb2f96', marginLeft: 8 }} />
+                                    <span style={{ marginLeft: 4, color: '#999' }}>{item.star || 0}</span>
                                 </List.Item>
                             )}
                         />
                     </Card>
                 </Col>
-
-                {/* 右半部分：用户卡片 */}
-                <Col span={12} style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
-                    <Card
-                        style={{ width: '360px' }}
-                        cover={
-                            <img
-                                alt="example"
-                                src="https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png"
-                                style={{ height: '200px', objectFit: 'cover' }}
-                            />
-                        }
-                        actions={[
-                            <SettingOutlined
-                                key="setting"
+                <Col xs={24} lg={8}>
+                    <Card>
+                        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                            <Avatar size={80} icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
+                            <h3 style={{ marginTop: 12, marginBottom: 4 }}>{username}</h3>
+                            <p style={{ color: '#999', margin: 0 }}>
+                                {region ? region : '全球'} · {roleName}
+                            </p>
+                        </div>
+                        <Row gutter={16} style={{ textAlign: 'center', borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
+                            <Col span={8}>
+                                <Statistic
+                                    title="我的新闻"
+                                    value={allList.filter((item) => item.author === username).length}
+                                    valueStyle={{ fontSize: 20 }}
+                                />
+                            </Col>
+                            <Col span={8}>
+                                <Statistic
+                                    title="我的浏览"
+                                    value={allList
+                                        .filter((item) => item.author === username)
+                                        .reduce((sum, item) => sum + (item.view || 0), 0)}
+                                    valueStyle={{ fontSize: 20 }}
+                                />
+                            </Col>
+                            <Col span={8}>
+                                <Statistic
+                                    title="我的点赞"
+                                    value={allList
+                                        .filter((item) => item.author === username)
+                                        .reduce((sum, item) => sum + (item.star || 0), 0)}
+                                    valueStyle={{ fontSize: 20 }}
+                                />
+                            </Col>
+                        </Row>
+                        <div style={{ marginTop: 16, textAlign: 'center' }}>
+                            <a
                                 onClick={() => {
                                     setOpen(true)
-                                    setTimeout(() => {
-                                        renderPieView()
-                                    }, 0)
+                                    setTimeout(() => renderPieView(), 0)
                                 }}
-                            />,
-                            <EditOutlined key="edit" />,
-                            <EllipsisOutlined key="ellipsis" />
-                        ]}
-                    >
-                        <Meta
-                            avatar={<Avatar icon={<UserOutlined />} />}
-                            title={username}
-                            description={
-                                <div>
-                                    <b>{region ? region : '全球'}</b>
-                                    <span style={{ marginLeft: '15px' }}>{roleName}</span>
-                                </div>
-                            }
-                        />
+                            >
+                                查看个人数据分析 →
+                            </a>
+                        </div>
                     </Card>
                 </Col>
             </Row>
 
             <Drawer
-                width="550px"
-                height="400px"
+                width="500px"
                 title="个人新闻数据分析"
                 placement="right"
                 onClose={() => setOpen(false)}
                 open={open}
             >
-                <div
-                    ref={pieRef}
-                    style={{ width: '100%', height: '400px' }}
-                ></div>
+                <div ref={pieRef} style={{ width: '100%', height: '400px' }}></div>
             </Drawer>
-
         </div>
     )
 }
