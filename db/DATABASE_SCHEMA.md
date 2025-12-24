@@ -13,6 +13,74 @@
 
 ---
 
+## 后端架构
+
+### Express + json-server 中间件方案
+
+后端使用 Express 作为主框架，将 json-server 作为中间件集成，实现：
+- 自定义路由（JWT 认证）优先处理
+- json-server 处理数据 CRUD 和查询语法
+
+### 服务器入口
+
+```javascript
+// server/index.cjs
+const express = require('express')
+const jsonServer = require('json-server')
+
+const app = express()
+
+// 1. 自定义路由优先
+app.use('/api/auth', authRoutes)    // JWT 登录/注册
+app.use('/api/users', usersRoutes)  // 用户管理 (需认证)
+
+// 2. json-server 中间件
+const router = jsonServer.router(mergedData)
+app.use(router)
+```
+
+### 数据合并与分离写入
+
+启动时将 `db.json` 和 `news.json` 合并到内存，写入时自动分离保存：
+
+```javascript
+// 合并数据
+const mergedData = { ...dbData, news: newsData }
+
+// 自定义写入逻辑
+router.db._.mixin({
+  write: function() {
+    const { news, ...rest } = router.db.getState()
+    fs.writeFileSync(newsPath, JSON.stringify(news, null, 2))
+    fs.writeFileSync(dbPath, JSON.stringify(rest, null, 2))
+  }
+})
+```
+
+### API 路由分配
+
+| 路由 | 处理方 | 说明 |
+|------|--------|------|
+| `POST /api/auth/login` | Express | JWT 登录 |
+| `POST /api/auth/register` | Express | 用户注册 |
+| `GET /api/users` | Express | 用户列表 (需认证) |
+| `/news` | json-server | 新闻 CRUD + 查询 |
+| `/roles` | json-server | 角色管理 |
+| `/rights` | json-server | 权限管理 |
+| `/categories` | json-server | 分类管理 |
+| `/regions` | json-server | 地区管理 |
+| `/children` | json-server | 子权限管理 |
+
+### 启动命令
+
+```bash
+npm start          # 前端 + 后端
+npm run server     # 只启动后端
+npm run server:watch  # 后端 (热重载)
+```
+
+---
+
 ## 数据表结构
 
 ### 1. users（用户表）
@@ -25,7 +93,7 @@
 |--------|------|------|------|--------|
 | `id` | Number | ✅ | 用户唯一标识 | `1` |
 | `username` | String | ✅ | 用户名（登录名） | `"admin"` |
-| `password` | String | ✅ | 密码（明文存储） | `"123456"` |
+| `password` | String | ✅ | 密码（bcrypt 加密） | `"$2a$10$..."` |
 | `roleState` | Boolean | ✅ | 角色状态（是否启用） | `true` |
 | `default` | Boolean | ✅ | 是否为默认用户 | `true` |
 | `roleId` | Number | ✅ | 关联角色ID（外键） | `1` |
@@ -37,7 +105,7 @@
 {
   "id": 1,
   "username": "admin",
-  "password": "123456",
+  "password": "$2a$10$hashedPasswordExample",
   "roleState": true,
   "default": true,
   "roleId": 1,
@@ -399,11 +467,12 @@ GET /news?categoryId=1&publishState=2
 - ✅ `password` 字段：已统一为 String 类型
 - ✅ `categoryId` 字段：已统一为 Number 类型
 
-### 2. 安全问题
+### 2. 安全机制
 
-- ⚠️ 密码明文存储，生产环境需要加密
-- ⚠️ 无用户 token 验证机制
+- ✅ JWT 认证已实现（`/api/auth/login` 返回 token）
+- ✅ 密码使用 bcryptjs 加密存储
 - ⚠️ 缺少请求频率限制
+- ⚠️ 部分旧数据密码仍为明文（可运行 `npm run hash-passwords` 迁移）
 
 ### 3. 数据完整性
 
@@ -417,11 +486,12 @@ GET /news?categoryId=1&publishState=2
 
 | 日期 | 版本 | 更新内容 |
 |------|------|---------|
+| 2025-12-24 | 1.2.0 | 后端重构为 Express + json-server 中间件方案，添加 JWT 认证 |
 | 2025-11-25 | 1.1.0 | 统一数据类型：password → String, categoryId → Number |
 | 2025-11-25 | 1.0.0 | 初始版本，完整记录数据库结构 |
 
 ---
 
-**文档生成时间**: 2025-11-25
+**文档生成时间**: 2025-12-24
 **项目**: NewsSystemPro
 **作者**: Claude Code
