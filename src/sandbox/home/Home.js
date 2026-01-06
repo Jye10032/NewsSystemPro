@@ -206,6 +206,9 @@ export default function Home() {
         option && myChart.setOption(option)
     }
 
+    const colorMap = ['blue', 'green', 'orange', 'red', 'purple', 'cyan']
+    const hotColors = ['#ff4d4f', '#ff7a45', '#ffa940']
+
     const recentNewsColumns = [
         {
             title: '标题',
@@ -221,7 +224,11 @@ export default function Home() {
             dataIndex: ['category', 'title'],
             key: 'category',
             width: 100,
-            render: (text) => <Tag color="blue">{text}</Tag>
+            render: (text, record) => (
+                <Tag color={colorMap[(record.categoryId - 1) % colorMap.length]} bordered={false}>
+                    {text}
+                </Tag>
+            )
         },
         {
             title: '浏览',
@@ -234,6 +241,62 @@ export default function Home() {
 
     return (
         <div style={{ padding: '24px', backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
+            {/* 用户卡片 - 横版布局 */}
+            <Card style={{ marginBottom: 24 }}>
+                <Row align="middle" gutter={24}>
+                    <Col>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <Avatar size={48} icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
+                            <div style={{ marginLeft: 12 }}>
+                                <h3 style={{ margin: 0, fontSize: 16 }}>{username}</h3>
+                                <p style={{ color: '#999', margin: 0, fontSize: 13 }}>
+                                    {region ? region : '全球'} · {roleName}
+                                </p>
+                            </div>
+                        </div>
+                    </Col>
+                    <Col flex="auto">
+                        <Row gutter={32} justify="center">
+                            <Col>
+                                <Statistic
+                                    title="我的新闻"
+                                    value={allList.filter((item) => item.author === username).length}
+                                    valueStyle={{ fontSize: 20 }}
+                                />
+                            </Col>
+                            <Col>
+                                <Statistic
+                                    title="我的浏览"
+                                    value={allList
+                                        .filter((item) => item.author === username)
+                                        .reduce((sum, item) => sum + (item.view || 0), 0)}
+                                    valueStyle={{ fontSize: 20 }}
+                                />
+                            </Col>
+                            <Col>
+                                <Statistic
+                                    title="我的点赞"
+                                    value={allList
+                                        .filter((item) => item.author === username)
+                                        .reduce((sum, item) => sum + (item.star || 0), 0)}
+                                    valueStyle={{ fontSize: 20 }}
+                                />
+                            </Col>
+                        </Row>
+                    </Col>
+                    <Col>
+                        <a
+                            onClick={() => {
+                                setOpen(true)
+                                setTimeout(() => renderPieView(), 0)
+                            }}
+                        >
+                            查看个人数据分析 →
+                        </a>
+                    </Col>
+                </Row>
+            </Card>
+
             {/* 统计卡片 */}
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                 <Col xs={24} sm={12} lg={6}>
@@ -314,7 +377,7 @@ export default function Home() {
 
             {/* 内容区域 */}
             <Row gutter={[16, 16]}>
-                <Col xs={24} lg={8}>
+                <Col xs={24} lg={12}>
                     <Card
                         title="热门浏览"
                         extra={<Link to="/news-manage/draft">更多</Link>}
@@ -329,7 +392,7 @@ export default function Home() {
                         />
                     </Card>
                 </Col>
-                <Col xs={24} lg={8}>
+                <Col xs={24} lg={12}>
                     <Card
                         title="热门点赞"
                         extra={<Link to="/news-manage/draft">更多</Link>}
@@ -348,7 +411,7 @@ export default function Home() {
                                             lineHeight: '20px',
                                             textAlign: 'center',
                                             borderRadius: '50%',
-                                            backgroundColor: index < 3 ? '#1890ff' : '#f0f0f0',
+                                            backgroundColor: index < 3 ? hotColors[index] : '#f0f0f0',
                                             color: index < 3 ? '#fff' : '#666',
                                             marginRight: 8,
                                             fontSize: 12
@@ -367,54 +430,6 @@ export default function Home() {
                                 </List.Item>
                             )}
                         />
-                    </Card>
-                </Col>
-                <Col xs={24} lg={8}>
-                    <Card>
-                        <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                            <Avatar size={80} icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
-                            <h3 style={{ marginTop: 12, marginBottom: 4 }}>{username}</h3>
-                            <p style={{ color: '#999', margin: 0 }}>
-                                {region ? region : '全球'} · {roleName}
-                            </p>
-                        </div>
-                        <Row gutter={16} style={{ textAlign: 'center', borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
-                            <Col span={8}>
-                                <Statistic
-                                    title="我的新闻"
-                                    value={allList.filter((item) => item.author === username).length}
-                                    valueStyle={{ fontSize: 20 }}
-                                />
-                            </Col>
-                            <Col span={8}>
-                                <Statistic
-                                    title="我的浏览"
-                                    value={allList
-                                        .filter((item) => item.author === username)
-                                        .reduce((sum, item) => sum + (item.view || 0), 0)}
-                                    valueStyle={{ fontSize: 20 }}
-                                />
-                            </Col>
-                            <Col span={8}>
-                                <Statistic
-                                    title="我的点赞"
-                                    value={allList
-                                        .filter((item) => item.author === username)
-                                        .reduce((sum, item) => sum + (item.star || 0), 0)}
-                                    valueStyle={{ fontSize: 20 }}
-                                />
-                            </Col>
-                        </Row>
-                        <div style={{ marginTop: 16, textAlign: 'center' }}>
-                            <a
-                                onClick={() => {
-                                    setOpen(true)
-                                    setTimeout(() => renderPieView(), 0)
-                                }}
-                            >
-                                查看个人数据分析 →
-                            </a>
-                        </div>
                     </Card>
                 </Col>
             </Row>
