@@ -1,3 +1,43 @@
-.hidden {
-  display: none;
+.editorPage {
+  background: #fff;
+  min-height: calc(100vh - 120px);
+  padding: 0;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 10;
+}
+
+.titleInput {
+  border: none;
+  font-size: 28px;
+  font-weight: 600;
+  padding: 24px;
+  margin: 0;
+
+  &:focus {
+    box-shadow: none;
+  }
+
+  &::placeholder {
+    color: #bfbfbf;
+  }
+
+  // 字数统计样式
+  :global(.ant-input-suffix) {
+    color: #999;
+    font-size: 12px;
+  }
+}
+
+.editorWrapper {
+  padding: 0 24px 24px;
 }
