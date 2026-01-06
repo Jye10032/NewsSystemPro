@@ -41,7 +41,7 @@
     "@ant-design/compatible": "^5.1.1",
     "@ant-design/pro-layout": "^7.6.1",
     "antd": "^5.1.7",
-    "axios": "^1.7.7",
+    "axios": "1.7.7",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "draft-js": "^0.11.7",
