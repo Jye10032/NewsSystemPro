@@ -1,17 +1,19 @@
 import style from './NewsAdd.module.scss'
 import NewsEditor from '../../news-mange/NewsEditor'
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button, Input, Select, message, notification, Space } from 'antd'
 import { SaveOutlined, SendOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
-export default function NewsAdd(props) {
+export default function NewsAdd() {
   const [title, setTitle] = useState('')
   const [categoryId, setCategoryId] = useState(undefined)
   const [content, setContent] = useState('')
   const [categoryList, setCategoryList] = useState([])
   const [saving, setSaving] = useState(false)
   const userInfo = JSON.parse(localStorage.getItem('token'))
+  const navigate = useNavigate()
 
   useEffect(() => {
     axios.get('/categories').then((res) => setCategoryList(res.data))
@@ -52,7 +54,7 @@ export default function NewsAdd(props) {
       })
       .then(
         (res) => {
-          props.history.push(auditState === 0 ? '/news-manage/draft' : '/audit-manage/list')
+          navigate(auditState === 0 ? '/news-manage/draft' : '/audit-manage/list')
           notification.info({
             message: '提示',
             description: `您可以到${auditState === 0 ? '草稿箱' : '审核列表'}中查看您的新闻`,
