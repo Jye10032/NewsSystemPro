@@ -86,6 +86,8 @@ const iconList = {
 export default function SideMenu() {
 
     const [meun, setMeun] = useState([])
+
+    // 获取用户可查看到的网页
     useEffect(() => {
         axios.get("/rights?_embed=children").then(res => {
             console.log(res.data)
@@ -129,6 +131,7 @@ export default function SideMenu() {
     }
 
     const [collapsed, setCollapsed] = React.useState(false)
+    const [hovered, setHovered] = React.useState(false)  // 鼠标悬停状态
     const {
         token: { colorBgContainer },
     } = theme.useToken();
@@ -136,6 +139,9 @@ export default function SideMenu() {
     const isCollapsible = useSelector(state => state.collapsible);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    // 实际显示的收缩状态：收缩且未悬停时才收缩
+    const showCollapsed = isCollapsible && !hovered
 
     // 切换侧边栏折叠状态
     const toggleCollapsed = () => {
@@ -145,20 +151,34 @@ export default function SideMenu() {
 
     //跳转路径
     const nav = useNavigate();
-    //console.log(useLocation().pathname)
+    const location = useLocation()
 
-    //选中的key
-    const selectKeys = [useLocation().pathname]
+    //选中的key - 同时包含当前路径和父级路径
+    const parentKey = "/" + location.pathname.split("/")[1]
+    const selectKeys = [location.pathname, parentKey]
 
-    //展开列表的key
-    const openKeys = ["/" + useLocation().pathname.split("/")[1]]
+    //展开列表的key - 初始值根据当前路径计算
+    const [openKeys, setOpenKeys] = useState([parentKey])
+
+    // 处理菜单展开/收起
+    const handleOpenChange = (keys) => {
+        setOpenKeys(keys)
+    }
 
     // const onClick = (menu) => {
     //     nav(menu.key)
     //     getItem(menu)
     // };
     return (
-        <Sider trigger={null} collapsible collapsed={isCollapsible} theme="light">
+        <Sider
+            trigger={null}
+            collapsible
+            collapsed={showCollapsed}
+            theme="light"
+            onMouseEnter={() => isCollapsible && setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            style={{ transition: 'all 0.2s' }}
+        >
             <div style={{/*设置范围 滚动条*/ display: "flex", height: "100%", flexDirection: "column" }}>
 
                 {/* <div className="demo-logo-vertical" >{isCollapsible ? 'News' : '新闻发布管理系统'}</div> */}
@@ -178,11 +198,12 @@ export default function SideMenu() {
                 </div>
                 <div style={{ flex: 1, "overflow": "auto" }}>
                     <Menu
-                        //onClick={onClick}
+                        key={meun.length}
                         theme="light"
                         mode="inline"
-                        defaultSelectedKeys={selectKeys}
-                        defaultOpenKeys={openKeys}>
+                        selectedKeys={selectKeys}
+                        openKeys={showCollapsed ? [] : openKeys}
+                        onOpenChange={handleOpenChange}>
                         {renderMenu(meun)}
                     </Menu>
                 </div>
