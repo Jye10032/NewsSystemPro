@@ -38,8 +38,8 @@
   },
   "homepage": "https://github.com/Jye10032/NewsSystemPro#readme",
   "dependencies": {
-    "@ant-design/compatible": "^5.1.1",
-    "@ant-design/pro-layout": "^7.6.1",
+    "@ant-design/compatible": "5.1.3",
+    "@ant-design/pro-layout": "7.17.16",
     "antd": "5.12.8",
     "axios": "1.7.7",
     "bcryptjs": "^3.0.3",
