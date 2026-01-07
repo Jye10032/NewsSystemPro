@@ -45,9 +45,6 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: Copy docs to dist
-        run: cp -r docs dist/docs
-
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
