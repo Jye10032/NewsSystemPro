@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import CollapsedReducer from './CollapsedReducer';
+import CollapsedReducer from '../../redux/reducers/CollapsedReducer';
 
 describe('CollapsedReducer', () => {
   // 测试初始状态

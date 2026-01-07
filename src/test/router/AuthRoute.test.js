@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import AuthRoute from './AuthRoute'
+import AuthRoute from '../../router/AuthRoute'
 
 describe('AuthRoute 路由守卫', () => {
   beforeEach(() => {

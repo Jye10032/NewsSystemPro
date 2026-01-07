@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import LoadingReducer from './LoadingReducer';
+import LoadingReducer from '../../redux/reducers/LoadingReducer';
 
 describe('LoadingReducer', () => {
   // 测试初始状态

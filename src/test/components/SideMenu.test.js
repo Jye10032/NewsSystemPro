@@ -5,13 +5,13 @@ import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import { createStore } from 'redux'
 import axios from 'axios'
-import SideMenu from './SideMenu'
+import SideMenu from '../../sandbox/SideMenu'
 
 // Mock axios
 vi.mock('axios')
 
 // Mock CSS import
-vi.mock('./index.css', () => ({}))
+vi.mock('../../sandbox/index.css', () => ({}))
 
 // 创建测试用的 Redux store
 function createTestReducer(initialState = { collapsible: false }) {

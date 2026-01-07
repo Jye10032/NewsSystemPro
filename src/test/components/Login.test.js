@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { legacy_createStore as createStore, combineReducers } from 'redux';
-import Login from './Login';
+import Login from '../../login/Login';
 import axios from 'axios';
 
 // Mock axios

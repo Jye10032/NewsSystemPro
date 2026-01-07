@@ -54,5 +54,5 @@ claude.md
 test-axios-global.html
 
 !DATABASE_SCHEMA.md
-!diary/*.md
+!doc/*.md
 .mcp.json

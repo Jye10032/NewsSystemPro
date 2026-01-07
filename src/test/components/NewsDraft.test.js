@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import axios from 'axios'
 import { message, notification } from 'antd'
-import NewsDraft from './NewsDraft'
+import NewsDraft from '../../sandbox/news-mange/NewsDraft'
 
 // Mock dependencies
 vi.mock('axios')

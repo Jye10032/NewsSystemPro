@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import axios from 'axios'
 
 // Mock Redux store - 使用工厂函数
-vi.mock('../redux/store', () => {
+vi.mock('../../redux/store', () => {
   const mockDispatch = vi.fn()
   return {
     store: {
@@ -14,8 +14,8 @@ vi.mock('../redux/store', () => {
 })
 
 // 导入 Request 来触发拦截器的设置
-import '../utils/Request'
-import { __mockDispatch as mockDispatch } from '../redux/store'
+import '../../utils/Request'
+import { __mockDispatch as mockDispatch } from '../../redux/store'
 
 describe('Axios 拦截器', () => {
   beforeEach(() => {

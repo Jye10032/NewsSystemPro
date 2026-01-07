@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import NewsEditor from './NewsEditor'
+import NewsEditor from '../../news-mange/NewsEditor'
 
 // Mock react-draft-wysiwyg Editor
 vi.mock('react-draft-wysiwyg', () => ({

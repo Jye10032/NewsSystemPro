@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import axios from 'axios'
 import { message, notification } from 'antd'
-import usePublish from './usePublish'
+import usePublish from '../../publish-manage/usePublish'
 
 // Mock dependencies
 vi.mock('axios')

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { createStore } from 'redux'
-import TopHead from './TopHead'
+import TopHead from '../../sandbox/TopHead'
 
 import { combineReducers } from 'redux'
 
