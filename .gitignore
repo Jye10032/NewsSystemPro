@@ -48,11 +48,10 @@ playwright-report/
 
 # 
 TESTING_GUIDE.md
-docs/
 claude.md
 *.md
 test-axios-global.html
 
 !DATABASE_SCHEMA.md
-!doc/*.md
+!docs/*.md
 .mcp.json

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button } from 'antd'
-import NewsPublish from '../../publish-manage/NewsPublish'
-import usePublish from '../../publish-manage/usePublish'
+import NewsPublish from '../components/NewsPublish'
+import usePublish from '../hooks/usePublish'
 
 export default function Sunset() {
   const { newsList, confirmMethod } = usePublish(3)

@@ -1,18 +1,18 @@
-import Home from './home/Home'
-import RightList from './right-manage/RightList'
-import RoleList from './right-manage/RoleList'
-import UserList from './user-manage/UserList'
-import Nopermission from './nopermission/Nopermission'
-import Audit from './audit-mange/Audit'
-import AuditList from './audit-mange/AuditList'
-import NewAdd from './news-mange/NewsAdd'
-import NewsCategory from './news-mange/NewsCategory'
-import NewsDraft from './news-mange/NewsDraft'
-import NewsPreivew from './news-mange/NewsPreivew'
-import NewsUpdate from './news-mange/NewsUpdate'
-import Published from './publish-mange/Published'
-import Unpublished from './publish-mange/Unpublished'
-import Sunset from './publish-mange/Sunset'
+import Home from '../sandbox/home/Home'
+import RightList from '../sandbox/right-manage/RightList'
+import RoleList from '../sandbox/right-manage/RoleList'
+import UserList from '../sandbox/user-manage/UserList'
+import Nopermission from '../sandbox/nopermission/Nopermission'
+import Audit from '../sandbox/audit-manage/Audit'
+import AuditList from '../sandbox/audit-manage/AuditList'
+import NewAdd from '../modules/news/pages/NewsAdd'
+import NewsCategory from '../modules/news/pages/NewsCategory'
+import NewsDraft from '../modules/news/pages/NewsDraft'
+import NewsPreivew from '../modules/news/pages/NewsPreivew'
+import NewsUpdate from '../modules/news/pages/NewsUpdate'
+import Published from '../modules/publish/pages/Published'
+import Unpublished from '../modules/publish/pages/Unpublished'
+import Sunset from '../modules/publish/pages/Sunset'
 import React, { useEffect, useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { Spin } from 'antd'
@@ -69,7 +69,7 @@ function NewsRouter(props) {
         <Spin
             size="large"
             tip="加载中..."
-            spinning={props.isLoding}
+            spinning={props.isLoading}
         >
             <Routes>
                 {backRouteList.map((item) => {
@@ -104,5 +104,5 @@ function NewsRouter(props) {
 }
 
 export default connect((state) => ({
-    isLoding: state.isLoding
+    isLoading: state.isLoading
 }))(NewsRouter)

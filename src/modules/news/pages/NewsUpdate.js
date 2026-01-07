@@ -1,12 +1,14 @@
 import style from './NewsAdd.module.scss'
-import NewsEditor from '../../news-mange/NewsEditor'
-import React, { useState, useEffect, useRef, useParams } from 'react'
+import NewsEditor from '../components/NewsEditor'
+import React, { useState, useEffect, useRef } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '@ant-design/pro-layout'
 import { Steps, Button, Form, Input, Select, message, notification } from 'antd'
 import axios from 'axios'
 const { Option } = Select
 
-export default function NewsUpdate(props) {
+export default function NewsUpdate() {
+  const navigate = useNavigate()
   const [current, setCurrent] = useState(0)
   const [content, setContent] = useState('')
   const [formInfo, setFormInfo] = useState({})
@@ -57,7 +59,7 @@ export default function NewsUpdate(props) {
       })
       .then(
         (res) => {
-          props.history.push(auditState === 0 ? '/news-manage/draft' : '/audit-manage/list')
+          navigate(auditState === 0 ? '/news-manage/draft' : '/audit-manage/list')
           notification.info({
             message: '提示',
             description: `您可以到${auditState === 0 ? '草稿箱' : '审核列表'}中查看您的新闻`,

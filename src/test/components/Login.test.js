@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { legacy_createStore as createStore, combineReducers } from 'redux';
-import Login from '../../login/Login';
+import Login from '../../modules/login/Login';
 import axios from 'axios';
 
 // Mock axios
@@ -24,7 +24,7 @@ const createTestStore = () => {
       return state;
     },
     collapsible: (state = false) => state,
-    isLoding: (state = false) => state,
+    isLoading: (state = false) => state,
   });
   return createStore(rootReducer);
 };

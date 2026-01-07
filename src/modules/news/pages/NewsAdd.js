@@ -1,5 +1,5 @@
 import style from './NewsAdd.module.scss'
-import NewsEditor from '../../news-mange/NewsEditor'
+import NewsEditor from '../components/NewsEditor'
 import React, { useState, useEffect } from 'react'
 import { Button, Input, Select, message, notification, Space } from 'antd'
 import { SaveOutlined, SendOutlined } from '@ant-design/icons'

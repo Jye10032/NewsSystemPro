@@ -22,7 +22,7 @@ export interface User {
 // Redux State
 export interface RootState {
   collapsible: boolean
-  isLoding: boolean
+  isLoading: boolean
   user: User | null
 }
 

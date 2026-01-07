@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Table, Button, notification, Modal, message } from 'antd'
 import axios from 'axios'
 import { EditOutlined, DeleteOutlined, VerticalAlignTopOutlined, ExclamationCircleFilled } from '@ant-design/icons'
-import '../../styles/TableStyles.css'
+import '../../../styles/TableStyles.css'
 const { confirm } = Modal
 
-export default function NewsDraft(props) {
+export default function NewsDraft() {
+  const navigate = useNavigate()
   const [newsList, setNewsList] = useState([])
   const [categoryList, setCategoryList] = useState([])
   const { username } = JSON.parse(localStorage.getItem('token'))
@@ -23,7 +24,7 @@ export default function NewsDraft(props) {
         auditState: 1
       })
       .then((res) => {
-        props.history.push('/audit-manage/list')
+        navigate('/audit-manage/list')
         notification.info({
           message: '通知',
           description: '您可以到审核列表中查看该新闻',

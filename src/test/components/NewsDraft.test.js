@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import axios from 'axios'
 import { message, notification } from 'antd'
-import NewsDraft from '../../sandbox/news-mange/NewsDraft'
+import NewsDraft from '../../modules/news/pages/NewsDraft'
 
 // Mock dependencies
 vi.mock('axios')
@@ -25,7 +25,7 @@ vi.mock('antd', async () => {
     }
   }
 })
-vi.mock('../../styles/TableStyles.css', () => ({}))
+vi.mock('../../../styles/TableStyles.css', () => ({}))
 
 describe('NewsDraft 草稿箱组件', () => {
   const mockUsername = 'testuser'

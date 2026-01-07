@@ -3,19 +3,19 @@ import { persistStore, persistReducer } from 'redux-persist';
 import { thunk } from 'redux-thunk';
 import storage from 'redux-persist/lib/storage'
 import collapsible from './reducers/CollapsedReducer'
-import isLoding from './reducers/LoadingReducer'
+import isLoading from './reducers/LoadingReducer'
 import user from './reducers/UserReducer'
 //import { configureStore } from '@reduxjs/toolkit';
 
 const persistConfig = {
   key: 'root',
   storage,
-  blacklist: ['isLoding']
+  blacklist: ['isLoading']
 }
 
 const AllReducers = combineReducers({
   collapsible,
-  isLoding,
+  isLoading,
   user
 })
 

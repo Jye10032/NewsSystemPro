@@ -1,9 +1,9 @@
 import React from 'react'
 import { Route, Routes } from 'react-router-dom'
-import Login from '../login/Login'
+import Login from '../modules/login/Login'
 import NewsSandBox from '../sandbox/NewsSandBox'
-import Detail from '../sandbox/news/Detail'
-import News from '../sandbox/news/News'
+import Detail from '../modules/visitor/pages/Detail'
+import News from '../modules/visitor/pages/News'
 import AuthRoute from './AuthRoute'
 
 /**

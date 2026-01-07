@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import './Login.css'
 import axios from 'axios'
-import { User } from '../types'
+import { User } from '../../types'
 
 interface LoginForm {
     username: string

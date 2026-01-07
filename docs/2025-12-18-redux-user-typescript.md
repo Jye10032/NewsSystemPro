@@ -51,7 +51,7 @@ export interface User {
 // Redux State
 export interface RootState {
   collapsible: boolean
-  isLoding: boolean
+  isLoading: boolean
   user: User | null
 }
 
@@ -94,7 +94,7 @@ import user from './reducers/UserReducer'
 
 const AllReducers = combineReducers({
   collapsible,
-  isLoding,
+  isLoading,
   user  // 新增
 })
 ```

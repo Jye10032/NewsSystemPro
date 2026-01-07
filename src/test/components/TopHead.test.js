@@ -15,7 +15,7 @@ function createTestStore(userInfo = null) {
       if (action.type === 'change_collapsed') return !state
       return state
     },
-    isLoding: (state = false) => state,
+    isLoading: (state = false) => state,
     user: (state = userInfo, action) => {
       if (action.type === 'set_user') return action.payload
       if (action.type === 'clear_user') return null

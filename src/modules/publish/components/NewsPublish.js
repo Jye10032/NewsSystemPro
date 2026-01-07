@@ -1,7 +1,7 @@
 import React from 'react'
 import { Table } from 'antd'
 import { Link } from 'react-router-dom'
-import '../styles/TableStyles.css'
+import '../../../styles/TableStyles.css'
 
 export default function NewsPublish(props) {
   // table表格要渲染的数据
