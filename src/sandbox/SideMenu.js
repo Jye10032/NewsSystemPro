@@ -6,12 +6,9 @@ import { useSelector, useDispatch } from 'react-redux'
 import {
     HomeOutlined,
     UserOutlined,
-    CrownOutlined,
     ContainerOutlined,
     AuditOutlined,
-    ExceptionOutlined,
-    VideoCameraOutlined,
-    UploadOutlined
+    ExceptionOutlined
 } from '@ant-design/icons'
 import './index.css'
 import axios from 'axios'
@@ -77,11 +74,11 @@ const { Sider } = Layout
  */
 const iconList = {
     '/home': <HomeOutlined />,
-    '/user-manage': <UserOutlined />,
-    '/right-manage': <CrownOutlined />,
     '/news-manage': <ContainerOutlined />,
     '/audit-manage': <AuditOutlined />,
-    '/publish-manage': <ExceptionOutlined />
+    '/publish-manage': <ExceptionOutlined />,
+    '/system-manage': <SettingOutlined />,
+    '/user-manage': <UserOutlined />
 }
 export default function SideMenu() {
 
@@ -89,7 +86,7 @@ export default function SideMenu() {
 
     // 获取用户可查看到的网页
     useEffect(() => {
-        axios.get("/rights?_embed=children").then(res => {
+        axios.get("/rights").then(res => {
             console.log(res.data)
             setMeun(res.data)
         })

@@ -7,10 +7,11 @@ import isLoading from './reducers/LoadingReducer'
 import user from './reducers/UserReducer'
 //import { configureStore } from '@reduxjs/toolkit';
 
+
 const persistConfig = {
-  key: 'root',
-  storage,
-  blacklist: ['isLoading']
+  key: 'root',           // localStorage 的 key 名称
+  storage,               // 存储引擎（localStorage）
+  blacklist: ['isLoading'] // 不持久化的状态
 }
 
 const AllReducers = combineReducers({

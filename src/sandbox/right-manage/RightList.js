@@ -11,10 +11,10 @@ export default function RightList() {
     const [dataSource, setdataSource] = useState([])
 
     useEffect(() => {
-        axios.get("/rights?_embed=children").then(res => {
+        axios.get("/rights").then(res => {
             const list = res.data
             list.forEach(item => {
-                if (item.children.length === 0) {
+                if (!item.children || item.children.length === 0) {
                     item.children = ""
                 }
             })
@@ -28,17 +28,33 @@ export default function RightList() {
 
 
     const columns = [
-        {
-            title: 'ID',
-            dataIndex: 'id',
-            //key: 'name',
-            render: (id) => {
-                return <b>{id}</b>
-            }
-        },
+        // {
+        //     title: 'ID',
+        //     dataIndex: 'id',
+        //     //key: 'name',
+        //     render: (id) => {
+        //         return <b>{id}</b>
+        //     }
+        // },
         {
             title: '权限名称',
             dataIndex: 'title',
+            render: (title, record) => {
+                const isEnabled = record.pagepermisson === 1
+                return (
+                    <span>
+                        <span style={{
+                            display: 'inline-block',
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            backgroundColor: isEnabled ? '#1890ff' : '#d9d9d9',
+                            marginRight: 8
+                        }} />
+                        <span style={{ color: isEnabled ? 'inherit' : '#999' }}>{title}</span>
+                    </span>
+                )
+            }
         },
         {
             title: '权限路径',
@@ -70,17 +86,23 @@ export default function RightList() {
     const switchMethod = (item) => {
         item.pagepermisson = Number(!item.pagepermisson)
         setdataSource([...dataSource])
-        //console.log(item)
-        if (item.grade === 1) {
+
+        // 通过路径层级判断：一级菜单只有一层路径
+        const isTopLevel = item.key.split('/').filter(Boolean).length === 1
+
+        if (isTopLevel) {
             axios.patch(`/rights/${item.id}`, {
                 pagepermisson: item.pagepermisson
-                //console.log(res.data)
             })
         } else {
-            axios.patch(`/children/${item.id}`, {
-                pagepermisson: item.pagepermisson
-                //console.log(res.data)
-            })
+            // 二级菜单：找到父级，更新整个 rights 项
+            const parentKey = '/' + item.key.split('/').filter(Boolean)[0]
+            const parent = dataSource.find(d => d.key === parentKey)
+            if (parent) {
+                axios.patch(`/rights/${parent.id}`, {
+                    children: parent.children
+                })
+            }
         }
     }
 
@@ -102,39 +124,32 @@ export default function RightList() {
 
 
     //删除
-    const deleteMethod = (item) => {//实现当前页面同步状态+后端同步删除
-        //console.log("delete")
-        if (item.grade === 1) {//如果是一级，直接删除
+    const deleteMethod = (item) => {
+        // 通过路径层级判断
+        const isTopLevel = item.key.split('/').filter(Boolean).length === 1
 
-            //遍历data，找到id相同的项，删除
+        if (isTopLevel) {
+            // 一级菜单：直接删除
             setdataSource(dataSource.filter(data => data.id !== item.id))
-
-            axios.delete(`/rights/${item.id}`).then(res => {
-                //console.log(res.data)
-            })
-        } else {//否则，找到父级，删除父级的children中的项
-
-            //找到父级
-            let list = dataSource.filter(data => data.id === item.rightId)
-
-            //删除父级的children中的项
-            list[0].children = list[0].children.filter(data => data.id !== item.id)
-
-            //实现页面同步
-            setdataSource([...dataSource])
-
-            //更新后端数据
-            axios.delete(`/children/${item.id}`).then(res => {
-                //console.log(res.data)
-            })
+            axios.delete(`/rights/${item.id}`)
+        } else {
+            // 二级菜单：找到父级，从 children 中删除
+            const parentKey = '/' + item.key.split('/').filter(Boolean)[0]
+            const parent = dataSource.find(d => d.key === parentKey)
+            if (parent) {
+                parent.children = parent.children.filter(child => child.id !== item.id)
+                setdataSource([...dataSource])
+                axios.patch(`/rights/${parent.id}`, {
+                    children: parent.children
+                })
+            }
         }
-
     }
 
     return (
         <div>
             <div className="table-header">
-                <h2>权限列表</h2>
+                <h2>菜单管理</h2>
             </div>
             <Table
                 className="right-table"

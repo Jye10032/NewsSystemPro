@@ -33,18 +33,18 @@ import { connect } from 'react-redux'
 const LocalRouterMap = {
     '/home': Home,
     '/user-manage/list': UserList,
-    '/right-manage/rolelist': RoleList,
-    '/right-manage/rightlist': RightList,
+    '/user-manage/role': RoleList,
+    '/user-manage/menu': RightList,
     '/audit-manage/audit': Audit,
     '/audit-manage/list': AuditList,
     '/news-manage/add': NewAdd,
-    '/news-manage/category': NewsCategory,
     '/news-manage/draft': NewsDraft,
     '/news-manage/preview/:id': NewsPreivew,
     '/news-manage/update/:id': NewsUpdate,
     '/publish-manage/sunset': Sunset,
     '/publish-manage/published': Published,
-    '/publish-manage/unpublished': Unpublished
+    '/publish-manage/unpublished': Unpublished,
+    '/system-manage/category': NewsCategory
 }
 
 function NewsRouter(props) {
@@ -53,8 +53,16 @@ function NewsRouter(props) {
     } = JSON.parse(localStorage.getItem('token'))
     const [backRouteList, setBackRouteList] = useState([])
     useEffect(() => {
-        Promise.all([axios.get('/children'), axios.get('/rights')]).then((res) => {
-            setBackRouteList([...res[0].data, ...res[1].data])
+        axios.get('/rights').then((res) => {
+            // 展平嵌套结构：一级菜单 + 所有二级菜单
+            const flatList = res.data.reduce((acc, item) => {
+                acc.push(item)
+                if (item.children && item.children.length > 0) {
+                    acc.push(...item.children)
+                }
+                return acc
+            }, [])
+            setBackRouteList(flatList)
         })
     }, [])
     // 检车用户的权限

@@ -127,7 +127,7 @@ describe('SideMenu 侧边栏组件', () => {
 
       // Assert
       await waitFor(() => {
-        expect(axios.get).toHaveBeenCalledWith('/rights?_embed=children')
+        expect(axios.get).toHaveBeenCalledWith('/rights')
       })
     })
 
