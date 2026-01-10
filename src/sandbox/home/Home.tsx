@@ -1,10 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import axios from 'axios'
-import { Card, Col, Row, List, Avatar, Drawer, Statistic, Progress, Table, Tag } from 'antd'
+import { Card, Col, Row, List, Drawer, Statistic, Progress, Table, Tag } from 'antd'
 import {
-    EditOutlined,
-    EllipsisOutlined,
-    SettingOutlined,
     UserOutlined,
     EyeOutlined,
     FileTextOutlined,
@@ -17,18 +14,33 @@ import { Link } from 'react-router-dom'
 import * as echarts from 'echarts'
 import _ from 'lodash'
 
-const { Meta } = Card
+interface NewsItem {
+    id: number
+    title: string
+    author: string
+    view?: number
+    star?: number
+    categoryId: number
+    category: { title: string }
+}
+
+interface Stats {
+    totalViews: number
+    totalNews: number
+    totalLikes: number
+    totalUsers: number
+}
 
 export default function Home() {
-    const barRef = useRef()
-    const pieRef = useRef()
-    const categoryChartRef = useRef()
+    const barRef = useRef<HTMLDivElement>(null)
+    const pieRef = useRef<HTMLDivElement>(null)
+    const categoryChartRef = useRef<HTMLDivElement>(null)
     const [open, setOpen] = useState(false)
-    const [pieChart, setPieChart] = useState(null)
-    const [newsViewList, setNewsViewList] = useState([])
-    const [newsStarList, setNewsStarList] = useState([])
-    const [allList, setAllList] = useState([])
-    const [stats, setStats] = useState({
+    const [pieChart, setPieChart] = useState<echarts.ECharts | null>(null)
+    const [newsViewList, setNewsViewList] = useState<NewsItem[]>([])
+    const [newsStarList, setNewsStarList] = useState<NewsItem[]>([])
+    const [allList, setAllList] = useState<NewsItem[]>([])
+    const [stats, setStats] = useState<Stats>({
         totalViews: 0,
         totalNews: 0,
         totalLikes: 0,
@@ -37,10 +49,10 @@ export default function Home() {
 
     useEffect(() => {
         Promise.all([
-            axios.get('/news?publishState=2&_expand=category&_sort=view&_order=desc&_limit=7'),
-            axios.get('/news?publishState=2&_expand=category&_sort=star&_order=desc&_limit=7'),
-            axios.get('/news?publishState=2&_expand=category'),
-            axios.get('/users')
+            axios.get<NewsItem[]>('/news?publishState=2&_expand=category&_sort=view&_order=desc&_limit=7'),
+            axios.get<NewsItem[]>('/news?publishState=2&_expand=category&_sort=star&_order=desc&_limit=7'),
+            axios.get<NewsItem[]>('/news?publishState=2&_expand=category'),
+            axios.get<{ id: number }[]>('/users')
         ]).then((res) => {
             setNewsViewList(res[0].data)
             setNewsStarList(res[1].data)
@@ -63,18 +75,18 @@ export default function Home() {
         }
     }, [])
 
-    const {
-        username,
-        region,
-        role: { roleName }
-    } = JSON.parse(localStorage.getItem('token'))
+    const tokenData = JSON.parse(localStorage.getItem('token') || '{}')
+    const username = tokenData.username || ''
+    const region = tokenData.region || ''
+    const roleName = tokenData.role?.roleName || ''
 
     function renderLineView() {
-        var myChart = echarts.init(barRef.current)
+        if (!barRef.current) return
+        const myChart = echarts.init(barRef.current)
         window.onresize = () => myChart.resize()
 
         function generateSeriesData() {
-            const seriesData = []
+            const seriesData: { date: string; views: number }[] = []
             const startDate = new Date()
             const DATA_COUNT = 14
             let baseViews = 400
@@ -103,7 +115,7 @@ export default function Home() {
             },
             tooltip: {
                 trigger: 'axis',
-                formatter: (params) => {
+                formatter: (params: { name: string; value: number }[]) => {
                     const item = params[0]
                     return `${item.name}<br/>浏览量：<b>${item.value}</b>`
                 }
@@ -135,7 +147,8 @@ export default function Home() {
         myChart.setOption(option)
     }
 
-    function renderCategoryChart(groupObj) {
+    function renderCategoryChart(groupObj: Record<string, NewsItem[]>) {
+        if (!categoryChartRef.current) return
         const myChart = echarts.init(categoryChartRef.current)
         const data = Object.entries(groupObj).map(([name, items]) => ({
             name,
@@ -171,16 +184,18 @@ export default function Home() {
     function renderPieView() {
         const currentList = allList.filter((item) => item.author === username)
         const groupObj = _.groupBy(currentList, (item) => item.category.title)
-        let list = []
-        for (let i in groupObj) {
+        const list: { name: string; value: number }[] = []
+        for (const i in groupObj) {
             list.push({ name: i, value: groupObj[i].length })
         }
-        var myChart
-        if (!pieChart) {
+        let myChart: echarts.ECharts
+        if (!pieChart && pieRef.current) {
             myChart = echarts.init(pieRef.current)
-            setPieChart(true)
-        } else {
+            setPieChart(myChart)
+        } else if (pieChart) {
             myChart = pieChart
+        } else {
+            return
         }
 
         const option = {
@@ -203,7 +218,7 @@ export default function Home() {
                 }
             ]
         }
-        option && myChart.setOption(option)
+        myChart.setOption(option)
     }
 
     const colorMap = ['blue', 'green', 'orange', 'red', 'purple', 'cyan']
@@ -215,7 +230,7 @@ export default function Home() {
             dataIndex: 'title',
             key: 'title',
             ellipsis: true,
-            render: (text, record) => (
+            render: (text: string, record: NewsItem) => (
                 <Link to={{ pathname: `/news-manage/preview/${record.id}` }}>{text}</Link>
             )
         },
@@ -224,7 +239,7 @@ export default function Home() {
             dataIndex: ['category', 'title'],
             key: 'category',
             width: 100,
-            render: (text, record) => (
+            render: (text: string, record: NewsItem) => (
                 <Tag color={colorMap[(record.categoryId - 1) % colorMap.length]} bordered={false}>
                     {text}
                 </Tag>
@@ -235,18 +250,19 @@ export default function Home() {
             dataIndex: 'view',
             key: 'view',
             width: 80,
-            render: (val) => <span style={{ color: '#1890ff' }}>{val || 0}</span>
+            render: (val: number) => <span style={{ color: '#1890ff' }}>{val || 0}</span>
         }
     ]
 
     return (
         <div style={{ padding: '24px', backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
-            {/* 用户卡片 - 横版布局 */}
             <Card style={{ marginBottom: 24 }}>
                 <Row align="middle" gutter={24}>
                     <Col>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <Avatar size={48} icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
+                            <div style={{ width: 48, height: 48, borderRadius: '50%', backgroundColor: '#1890ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <UserOutlined style={{ color: '#fff', fontSize: 24 }} />
+                            </div>
                             <div style={{ marginLeft: 12 }}>
                                 <h3 style={{ margin: 0, fontSize: 16 }}>{username}</h3>
                                 <p style={{ color: '#999', margin: 0, fontSize: 13 }}>
@@ -297,7 +313,6 @@ export default function Home() {
                 </Row>
             </Card>
 
-            {/* 统计卡片 */}
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                 <Col xs={24} sm={12} lg={6}>
                     <Card hoverable>
@@ -361,7 +376,6 @@ export default function Home() {
                 </Col>
             </Row>
 
-            {/* 图表区域 */}
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                 <Col xs={24} lg={16}>
                     <Card>
@@ -375,7 +389,6 @@ export default function Home() {
                 </Col>
             </Row>
 
-            {/* 内容区域 */}
             <Row gutter={[16, 16]}>
                 <Col xs={24} lg={12}>
                     <Card

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '@ant-design/pro-layout'
 import { Descriptions, message } from 'antd'
@@ -6,13 +6,25 @@ import { HeartTwoTone } from '@ant-design/icons'
 import axios from 'axios'
 import moment from 'moment'
 
-export default function Detail(props) {
-  const [newsInfo, setNewsInfo] = useState(null);
-  const navigate = useNavigate();
-  const params = useParams();
+interface NewsInfo {
+  id: number
+  title: string
+  content: string
+  author: string
+  publishTime?: number
+  view: number
+  star: number
+  category: { title: string }
+}
+
+export default function Detail() {
+  const [newsInfo, setNewsInfo] = useState<NewsInfo | null>(null)
+  const navigate = useNavigate()
+  const params = useParams<{ id: string }>()
+
   useEffect(() => {
     axios
-      .get(`/news/${params.id}?_expand=category&_expand=role`)
+      .get<NewsInfo>(`/news/${params.id}?_expand=category&_expand=role`)
       .then((res) => {
         setNewsInfo({ ...res.data, view: res.data.view + 1 })
         return res.data
@@ -23,9 +35,11 @@ export default function Detail(props) {
         })
       )
   }, [params.id])
+
   function handleStar() {
-    const list = JSON.parse(localStorage.getItem('isStar'))
-    if (list.includes(params.id)) {
+    if (!newsInfo) return
+    const list: string[] = JSON.parse(localStorage.getItem('isStar') || '[]')
+    if (list.includes(params.id!)) {
       message.info('您已经为该新闻点过赞')
     } else {
       setNewsInfo({
@@ -43,6 +57,7 @@ export default function Detail(props) {
       }
     }
   }
+
   return (
     <div>
       {newsInfo && (

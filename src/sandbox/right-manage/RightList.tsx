@@ -1,45 +1,32 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Table, Tag, Button, Modal, Popover, Switch } from 'antd'
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
-import { ExclamationCircleFilled } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, ExclamationCircleFilled } from '@ant-design/icons'
 import axios from 'axios'
 import '../../styles/TableStyles.css'
+import type { Right } from '@/types'
 
-const { confirm } = Modal;
+const { confirm } = Modal
 
 export default function RightList() {
-    const [dataSource, setdataSource] = useState([])
+    const [dataSource, setdataSource] = useState<Right[]>([])
 
     useEffect(() => {
-        axios.get("/rights").then(res => {
+        axios.get<Right[]>("/rights").then(res => {
             const list = res.data
             list.forEach(item => {
                 if (!item.children || item.children.length === 0) {
-                    item.children = ""
+                    item.children = undefined
                 }
             })
             setdataSource(list)
         })
     }, [])
 
-    const [modal, contextHolder] = Modal.useModal();
-
-
-
-
     const columns = [
-        // {
-        //     title: 'ID',
-        //     dataIndex: 'id',
-        //     //key: 'name',
-        //     render: (id) => {
-        //         return <b>{id}</b>
-        //     }
-        // },
         {
             title: '权限名称',
             dataIndex: 'title',
-            render: (title, record) => {
+            render: (title: string, record: Right) => {
                 const isEnabled = record.pagepermisson === 1
                 return (
                     <span>
@@ -59,35 +46,30 @@ export default function RightList() {
         {
             title: '权限路径',
             dataIndex: 'key',
-            //key: 'address',
-            render: (key) => {
+            render: (key: string) => {
                 return <Tag color="orange">{key}</Tag>
             }
         },
         {
             title: '操作',
-            //key: 'age',
-
-            render: (item) => {
+            render: (item: Right) => {
                 return <div>
                     <Button danger shape="circle" icon={<DeleteOutlined />}
                         onClick={() => showConfirm(item)} />
                     <Popover content={<div style={{ textAlign: "center" }}>
-                        <Switch checked={item.pagepermisson} onChange={() => switchMethod(item)}></Switch>
-                    </div>} title="配置项" trigger={item.pagepermisson === undefined ? '' : 'click'}>
+                        <Switch checked={item.pagepermisson === 1} onChange={() => switchMethod(item)}></Switch>
+                    </div>} title="配置项" trigger={item.pagepermisson === undefined ? undefined : 'click'}>
                         <Button type="primary" shape="circle" icon={<EditOutlined />} disabled={item.pagepermisson === undefined} />
                     </Popover>
-
                 </div>
             }
         },
-    ];
+    ]
 
-    const switchMethod = (item) => {
-        item.pagepermisson = Number(!item.pagepermisson)
+    const switchMethod = (item: Right) => {
+        item.pagepermisson = item.pagepermisson ? 0 : 1
         setdataSource([...dataSource])
 
-        // 通过路径层级判断：一级菜单只有一层路径
         const isTopLevel = item.key.split('/').filter(Boolean).length === 1
 
         if (isTopLevel) {
@@ -95,7 +77,6 @@ export default function RightList() {
                 pagepermisson: item.pagepermisson
             })
         } else {
-            // 二级菜单：找到父级，更新整个 rights 项
             const parentKey = '/' + item.key.split('/').filter(Boolean)[0]
             const parent = dataSource.find(d => d.key === parentKey)
             if (parent) {
@@ -106,37 +87,30 @@ export default function RightList() {
         }
     }
 
-
-    const showConfirm = (item) => {
+    const showConfirm = (item: Right) => {
         confirm({
             title: 'Do you Want to delete these items?',
             icon: <ExclamationCircleFilled />,
             content: 'Some descriptions',
             onOk() {
-                deleteMethod(item);
-                console.log('OK');
+                deleteMethod(item)
             },
             onCancel() {
-                console.log('Cancel');
+                console.log('Cancel')
             },
-        });
-    };
+        })
+    }
 
-
-    //删除
-    const deleteMethod = (item) => {
-        // 通过路径层级判断
+    const deleteMethod = (item: Right) => {
         const isTopLevel = item.key.split('/').filter(Boolean).length === 1
 
         if (isTopLevel) {
-            // 一级菜单：直接删除
             setdataSource(dataSource.filter(data => data.id !== item.id))
             axios.delete(`/rights/${item.id}`)
         } else {
-            // 二级菜单：找到父级，从 children 中删除
             const parentKey = '/' + item.key.split('/').filter(Boolean)[0]
             const parent = dataSource.find(d => d.key === parentKey)
-            if (parent) {
+            if (parent && parent.children) {
                 parent.children = parent.children.filter(child => child.id !== item.id)
                 setdataSource([...dataSource])
                 axios.patch(`/rights/${parent.id}`, {

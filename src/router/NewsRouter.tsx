@@ -13,11 +13,13 @@ import NewsUpdate from '../modules/news/pages/NewsUpdate'
 import Published from '../modules/publish/pages/Published'
 import Unpublished from '../modules/publish/pages/Unpublished'
 import Sunset from '../modules/publish/pages/Sunset'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, ComponentType } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { Spin } from 'antd'
 import axios from 'axios'
 import { connect } from 'react-redux'
+import type { Right, RootState } from '@/types'
+
 /**
  * 对应页面的路由导航
  * 1.判断用户是否具有访问权限
@@ -30,7 +32,7 @@ import { connect } from 'react-redux'
  * 需要先获取到组件，然后再使用 React.createElement() 来创建一个组件实例
  */
 
-const LocalRouterMap = {
+const LocalRouterMap: Record<string, ComponentType> = {
     '/home': Home,
     '/user-manage/list': UserList,
     '/user-manage/role': RoleList,
@@ -47,15 +49,19 @@ const LocalRouterMap = {
     '/system-manage/category': NewsCategory
 }
 
-function NewsRouter(props) {
-    const {
-        role: { rights }
-    } = JSON.parse(localStorage.getItem('token'))
-    const [backRouteList, setBackRouteList] = useState([])
+interface NewsRouterProps {
+    isLoading: boolean
+}
+
+function NewsRouter(props: NewsRouterProps) {
+    const tokenData = JSON.parse(localStorage.getItem('token') || '{}')
+    const rights: string[] = tokenData.role?.rights || []
+    const [backRouteList, setBackRouteList] = useState<Right[]>([])
+
     useEffect(() => {
-        axios.get('/rights').then((res) => {
+        axios.get<Right[]>('/rights').then((res) => {
             // 展平嵌套结构：一级菜单 + 所有二级菜单
-            const flatList = res.data.reduce((acc, item) => {
+            const flatList = res.data.reduce<Right[]>((acc, item) => {
                 acc.push(item)
                 if (item.children && item.children.length > 0) {
                     acc.push(...item.children)
@@ -65,14 +71,17 @@ function NewsRouter(props) {
             setBackRouteList(flatList)
         })
     }, [])
-    // 检车用户的权限
-    function checkUserPermission(key) {
+
+    // 检查用户的权限
+    function checkUserPermission(key: string): boolean {
         return rights.includes(key)
     }
+
     // 检测路径是否存在
-    function checkRoute(item) {
-        return LocalRouterMap[item.key] && (item.pagepermisson || item.routepermisson)
+    function checkRoute(item: Right): boolean {
+        return !!LocalRouterMap[item.key] && !!(item.pagepermisson || item.routepermisson)
     }
+
     return (
         <Spin
             size="large"
@@ -82,7 +91,6 @@ function NewsRouter(props) {
             <Routes>
                 {backRouteList.map((item) => {
                     if (checkUserPermission(item.key) && checkRoute(item)) {
-                        //console.log(item.key)
                         return (
                             <Route
                                 path={item.key}
@@ -94,23 +102,13 @@ function NewsRouter(props) {
                         return null
                     }
                 })}
-
-                {/* <Redirect
-                    from="/"
-                    to="/home"
-                    exact
-                ></Redirect>
-                <Route
-                    path="*"
-                    component={NoPermission}
-                ></Route> */}
                 <Route path="/" element={<Home />}></Route>
                 <Route path="*" element={<Nopermission />} />
             </Routes>
-        </Spin >
+        </Spin>
     )
 }
 
-export default connect((state) => ({
+export default connect((state: RootState) => ({
     isLoading: state.isLoading
 }))(NewsRouter)

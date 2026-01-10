@@ -1,15 +1,28 @@
-import React from 'react'
 import { Table } from 'antd'
 import { Link } from 'react-router-dom'
 import '../../../styles/TableStyles.css'
+import type { ReactNode } from 'react'
 
-export default function NewsPublish(props) {
-  // table表格要渲染的数据
+interface NewsItem {
+  id: number
+  title: string
+  author: string
+  categoryId: number
+  category?: { title: string }
+}
+
+interface NewsPublishProps {
+  title: string
+  newsList: NewsItem[]
+  button: (id: number) => ReactNode
+}
+
+export default function NewsPublish(props: NewsPublishProps) {
   const columns = [
     {
       title: '新闻标题',
       dataIndex: 'title',
-      render: (title, item) => {
+      render: (title: string, item: NewsItem) => {
         return <Link to={{ pathname: `/news-manage/preview/${item.id}` }}>{title}</Link>
       }
     },
@@ -20,18 +33,19 @@ export default function NewsPublish(props) {
     {
       title: '新闻分类',
       dataIndex: 'categoryId',
-      render: (_, item) => {
-        return item.category.title
+      render: (_: number, item: NewsItem) => {
+        return item.category?.title
       }
     },
     {
       title: '操作',
       dataIndex: 'id',
-      render: (id) => {
+      render: (id: number) => {
         return <div>{props.button(id)}</div>
       }
     }
   ]
+
   return (
     <div>
       <div className="table-header">

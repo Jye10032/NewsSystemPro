@@ -2,18 +2,30 @@ import { ExclamationCircleFilled } from '@ant-design/icons'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { notification, message, Modal } from 'antd'
+
 const { confirm } = Modal
 
-function usePublish(publishState) {
-  const [newsList, setNewsList] = useState([])
+interface NewsItem {
+  id: number
+  title: string
+  author: string
+  categoryId: number
+  auditState: number
+  publishState: number
+  category?: { title: string }
+}
+
+function usePublish(publishState: number) {
+  const [newsList, setNewsList] = useState<NewsItem[]>([])
+
   useEffect(() => {
-    const { username } = JSON.parse(localStorage.getItem('token'))
-    axios(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then((res) => {
+    const { username } = JSON.parse(localStorage.getItem('token') || '{}')
+    axios<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then((res) => {
       setNewsList(res.data)
     })
   }, [publishState])
 
-  function confirmMethod(id) {
+  function confirmMethod(id: number) {
     confirm({
       title: '警告',
       icon: <ExclamationCircleFilled />,
@@ -35,15 +47,15 @@ function usePublish(publishState) {
     })
   }
 
-  function handlePublish(id) {
+  function handlePublish(id: number) {
     axios
       .patch(`/news/${id}`, {
         publishState: 2
       })
       .then(
-        (res) => {
-          const { username } = JSON.parse(localStorage.getItem('token'))
-          axios(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then(
+        () => {
+          const { username } = JSON.parse(localStorage.getItem('token') || '{}')
+          axios<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then(
             (res) => {
               setNewsList(res.data)
             }
@@ -54,18 +66,19 @@ function usePublish(publishState) {
             placement: 'bottomRight'
           })
         },
-        (err) => message.error('出错了，请再次尝试')
+        () => message.error('出错了，请再次尝试')
       )
   }
-  function handleSunset(id) {
+
+  function handleSunset(id: number) {
     axios
       .patch(`/news/${id}`, {
         publishState: 3
       })
       .then(
-        (res) => {
-          const { username } = JSON.parse(localStorage.getItem('token'))
-          axios(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then(
+        () => {
+          const { username } = JSON.parse(localStorage.getItem('token') || '{}')
+          axios<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then(
             (res) => {
               setNewsList(res.data)
             }
@@ -76,14 +89,15 @@ function usePublish(publishState) {
             placement: 'bottomRight'
           })
         },
-        (err) => message.error('出错了，请再次尝试')
+        () => message.error('出错了，请再次尝试')
       )
   }
-  function handleDelete(id) {
+
+  function handleDelete(id: number) {
     axios.delete(`/news/${id}`, {}).then(
-      (res) => {
-        const { username } = JSON.parse(localStorage.getItem('token'))
-        axios(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then((res) => {
+      () => {
+        const { username } = JSON.parse(localStorage.getItem('token') || '{}')
+        axios<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then((res) => {
           setNewsList(res.data)
         })
         notification.info({
@@ -92,7 +106,7 @@ function usePublish(publishState) {
           placement: 'bottomRight'
         })
       },
-      (err) => message.error('出错了，请再次尝试')
+      () => message.error('出错了，请再次尝试')
     )
   }
 
@@ -101,4 +115,5 @@ function usePublish(publishState) {
     confirmMethod
   }
 }
+
 export default usePublish

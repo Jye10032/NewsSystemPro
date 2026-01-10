@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './styles/index.css'
-import './utils/Request.js'
+import './utils/Request'
 
 // 根据环境自动设置 basename
 // 开发环境: 无 basename (本地 localhost:5173/)

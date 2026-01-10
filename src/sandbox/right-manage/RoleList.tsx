@@ -1,69 +1,55 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Table, Button, Modal, Tree } from 'antd'
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
-import { ExclamationCircleFilled } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, ExclamationCircleFilled } from '@ant-design/icons'
 import axios from 'axios'
-import RightList from './RightList';
 import '../../styles/TableStyles.css'
+import type { Role, Right } from '@/types'
 
-const { confirm } = Modal;
+const { confirm } = Modal
 
 export default function RoleList() {
-
-    const [dataSource, setdataSource] = useState([])
-    const [rightList, setRightList] = useState([])
+    const [dataSource, setdataSource] = useState<Role[]>([])
+    const [rightList, setRightList] = useState<Right[]>([])
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [currentRights, setcurrentRights] = useState([])
-    const [currentId, setcurrentId] = useState([])
+    const [currentRights, setcurrentRights] = useState<string[]>([])
+    const [currentId, setcurrentId] = useState<number>(0)
 
-
-    const showConfirm = (item) => {
+    const showConfirm = (item: Role) => {
         confirm({
             title: 'Do you Want to delete these items?',
             icon: <ExclamationCircleFilled />,
             content: 'Some descriptions',
             onOk() {
-                deleteMethod(item);
-                console.log('OK');
+                deleteMethod(item)
             },
             onCancel() {
-                console.log('Cancel');
+                console.log('Cancel')
             },
-        });
-    };
-
-    //删除
-    const deleteMethod = (item) => {//实现当前页面同步状态+后端同步删除
-        //console.log("delete")
-        setdataSource(dataSource.filter(data => data.id !== item.id))
-
-        axios.delete(`/roles/${item.id}`).then(res => {
-            //console.log(res.data)
         })
-
     }
 
+    const deleteMethod = (item: Role) => {
+        setdataSource(dataSource.filter(data => data.id !== item.id))
+        axios.delete(`/roles/${item.id}`)
+    }
 
     useEffect(() => {
-        axios.get("/roles").then(res => {
+        axios.get<Role[]>("/roles").then(res => {
             setdataSource(res.data)
         })
-
     }, [])
 
     useEffect(() => {
-        axios.get("/rights?_embed=children").then(res => {
+        axios.get<Right[]>("/rights?_embed=children").then(res => {
             setRightList(res.data)
         })
-
     }, [])
 
     const columns = [
         {
             title: 'ID',
             dataIndex: 'id',
-            //key: 'name',
-            render: (id) => {
+            render: (id: number) => {
                 return <b>{id}</b>
             }
         },
@@ -73,8 +59,7 @@ export default function RoleList() {
         },
         {
             title: '操作',
-            //key: 'address',
-            render: (item) => {
+            render: (item: Role) => {
                 return (
                     <div>
                         <Button danger shape="circle" icon={<DeleteOutlined />}
@@ -91,15 +76,8 @@ export default function RoleList() {
         },
     ]
 
-
-
-    // const showModal = () => {
-    //     setIsModalOpen(true);
-    // };
     const handleOk = () => {
-        setIsModalOpen(false);
-
-        //同步datasource
+        setIsModalOpen(false)
         setdataSource(dataSource.map(item => {
             if (item.id === currentId) {
                 return {
@@ -109,21 +87,22 @@ export default function RoleList() {
             }
             return item
         }))
-
-        //同步后端
-
         axios.patch(`/roles/${currentId}`, {
             rights: currentRights
         })
-    };
-    const handleCancel = () => {
-        setIsModalOpen(false);
-    };
+    }
 
-    const onCheck = (checkedKeys) => {
-        setcurrentRights(checkedKeys.checked)
-        //console.log(checkedKeys);
-    };
+    const handleCancel = () => {
+        setIsModalOpen(false)
+    }
+
+    const onCheck = (checkedKeys: { checked: string[] } | string[]) => {
+        if (Array.isArray(checkedKeys)) {
+            setcurrentRights(checkedKeys)
+        } else {
+            setcurrentRights(checkedKeys.checked)
+        }
+    }
 
     return (
         <div>
@@ -145,12 +124,11 @@ export default function RoleList() {
                 <Tree
                     checkable
                     checkedKeys={currentRights}
-                    onCheck={onCheck}
+                    onCheck={onCheck as any}
                     checkStrictly={true}
-                    treeData={rightList}
+                    treeData={rightList as any}
                 />
             </Modal>
-
         </div>
     )
 }

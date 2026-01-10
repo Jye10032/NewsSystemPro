@@ -1,37 +1,47 @@
 import style from './NewsAdd.module.scss'
 import NewsEditor from '../components/NewsEditor'
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '@ant-design/pro-layout'
 import { Steps, Button, Form, Input, Select, message, notification } from 'antd'
 import axios from 'axios'
+import type { Category } from '@/types'
+import type { FormInstance } from 'antd'
+
 const { Option } = Select
+
+interface FormInfo {
+  title: string
+  categoryId: number
+}
 
 export default function NewsUpdate() {
   const navigate = useNavigate()
   const [current, setCurrent] = useState(0)
   const [content, setContent] = useState('')
-  const [formInfo, setFormInfo] = useState({})
-  const [categoryList, setCategoryList] = useState([])
-  const NewsForm = useRef();
-  const params = useParams();
-  const userInfo = JSON.parse(localStorage.getItem('token'))
+  const [formInfo, setFormInfo] = useState<FormInfo>({ title: '', categoryId: 0 })
+  const [categoryList, setCategoryList] = useState<Category[]>([])
+  const NewsForm = useRef<FormInstance>(null)
+  const params = useParams<{ id: string }>()
+  const userInfo = JSON.parse(localStorage.getItem('token') || '{}')
+
   useEffect(() => {
-    axios.get('/categories').then((res) => setCategoryList(res.data))
+    axios.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
     axios.get(`/news/${params.id}?_expand=category&_expand=role`).then((res) => {
       setContent(res.data.content)
       const { title, categoryId } = res.data
-      NewsForm.current.setFieldsValue({
+      NewsForm.current?.setFieldsValue({
         title,
         categoryId
       })
     })
   }, [params.id])
+
   function handlerNext() {
     if (current === 0) {
       NewsForm.current
-        .validateFields()
-        .then((value) => {
+        ?.validateFields()
+        .then((value: FormInfo) => {
           setCurrent(current + 1)
           setFormInfo(value)
         })
@@ -44,7 +54,8 @@ export default function NewsUpdate() {
       }
     }
   }
-  function handleSave(auditState) {
+
+  function handleSave(auditState: number) {
     axios
       .post('/news', {
         ...formInfo,
@@ -58,7 +69,7 @@ export default function NewsUpdate() {
         view: 0
       })
       .then(
-        (res) => {
+        () => {
           navigate(auditState === 0 ? '/news-manage/draft' : '/audit-manage/list')
           notification.info({
             message: '提示',
@@ -66,11 +77,12 @@ export default function NewsUpdate() {
             placement: 'bottomRight'
           })
         },
-        (err) => {
+        () => {
           message.error('出错了，请联系管理号')
         }
       )
   }
+
   return (
     <div>
       <PageHeader

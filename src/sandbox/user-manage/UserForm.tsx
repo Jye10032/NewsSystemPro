@@ -1,11 +1,20 @@
 import React, { forwardRef, useState, useEffect } from 'react'
-import { Form, Input, Select } from 'antd'
+import { Form, Input, Select, FormInstance } from 'antd'
+import type { Role, Category } from '@/types'
+
 const { Option } = Select
 
-const UserForm = forwardRef((props, ref) => {
+interface UserFormProps {
+    isUpdate?: boolean
+    isSelectDisabled?: boolean
+    roleList?: Role[]
+    categoryList?: Category[]
+}
+
+const UserForm = forwardRef<FormInstance, UserFormProps>((props, ref) => {
     const [form] = Form.useForm()
-    const [isDisabled, setIsDisabled] = useState()
-    const rank = {
+    const [isDisabled, setIsDisabled] = useState<boolean>()
+    const rank: Record<number, string> = {
         1: 'superAdmin',
         2: 'admin',
         3: 'editor'
@@ -15,10 +24,10 @@ const UserForm = forwardRef((props, ref) => {
         setIsDisabled(props.isSelectDisabled)
     }, [props])
     // 选择角色的回调函数
-    function handleSetRole(value) {
+    function handleSetRole(value: number) {
         if (value === 1) {
             setIsDisabled(true)
-            ref.current.setFieldsValue({
+            ;(ref as React.RefObject<FormInstance>).current?.setFieldsValue({
                 allowedCategoryIds: [1, 2, 3, 4, 5, 6]
             })
         } else {
@@ -26,8 +35,8 @@ const UserForm = forwardRef((props, ref) => {
         }
     }
     // 根据登录用户的权限来显示可选的分类
-    function checkCategoryDisable(item) {
-        const { roleId, allowedCategoryIds } = JSON.parse(localStorage.getItem('token'))
+    function checkCategoryDisable(item: Category) {
+        const { roleId, allowedCategoryIds } = JSON.parse(localStorage.getItem('token') || '{}')
         // 若打开的是编辑对话框
         if (props.isUpdate) {
             // 除超级管理员，其他角色不能修改分类选择
@@ -47,8 +56,8 @@ const UserForm = forwardRef((props, ref) => {
         }
     }
     // 根据登录用户的权限来显示可选的角色
-    function checkRoleDisable(item) {
-        const { roleId } = JSON.parse(localStorage.getItem('token'))
+    function checkRoleDisable(item: Role) {
+        const { roleId } = JSON.parse(localStorage.getItem('token') || '{}')
         // 若打开的是编辑对话框
         if (props.isUpdate) {
             // 除超级管理员，其他角色只不能修改角色

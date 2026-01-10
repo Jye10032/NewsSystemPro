@@ -1,25 +1,26 @@
 import style from './NewsAdd.module.scss'
 import NewsEditor from '../components/NewsEditor'
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Button, Input, Select, message, notification, Space } from 'antd'
 import { SaveOutlined, SendOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import type { Category } from '@/types'
 
 export default function NewsAdd() {
   const [title, setTitle] = useState('')
-  const [categoryId, setCategoryId] = useState(undefined)
+  const [categoryId, setCategoryId] = useState<number | undefined>(undefined)
   const [content, setContent] = useState('')
-  const [categoryList, setCategoryList] = useState([])
+  const [categoryList, setCategoryList] = useState<Category[]>([])
   const [saving, setSaving] = useState(false)
-  const userInfo = JSON.parse(localStorage.getItem('token'))
+  const userInfo = JSON.parse(localStorage.getItem('token') || '{}')
   const navigate = useNavigate()
 
   useEffect(() => {
-    axios.get('/categories').then((res) => setCategoryList(res.data))
+    axios.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
   }, [])
 
-  function validate() {
+  function validate(): boolean {
     if (!title.trim()) {
       message.error('请填写新闻标题')
       return false
@@ -35,7 +36,7 @@ export default function NewsAdd() {
     return true
   }
 
-  function handleSave(auditState) {
+  function handleSave(auditState: number) {
     if (!validate()) return
 
     setSaving(true)
@@ -53,7 +54,7 @@ export default function NewsAdd() {
         view: 0
       })
       .then(
-        (res) => {
+        () => {
           navigate(auditState === 0 ? '/news-manage/draft' : '/audit-manage/list')
           notification.info({
             message: '提示',
@@ -61,7 +62,7 @@ export default function NewsAdd() {
             placement: 'bottomRight'
           })
         },
-        (err) => {
+        () => {
           message.error('出错了，请联系管理员')
         }
       )
@@ -70,7 +71,6 @@ export default function NewsAdd() {
 
   return (
     <div className={style.editorPage}>
-      {/* 顶部工具栏 */}
       <div className={style.toolbar}>
         <Select
           placeholder="选择分类"
@@ -101,7 +101,6 @@ export default function NewsAdd() {
         </Space>
       </div>
 
-      {/* 标题输入 */}
       <Input
         className={style.titleInput}
         placeholder="请输入标题"
@@ -111,7 +110,6 @@ export default function NewsAdd() {
         showCount
       />
 
-      {/* 富文本编辑器 */}
       <div className={style.editorWrapper}>
         <NewsEditor getContent={(value) => setContent(value)} />
       </div>

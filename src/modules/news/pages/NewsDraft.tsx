@@ -1,29 +1,41 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Table, Button, notification, Modal, message } from 'antd'
 import axios from 'axios'
 import { EditOutlined, DeleteOutlined, VerticalAlignTopOutlined, ExclamationCircleFilled } from '@ant-design/icons'
 import '../../../styles/TableStyles.css'
+import type { Category } from '@/types'
+
 const { confirm } = Modal
+
+interface NewsItem {
+  id: number
+  title: string
+  author: string
+  categoryId: number
+  auditState: number
+  category?: { title: string }
+}
 
 export default function NewsDraft() {
   const navigate = useNavigate()
-  const [newsList, setNewsList] = useState([])
-  const [categoryList, setCategoryList] = useState([])
-  const { username } = JSON.parse(localStorage.getItem('token'))
+  const [newsList, setNewsList] = useState<NewsItem[]>([])
+  const [categoryList, setCategoryList] = useState<Category[]>([])
+  const { username } = JSON.parse(localStorage.getItem('token') || '{}')
+
   useEffect(() => {
-    axios.get(`/news?author=${username}&auditState=0&_expand=category`).then((res) => {
+    axios.get<NewsItem[]>(`/news?author=${username}&auditState=0&_expand=category`).then((res) => {
       setNewsList(res.data)
     })
-    axios.get('/categories').then((res) => setCategoryList(res.data))
+    axios.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
   }, [username])
-  // 将新闻提交审核
-  function handleCheck(id) {
+
+  function handleCheck(id: number) {
     axios
       .patch(`news/${id}`, {
         auditState: 1
       })
-      .then((res) => {
+      .then(() => {
         navigate('/audit-manage/list')
         notification.info({
           message: '通知',
@@ -32,8 +44,8 @@ export default function NewsDraft() {
         })
       })
   }
-  // 删除前的确认框
-  function confirmMethod(news) {
+
+  function confirmMethod(news: NewsItem) {
     confirm({
       title: '警告',
       icon: <ExclamationCircleFilled />,
@@ -46,22 +58,20 @@ export default function NewsDraft() {
       onCancel() { }
     })
   }
-  // 将新闻删除
-  function deleteNews(news) {
-    let list = newsList.filter((item) => {
-      return news.id !== item.id
-    })
+
+  function deleteNews(news: NewsItem) {
+    const list = newsList.filter((item) => news.id !== item.id)
     axios.delete(`/news/${news.id}`).then(
-      (res) => {
+      () => {
         setNewsList([...list])
         message.success('删除成功')
       },
-      (err) => {
+      () => {
         message.error('删除失败')
       }
     )
   }
-  // table表格要渲染的数据
+
   const columns = [
     {
       title: 'ID',
@@ -70,7 +80,7 @@ export default function NewsDraft() {
     {
       title: '新闻标题',
       dataIndex: 'title',
-      render: (title, item) => {
+      render: (title: string, item: NewsItem) => {
         return <Link to={{ pathname: `/news-manage/preview/${item.id}` }}>{title}</Link>
       }
     },
@@ -81,7 +91,7 @@ export default function NewsDraft() {
     {
       title: '新闻分类',
       dataIndex: 'categoryId',
-      render: (id) => {
+      render: (id: number) => {
         return categoryList.map((item) => {
           if (item.id === id) {
             return item.title
@@ -93,25 +103,21 @@ export default function NewsDraft() {
     {
       title: '操作',
       dataIndex: 'id',
-      render: (_, item) => {
+      render: (_: number, item: NewsItem) => {
         return (
           <div>
             <Button
               danger
               shape="circle"
               icon={<DeleteOutlined />}
-              style={{
-                marginRight: '10px'
-              }}
+              style={{ marginRight: '10px' }}
               onClick={() => confirmMethod(item)}
             />
             <Link to={{ pathname: `/news-manage/update/${item.id}` }}>
               <Button
                 shape="circle"
                 icon={<EditOutlined />}
-                style={{
-                  marginRight: '10px'
-                }}
+                style={{ marginRight: '10px' }}
               />
             </Link>
             <Button
@@ -125,6 +131,7 @@ export default function NewsDraft() {
       }
     }
   ]
+
   return (
     <div>
       <div className="table-header">
@@ -134,9 +141,7 @@ export default function NewsDraft() {
         className="news-draft-table"
         dataSource={newsList}
         columns={columns}
-        rowKey={(item) => {
-          return item.id
-        }}
+        rowKey={(item) => item.id}
         pagination={{
           pageSize: 5,
           position: ['bottomCenter']

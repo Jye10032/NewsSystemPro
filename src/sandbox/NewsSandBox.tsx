@@ -1,11 +1,10 @@
-
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import SideMenu from './SideMenu'
 import TopHead from './TopHead'
 import NewsRouter from '../router/NewsRouter'
 import './NewsSandBox.css'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { Layout, theme } from 'antd'
 const { Content } = Layout
 

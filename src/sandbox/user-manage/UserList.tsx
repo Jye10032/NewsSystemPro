@@ -1,31 +1,33 @@
 import UserForm from './UserForm'
 import React, { useEffect, useState, useRef } from 'react'
-import { Table, Switch, Button, Modal, message, Tag } from 'antd'
+import { Table, Switch, Button, Modal, message, Tag, FormInstance } from 'antd'
 import axios from 'axios'
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, UserAddOutlined } from '@ant-design/icons'
+import type { User, Role, Category } from '@/types'
+
 const { confirm } = Modal
 
 export default function UserList() {
-    const addForm = useRef()
-    const editForm = useRef()
-    const [userList, setUserList] = useState([])
-    const [categoryList, setCategoryList] = useState([])
-    const [roleList, setRoleList] = useState([])
+    const addForm = useRef<FormInstance>(null)
+    const editForm = useRef<FormInstance>(null)
+    const [userList, setUserList] = useState<User[]>([])
+    const [categoryList, setCategoryList] = useState<Category[]>([])
+    const [roleList, setRoleList] = useState<Role[]>([])
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
     const [currentId, setCurrentId] = useState(0)
     const [isSelectDisabled, setIsSelectDisabled] = useState(false)
     const [isUpdate, setIsUpdate] = useState(false)
     useEffect(() => {
-        const rank = {
+        const rank: Record<number, string> = {
             1: 'superAdmin',
             2: 'admin',
             3: 'editor'
         }
         axios.get('/users?_expand=role').then((res) => {
             //过滤权限比登录用户大的用户
-            const { roleId, username, allowedCategoryIds } = JSON.parse(localStorage.getItem('token'))
-            const list = res.data
+            const { roleId, username, allowedCategoryIds } = JSON.parse(localStorage.getItem('token') || '{}')
+            const list = res.data as User[]
             setUserList(
                 rank[roleId] === 'superAdmin'
                     ? list
@@ -53,7 +55,7 @@ export default function UserList() {
         {
             title: '可管理的分类',
             dataIndex: 'allowedCategoryIds',
-            render: (allowedCategoryIds) => {
+            render: (allowedCategoryIds: number[]) => {
                 if (!allowedCategoryIds || allowedCategoryIds.length === 0) {
                     return <Tag>无</Tag>
                 }
@@ -81,14 +83,14 @@ export default function UserList() {
                     text: category.title
                 }
             }),
-            onFilter: (value, item) => {
-                return item.allowedCategoryIds?.includes(value)
+            onFilter: (value: React.Key | boolean, item: User) => {
+                return item.allowedCategoryIds?.includes(value as number) ?? false
             }
         },
         {
             title: '角色类别',
             dataIndex: 'role',
-            render: (role) => {
+            render: (role: Role) => {
                 return role?.roleName
             }
         },
@@ -99,7 +101,7 @@ export default function UserList() {
         {
             title: '用户状态',
             dataIndex: 'id',
-            render: (id, user) => {
+            render: (_id: number, user: User) => {
                 return (
                     <div>
                         <Switch
@@ -115,7 +117,7 @@ export default function UserList() {
             title: '操作',
             dataIndex: 'id',
             key: 'grade',
-            render: (id, user) => {
+            render: (_id: number, user: User) => {
                 return (
                     <div>
                         <Button
@@ -141,7 +143,7 @@ export default function UserList() {
         }
     ]
     // 更新用户状态
-    function handleSwitch(item) {
+    function handleSwitch(item: User) {
         setUserList(
             userList.map((user) => {
                 if (user.id === item.id) {
@@ -157,7 +159,7 @@ export default function UserList() {
         axios.patch(`/users/${item.id}`, { roleState: !item.roleState })
     }
     // 删除前的确认框
-    function confirmMethod(user) {
+    function confirmMethod(user: User) {
         confirm({
             title: '警告',
             icon: <ExclamationCircleFilled />,
@@ -171,25 +173,23 @@ export default function UserList() {
         })
     }
     // 删除用户
-    function deleteUser(item) {
+    function deleteUser(item: User) {
         let list = userList.filter((user) => {
             return user.id !== item.id
         })
         axios.delete(`/users/${item.id}`).then(
-            (res) => {
+            () => {
                 setUserList([...list])
                 message.success('删除成功')
             },
-            (err) => {
+            () => {
                 message.error('删除失败')
             }
         )
-        // setUserList([...list])
-        // message.success('删除成功')
     }
     // 提交添加用户信息
     function handleAdd() {
-        addForm.current.validateFields().then(
+        addForm.current?.validateFields().then(
             (value) => {
                 axios
                     .post('/users', {
@@ -198,22 +198,22 @@ export default function UserList() {
                         roleState: true
                     })
                     .then(
-                        (res) => {
+                        () => {
                             message.success('成功添加用户')
                             axios.get('/users?_expand=role').then((res) => {
                                 setUserList(res.data)
                             })
                             setIsAddModalOpen(false)
-                            addForm.current.resetFields()
+                            addForm.current?.resetFields()
                         },
-                        (err) => message.error('出现错误了!添加用户失败！')
+                        () => message.error('出现错误了!添加用户失败！')
                     )
             },
-            (err) => message.error('请确认所有信息已填写')
+            () => message.error('请确认所有信息已填写')
         )
     }
     // 点击编辑按钮的回调
-    function handleEditButton(user) {
+    function handleEditButton(user: User) {
         setIsUpdate(true)
         setIsEditModalOpen(!isEditModalOpen)
         if (user.roleId === 1) {
@@ -222,33 +222,33 @@ export default function UserList() {
             setIsSelectDisabled(false)
         }
         setTimeout(() => {
-            editForm.current.setFieldsValue({
+            editForm.current?.setFieldsValue({
                 ...user,
-                roleName: user.role.roleName
+                roleName: user.role?.roleName
             })
         }, 10)
         setCurrentId(user.id)
     }
     // 提交编辑后的用户信息
     function editUser() {
-        editForm.current.validateFields().then(
+        editForm.current?.validateFields().then(
             (value) => {
                 axios
                     .patch(`/users/${currentId}`, {
                         ...value
                     })
                     .then(
-                        (res) => {
+                        () => {
                             message.success('成功编辑用户')
                             axios.get('/users?_expand=role').then((res) => {
                                 setUserList(res.data)
                             })
                             setIsEditModalOpen(false)
                         },
-                        (err) => message.error('出现错误了!编辑用户失败！')
+                        () => message.error('出现错误了!编辑用户失败！')
                     )
             },
-            (err) => message.error('请确认所有信息已填写')
+            () => message.error('请确认所有信息已填写')
         )
 
         setIsUpdate(false)

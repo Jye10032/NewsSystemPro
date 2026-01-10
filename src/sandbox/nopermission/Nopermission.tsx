@@ -1,9 +1,8 @@
-import React from 'react';
-import { Button, Result } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { Button, Result } from 'antd'
+import { useNavigate } from 'react-router-dom'
 
 export default function Nopermission() {
-    const navigate = useNavigate();
+    const navigate = useNavigate()
 
     return (
         <Result

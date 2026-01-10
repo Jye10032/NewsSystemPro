@@ -1,17 +1,27 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PageHeader } from '@ant-design/pro-layout'
 import { Card, Col, Row, List } from 'antd'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import _ from 'lodash'
 
+interface NewsItem {
+  id: number
+  title: string
+  category: { title: string }
+}
+
+type GroupedNews = [string, NewsItem[]][]
+
 export default function News() {
-  const [newsList, setNewsList] = useState([])
+  const [newsList, setNewsList] = useState<GroupedNews>([])
+
   useEffect(() => {
-    axios.get('/news?publishState=2&_expand=category').then((res) => {
-      setNewsList(Object.entries(_.groupBy(res.data, (item) => item.category.title)))
+    axios.get<NewsItem[]>('/news?publishState=2&_expand=category').then((res) => {
+      setNewsList(Object.entries(_.groupBy(res.data, (item: NewsItem) => item.category.title)))
     })
   }, [])
+
   return (
     <div style={{ padding: '15px 30px' }}>
       <PageHeader

@@ -1,21 +1,20 @@
-import React from 'react'
 import { Button } from 'antd'
 import NewsPublish from '../components/NewsPublish'
 import usePublish from '../hooks/usePublish'
 
-export default function Unpublished() {
-  const { newsList, confirmMethod } = usePublish(1)
+export default function Sunset() {
+  const { newsList, confirmMethod } = usePublish(3)
   return (
     <div>
       <NewsPublish
-        title="待发布"
+        title="已下线"
         newsList={newsList}
         button={(id) => (
           <Button
             type="primary"
-            onClick={() => confirmMethod(id, 1)}
+            onClick={() => confirmMethod(id)}
           >
-            发布
+            删除
           </Button>
         )}
       ></NewsPublish>

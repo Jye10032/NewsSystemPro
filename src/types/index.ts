@@ -1,23 +1,9 @@
-// 用户角色
-export interface Role {
-  id: number
-  roleName: string
-  roleType: number
-  rights: string[]
-}
+// 统一导出
+export * from './user'
+export * from './category'
+export * from './right'
 
-// 用户信息
-export interface User {
-  id: number
-  username: string
-  password: string
-  roleState: boolean
-  default: boolean
-  region: string
-  roleId: number
-  role: Role
-  allowedCategoryIds?: number[]
-}
+import type { User } from './user'
 
 // Redux State
 export interface RootState {
@@ -26,13 +12,9 @@ export interface RootState {
   user: User | null
 }
 
-// Action Types
-export type UserAction =
-  | { type: 'set_user'; payload: User }
-  | { type: 'clear_user' }
-
+// Redux Action Types
 export type CollapsedAction = { type: 'change_collapsed' }
-
 export type LoadingAction = { type: 'change_loading' }
 
+import type { UserAction } from './user'
 export type AppAction = UserAction | CollapsedAction | LoadingAction
