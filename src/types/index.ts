@@ -2,6 +2,7 @@
 export * from './user'
 export * from './category'
 export * from './right'
+export * from './news'
 
 import type { User } from './user'
 

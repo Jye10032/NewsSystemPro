@@ -3,16 +3,7 @@ import { useEffect, useState } from 'react'
 import { Table, Button, Tag, notification, message } from 'antd'
 import { Link } from 'react-router-dom'
 import '../../styles/TableStyles.css'
-
-interface NewsItem {
-    id: number
-    title: string
-    author: string
-    categoryId: number
-    auditState: number
-    publishState: number
-    category: { title: string }
-}
+import type { NewsItem } from '@/types'
 
 export default function AuditList() {
     const auditList = ['未审核', '审核中', '已通过', '未通过']

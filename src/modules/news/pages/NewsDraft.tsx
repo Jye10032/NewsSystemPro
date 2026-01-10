@@ -4,18 +4,9 @@ import { Table, Button, notification, Modal, message } from 'antd'
 import axios from 'axios'
 import { EditOutlined, DeleteOutlined, VerticalAlignTopOutlined, ExclamationCircleFilled } from '@ant-design/icons'
 import '../../../styles/TableStyles.css'
-import type { Category } from '@/types'
+import type { Category, NewsItem } from '@/types'
 
 const { confirm } = Modal
-
-interface NewsItem {
-  id: number
-  title: string
-  author: string
-  categoryId: number
-  auditState: number
-  category?: { title: string }
-}
 
 export default function NewsDraft() {
   const navigate = useNavigate()

@@ -3,16 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Table, Button, notification, message } from 'antd'
 import '../../styles/TableStyles.css'
-
-interface NewsItem {
-    id: number
-    title: string
-    author: string
-    categoryId: number
-    roleId: number
-    auditState: number
-    category: { title: string }
-}
+import type { NewsItem } from '@/types'
 
 export default function Audit() {
     const [newsList, setNewsList] = useState<NewsItem[]>([])

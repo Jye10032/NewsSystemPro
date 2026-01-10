@@ -13,16 +13,7 @@ import {
 import { Link } from 'react-router-dom'
 import * as echarts from 'echarts'
 import _ from 'lodash'
-
-interface NewsItem {
-    id: number
-    title: string
-    author: string
-    view?: number
-    star?: number
-    categoryId: number
-    category: { title: string }
-}
+import type { NewsItem } from '@/types'
 
 interface Stats {
     totalViews: number

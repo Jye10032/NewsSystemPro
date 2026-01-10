@@ -4,12 +4,7 @@ import { Card, Col, Row, List } from 'antd'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import _ from 'lodash'
-
-interface NewsItem {
-  id: number
-  title: string
-  category: { title: string }
-}
+import type { NewsItem } from '@/types'
 
 type GroupedNews = [string, NewsItem[]][]
 

@@ -2,18 +2,9 @@ import { ExclamationCircleFilled } from '@ant-design/icons'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { notification, message, Modal } from 'antd'
+import type { NewsItem } from '@/types'
 
 const { confirm } = Modal
-
-interface NewsItem {
-  id: number
-  title: string
-  author: string
-  categoryId: number
-  auditState: number
-  publishState: number
-  category?: { title: string }
-}
 
 function usePublish(publishState: number) {
   const [newsList, setNewsList] = useState<NewsItem[]>([])

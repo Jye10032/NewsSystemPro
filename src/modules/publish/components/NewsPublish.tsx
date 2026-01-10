@@ -2,14 +2,7 @@ import { Table } from 'antd'
 import { Link } from 'react-router-dom'
 import '../../../styles/TableStyles.css'
 import type { ReactNode } from 'react'
-
-interface NewsItem {
-  id: number
-  title: string
-  author: string
-  categoryId: number
-  category?: { title: string }
-}
+import type { NewsItem } from '@/types'
 
 interface NewsPublishProps {
   title: string
