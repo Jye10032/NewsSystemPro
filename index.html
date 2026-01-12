@@ -6,9 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>新闻管理系统</title>
 
-    <!-- Axios 兼容性 Polyfill - 必须在所有模块加载前执行 -->
+    <!--
+      Axios 兼容性 Polyfill
+
+      问题背景：
+      - axios 1.8+ 版本在 fetch.js 中使用了解构语法：
+        const globalFetchAPI = (({Request, Response}) => ({Request, Response}))(utils.global)
+      - 如果 utils.global 中没有 Request/Response，会报错：
+        "Cannot destructure property 'Request' of 'undefined'"
+
+      解决方案：
+      - 在模块加载前，确保 globalThis.Request 和 globalThis.Response 可用
+
+      局限性：
+      - 由于 <script type="module"> 和 modulepreload 的加载机制，
+        axios 模块可能在此 polyfill 执行前就已经解析执行
+      - 建议：锁定 axios 版本为 1.7.7 以彻底避免此问题
+
+      相关 Issue：https://github.com/axios/axios/issues/7259
+    -->
     <script>
-      // 确保 globalThis 可用
+      // 确保 globalThis 可用（兼容旧浏览器）
       if (typeof globalThis === 'undefined') {
         if (typeof window !== 'undefined') {
           window.globalThis = window;
@@ -20,7 +38,7 @@
       }
 
       // 确保 Request 和 Response 在全局作用域可用
-      // axios 会从 utils.global 解构这些对象
+      // axios 的 fetch adapter 会从 utils.global 解构这些对象
       if (typeof globalThis !== 'undefined') {
         globalThis.Request = globalThis.Request || window.Request;
         globalThis.Response = globalThis.Response || window.Response;

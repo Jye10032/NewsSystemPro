@@ -1,6 +1,6 @@
-import React from 'react'
-import { Layout, theme, Dropdown, Breadcrumb, Avatar, Space } from 'antd'
-import { UserOutlined, HomeOutlined } from '@ant-design/icons'
+import { useState, useEffect } from 'react'
+import { Layout, theme, Dropdown, Breadcrumb, Avatar, Space, Button } from 'antd'
+import { UserOutlined, HomeOutlined, MenuOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../types'
@@ -9,6 +9,13 @@ export default function TopHead() {
     const user = useSelector((state: RootState) => state.user)
     const dispatch = useDispatch()
     const location = useLocation()
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768)
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
 
     const {
         token: { colorBgContainer },
@@ -105,6 +112,10 @@ export default function TopHead() {
         },
     ]
 
+    const handleMobileMenuClick = () => {
+        window.dispatchEvent(new CustomEvent('toggleMobileMenu'))
+    }
+
     return (
         <Header
             style={{
@@ -117,8 +128,16 @@ export default function TopHead() {
                 zIndex: 1,
             }}
         >
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-                <Breadcrumb items={breadcrumbItems} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {isMobile && (
+                    <Button
+                        type="text"
+                        icon={<MenuOutlined />}
+                        onClick={handleMobileMenuClick}
+                        style={{ fontSize: 18 }}
+                    />
+                )}
+                <Breadcrumb items={breadcrumbItems.filter(Boolean) as { key: string; title: React.ReactNode }[]} />
             </div>
 
             <div style={{ float: "right" }}>

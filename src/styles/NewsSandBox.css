@@ -1,0 +1,68 @@
+#root,
+.ant-layout {
+    height: 100%;
+}
+
+/* Content 内容区样式 */
+.site-layout .ant-layout-content {
+    margin: 24px 16px;
+    padding: 24px;
+    min-height: 280px;
+    overflow: auto;
+}
+
+/*
+ * 移动端适配 - 抽屉式导航
+ *
+ * 为什么不用 Flex 并排布局？
+ * - 电脑端：Flex 布局（Ant Design 默认）
+ * - 移动端屏幕窄（如 400px），Sider 200px + Content 200px 会导致内容区太挤
+ * - 改用 position: fixed 让侧边栏脱离文档流，内容区可全宽显示
+ * - 侧边栏作为浮层覆盖在内容上方，点击时滑入/滑出
+ *
+ * 为什么用 !important？
+ * - Ant Design Sider 组件有内联样式（优先级 1000）
+ * - 普通 CSS 选择器无法覆盖，需要 !important 强制生效
+ */
+@media screen and (max-width: 768px) {
+
+    /* 侧边栏：固定定位，默认隐藏在屏幕左侧外 */
+    .ant-layout-sider {
+        position: fixed !important;
+        z-index: 1000;
+        height: 100%;
+        left: -200px;
+        transition: left 0.3s ease;
+    }
+
+    .ant-layout-sider.mobile-visible {
+        left: 0;
+    }
+
+    /* 遮罩层 */
+    .mobile-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 999;
+    }
+
+    /* 内容区域全宽 */
+    .site-layout {
+        margin-left: 0 !important;
+    }
+
+    /* 减小内容区域边距 */
+    .site-layout .ant-layout-content {
+        margin: 12px 8px !important;
+        padding: 12px !important;
+    }
+
+    /* 顶部栏调整 */
+    .ant-layout-header {
+        padding: 0 12px !important;
+    }
+}

@@ -246,7 +246,7 @@ export default function Home() {
     ]
 
     return (
-        <div style={{ padding: '24px', backgroundColor: '#f0f2f5', minHeight: '100vh' }}>
+        <div style={{ padding: '24px', minHeight: '100vh' }}>
             <Card style={{ marginBottom: 24 }}>
                 <Row align="middle" gutter={24}>
                     <Col>

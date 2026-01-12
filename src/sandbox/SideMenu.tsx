@@ -29,6 +29,24 @@ const iconList: Record<string, ReactNode> = {
 
 export default function SideMenu() {
     const [meun, setMeun] = useState<Right[]>([])
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+    const [mobileVisible, setMobileVisible] = useState(false)
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768)
+            if (window.innerWidth > 768) {
+                setMobileVisible(false)
+            }
+        }
+        const handleToggleMobile = () => setMobileVisible(v => !v)
+        window.addEventListener('resize', handleResize)
+        window.addEventListener('toggleMobileMenu', handleToggleMobile)
+        return () => {
+            window.removeEventListener('resize', handleResize)
+            window.removeEventListener('toggleMobileMenu', handleToggleMobile)
+        }
+    }, [])
 
     useEffect(() => {
         axios.get<Right[]>("/rights").then(res => {
@@ -38,6 +56,13 @@ export default function SideMenu() {
 
     const checkPagePermission = (item: Right): boolean => {
         return item.pagepermisson === 1
+    }
+
+    const handleMenuClick = (key: string) => {
+        nav(key)
+        if (isMobile) {
+            setMobileVisible(false)
+        }
     }
 
     const renderMenu = (meun: Right[]): ReactNode[] => {
@@ -51,7 +76,7 @@ export default function SideMenu() {
             }
             return checkPagePermission(item) && (
                 <Menu.Item key={item.key} icon={iconList[item.key]} onClick={() => {
-                    nav(item.key)
+                    handleMenuClick(item.key)
                 }}>
                     {item.title}
                 </Menu.Item>
@@ -67,7 +92,11 @@ export default function SideMenu() {
     const showCollapsed = isCollapsible && !hovered
 
     const toggleCollapsed = () => {
-        dispatch({ type: 'change_collapsed' })
+        if (isMobile) {
+            setMobileVisible(!mobileVisible)
+        } else {
+            dispatch({ type: 'change_collapsed' })
+        }
     }
 
     const nav = useNavigate()
@@ -83,40 +112,46 @@ export default function SideMenu() {
     }
 
     return (
-        <Sider
-            trigger={null}
-            collapsible
-            collapsed={showCollapsed}
-            theme="light"
-            onMouseEnter={() => isCollapsible && setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            style={{ transition: 'all 0.2s' }}
-        >
-            <div style={{ display: "flex", height: "100%", flexDirection: "column" }}>
-                <div className="sider-collapse-button">
-                    <Button
-                        type="text"
-                        icon={isCollapsible ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                        onClick={toggleCollapsed}
-                        style={{
-                            fontSize: '16px',
-                            width: '100%',
-                            height: '48px',
-                        }}
-                    />
+        <>
+            {isMobile && mobileVisible && (
+                <div className="mobile-overlay" onClick={() => setMobileVisible(false)} />
+            )}
+            <Sider
+                trigger={null}
+                collapsible
+                collapsed={isMobile ? false : showCollapsed}
+                theme="light"
+                className={isMobile && mobileVisible ? 'mobile-visible' : ''}
+                onMouseEnter={() => !isMobile && isCollapsible && setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                style={{ transition: 'all 0.2s' }}
+            >
+                <div style={{ display: "flex", height: "100%", flexDirection: "column" }}>
+                    <div className="sider-collapse-button">
+                        <Button
+                            type="text"
+                            icon={isCollapsible ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                            onClick={toggleCollapsed}
+                            style={{
+                                fontSize: '16px',
+                                width: '100%',
+                                height: '48px',
+                            }}
+                        />
+                    </div>
+                    <div style={{ flex: 1, "overflow": "auto" }}>
+                        <Menu
+                            key={meun.length}
+                            theme="light"
+                            mode="inline"
+                            selectedKeys={selectKeys}
+                            openKeys={showCollapsed ? [] : openKeys}
+                            onOpenChange={handleOpenChange}>
+                            {renderMenu(meun)}
+                        </Menu>
+                    </div>
                 </div>
-                <div style={{ flex: 1, "overflow": "auto" }}>
-                    <Menu
-                        key={meun.length}
-                        theme="light"
-                        mode="inline"
-                        selectedKeys={selectKeys}
-                        openKeys={showCollapsed ? [] : openKeys}
-                        onOpenChange={handleOpenChange}>
-                        {renderMenu(meun)}
-                    </Menu>
-                </div>
-            </div>
-        </Sider>
+            </Sider>
+        </>
     )
 }

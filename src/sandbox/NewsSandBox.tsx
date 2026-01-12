@@ -3,16 +3,12 @@ import 'nprogress/nprogress.css'
 import SideMenu from './SideMenu'
 import TopHead from './TopHead'
 import NewsRouter from '../router/NewsRouter'
-import './NewsSandBox.css'
+import '@/styles/NewsSandBox.css'
 import { useEffect } from 'react'
-import { Layout, theme } from 'antd'
+import { Layout } from 'antd'
 const { Content } = Layout
 
 export default function NewsSandBox() {
-    const {
-        token: { colorBgContainer }
-    } = theme.useToken()
-
     //加载进度条
     NProgress.start()
     useEffect(() => {
@@ -24,15 +20,7 @@ export default function NewsSandBox() {
             <SideMenu></SideMenu>
             <Layout className="site-layout">
                 <TopHead></TopHead>
-                <Content
-                    style={{
-                        margin: '24px 16px',
-                        padding: 24,
-                        minHeight: 280,
-                        background: colorBgContainer,
-                        overflow: 'auto'
-                    }}
-                >
+                <Content>
                     <NewsRouter></NewsRouter>
                 </Content>
             </Layout>
