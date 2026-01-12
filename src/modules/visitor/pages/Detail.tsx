@@ -12,6 +12,7 @@ interface NewsInfo {
   content: string
   author: string
   publishTime?: number
+  publishState: number
   view: number
   star: number
   category: { title: string }
@@ -26,15 +27,23 @@ export default function Detail() {
     axios
       .get<NewsInfo>(`/news/${params.id}?_expand=category&_expand=role`)
       .then((res) => {
+        // 校验发布状态，只有已发布(publishState=2)的新闻才能访问
+        if (res.data.publishState !== 2) {
+          message.error('该文章不存在或未发布')
+          navigate('/news')
+          return
+        }
         setNewsInfo({ ...res.data, view: res.data.view + 1 })
         return res.data
       })
-      .then((res) =>
-        axios.patch(`/news/${params.id}`, {
-          view: res.view + 1
-        })
-      )
-  }, [params.id])
+      .then((res) => {
+        if (res) {
+          axios.patch(`/news/${params.id}`, {
+            view: res.view + 1
+          })
+        }
+      })
+  }, [params.id, navigate])
 
   function handleStar() {
     if (!newsInfo) return
