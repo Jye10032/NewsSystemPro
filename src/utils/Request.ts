@@ -15,6 +15,11 @@ axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:
 axios.interceptors.request.use(
   function (config) {
     store.dispatch({ type: 'change_loading' })
+    // 添加 JWT Authorization header 用于后端权限校验
+    const jwt = localStorage.getItem('jwt')
+    if (jwt) {
+      config.headers.Authorization = `Bearer ${jwt}`
+    }
     return config
   },
   function (error) {

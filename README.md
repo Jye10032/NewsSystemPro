@@ -2,6 +2,8 @@
 
 > 一个基于 React + Vite 的现代化新闻发布与管理平台
 
+📖 [项目开发笔记](https://jye10032.github.io/NewsSystemPro/docs/)
+
 [![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-4.4.5-646CFF.svg)](https://vitejs.dev/)
 [![Ant Design](https://img.shields.io/badge/Ant%20Design-5.1.7-1890FF.svg)](https://ant.design/)

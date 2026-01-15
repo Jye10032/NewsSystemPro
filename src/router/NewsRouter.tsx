@@ -1,36 +1,37 @@
-import Home from '../sandbox/home/Home'
-import RightList from '../sandbox/right-manage/RightList'
-import RoleList from '../sandbox/right-manage/RoleList'
-import UserList from '../sandbox/user-manage/UserList'
-import Nopermission from '../sandbox/nopermission/Nopermission'
-import Audit from '../sandbox/audit-manage/Audit'
-import AuditList from '../sandbox/audit-manage/AuditList'
-import NewAdd from '../modules/news/pages/NewsAdd'
-import NewsCategory from '../modules/news/pages/NewsCategory'
-import NewsDraft from '../modules/news/pages/NewsDraft'
-import NewsPreivew from '../modules/news/pages/NewsPreivew'
-import NewsUpdate from '../modules/news/pages/NewsUpdate'
-import Published from '../modules/publish/pages/Published'
-import Unpublished from '../modules/publish/pages/Unpublished'
-import Sunset from '../modules/publish/pages/Sunset'
-import React, { useEffect, useState, ComponentType } from 'react'
+import { useEffect, useState, lazy, Suspense, ComponentType } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { Spin } from 'antd'
 import axios from 'axios'
 import { connect } from 'react-redux'
 import type { Right, RootState } from '@/types'
 
+
 /**
  * 对应页面的路由导航
  * 1.判断用户是否具有访问权限
  * 2.判断路由是否存在
  * 3.Spin：进度条加载指示器
- * 4.在backRouteList中,由于LocalRouterMap[item.key] 是一个组件，
- * 应该返回 <LocalRouterMap[item.key] />，而不是 LocalRouterMap[item.key]，
- * 但是因为 item.key 是一个变量，
- * 不能直接在 JSX 中使用它来创建一个组件实例。
- * 需要先获取到组件，然后再使用 React.createElement() 来创建一个组件实例
+ * 4.动态组件渲染：由于 LocalRouterMap[item.key] 是动态获取的组件，
+ * JSX 不支持 <LocalRouterMap[item.key] /> 这种写法，
+ * 需要先赋值给大写变量 Component，再用 <Component /> 渲染
  */
+
+// 懒加载组件 - 首屏只加载当前页面，其他页面延迟加载
+const Home = lazy(() => import('../sandbox/home/Home'))
+const UserList = lazy(() => import('../sandbox/user-manage/UserList'))
+const RoleList = lazy(() => import('../sandbox/right-manage/RoleList'))
+const RightList = lazy(() => import('../sandbox/right-manage/RightList'))
+const Nopermission = lazy(() => import('../sandbox/nopermission/Nopermission'))
+const Audit = lazy(() => import('../sandbox/audit-manage/Audit'))
+const AuditList = lazy(() => import('../sandbox/audit-manage/AuditList'))
+const NewsAdd = lazy(() => import('../modules/news/pages/NewsAdd'))
+const NewsCategory = lazy(() => import('../modules/news/pages/NewsCategory'))
+const NewsDraft = lazy(() => import('../modules/news/pages/NewsDraft'))
+const NewsPreview = lazy(() => import('../modules/news/pages/NewsPreivew'))
+const NewsUpdate = lazy(() => import('../modules/news/pages/NewsUpdate'))
+const Published = lazy(() => import('../modules/publish/pages/Published'))
+const Unpublished = lazy(() => import('../modules/publish/pages/Unpublished'))
+const Sunset = lazy(() => import('../modules/publish/pages/Sunset'))
 
 const LocalRouterMap: Record<string, ComponentType> = {
     '/home': Home,
@@ -39,9 +40,9 @@ const LocalRouterMap: Record<string, ComponentType> = {
     '/user-manage/menu': RightList,
     '/audit-manage/audit': Audit,
     '/audit-manage/list': AuditList,
-    '/news-manage/add': NewAdd,
+    '/news-manage/add': NewsAdd,
     '/news-manage/draft': NewsDraft,
-    '/news-manage/preview/:id': NewsPreivew,
+    '/news-manage/preview/:id': NewsPreview,
     '/news-manage/update/:id': NewsUpdate,
     '/publish-manage/sunset': Sunset,
     '/publish-manage/published': Published,
@@ -60,7 +61,6 @@ function NewsRouter(props: NewsRouterProps) {
 
     useEffect(() => {
         axios.get<Right[]>('/rights').then((res) => {
-            // 展平嵌套结构：一级菜单 + 所有二级菜单
             const flatList = res.data.reduce<Right[]>((acc, item) => {
                 acc.push(item)
                 if (item.children && item.children.length > 0) {
@@ -72,39 +72,29 @@ function NewsRouter(props: NewsRouterProps) {
         })
     }, [])
 
-    // 检查用户的权限
     function checkUserPermission(key: string): boolean {
         return rights.includes(key)
     }
 
-    // 检测路径是否存在
     function checkRoute(item: Right): boolean {
         return !!LocalRouterMap[item.key] && !!(item.pagepermisson || item.routepermisson)
     }
 
     return (
-        <Spin
-            size="large"
-            tip="加载中..."
-            spinning={props.isLoading}
-        >
-            <Routes>
-                {backRouteList.map((item) => {
-                    if (checkUserPermission(item.key) && checkRoute(item)) {
-                        return (
-                            <Route
-                                path={item.key}
-                                key={item.key}
-                                element={React.createElement(LocalRouterMap[item.key])}
-                            ></Route>
-                        )
-                    } else {
+        <Spin size="large" tip="加载中..." spinning={props.isLoading}>
+            <Suspense fallback={<Spin size="large" tip="页面加载中..." />}>
+                <Routes>
+                    {backRouteList.map((item) => {
+                        if (checkUserPermission(item.key) && checkRoute(item)) {
+                            const Component = LocalRouterMap[item.key]
+                            return <Route path={item.key} key={item.key} element={<Component />} />
+                        }
                         return null
-                    }
-                })}
-                <Route path="/" element={<Home />}></Route>
-                <Route path="*" element={<Nopermission />} />
-            </Routes>
+                    })}
+                    <Route path="/" element={<Home />} />
+                    <Route path="*" element={<Nopermission />} />
+                </Routes>
+            </Suspense>
         </Spin>
     )
 }
