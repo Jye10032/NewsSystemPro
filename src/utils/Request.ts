@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { message } from 'antd'
 import { store } from '../redux/store'
 
 /*
@@ -14,7 +15,9 @@ axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:
 
 axios.interceptors.request.use(
   function (config) {
-    store.dispatch({ type: 'change_loading' })
+    store.dispatch({ type: 'loading_start' })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    console.log('[Request Start]', config.method?.toUpperCase(), config.url, '| Loading:', (store.getState() as any).isLoading)
     // 添加 JWT Authorization header 用于后端权限校验
     const jwt = localStorage.getItem('jwt')
     if (jwt) {
@@ -27,11 +30,19 @@ axios.interceptors.request.use(
   },
 )
 axios.interceptors.response.use(
-  function (config) {
-    store.dispatch({ type: 'change_loading' })
-    return config
+  function (response) {
+    store.dispatch({ type: 'loading_end' })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    console.log('[Request End]', response.config.method?.toUpperCase(), response.config.url, '| Loading:', (store.getState() as any).isLoading)
+    return response
   },
   function (error) {
+    store.dispatch({ type: 'loading_end' })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    console.log('[Request Error]', error.config?.method?.toUpperCase(), error.config?.url, '| Loading:', (store.getState() as any).isLoading)
+    // 显示错误提示
+    const msg = error.response?.data?.message || error.response?.data?.error || '请求失败'
+    message.error(msg)
     return Promise.reject(error)
   },
 )

@@ -55,6 +55,7 @@ interface NewsRouterProps {
 }
 
 function NewsRouter(props: NewsRouterProps) {
+    console.log('[NewsRouter] isLoading prop:', props.isLoading)
     const tokenData = JSON.parse(localStorage.getItem('token') || '{}')
     const rights: string[] = tokenData.role?.rights || []
     const [backRouteList, setBackRouteList] = useState<Right[]>([])
@@ -99,6 +100,9 @@ function NewsRouter(props: NewsRouterProps) {
     )
 }
 
-export default connect((state: RootState) => ({
-    isLoading: state.isLoading
-}))(NewsRouter)
+export default connect((state: RootState) => {
+    console.log('[NewsRouter connect] raw state.isLoading:', state.isLoading)
+    return {
+        isLoading: state.isLoading > 0
+    }
+})(NewsRouter)

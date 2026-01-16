@@ -92,6 +92,27 @@ app.post('/api/auth/login', (req, res) => {
   })
 })
 
+// 获取当前登录用户信息
+app.get('/api/users/me', (req, res) => {
+  const user = getUserFromToken(req)
+  if (!user) {
+    return res.status(401).json({ message: '未登录' })
+  }
+
+  const userData = memoryDB.users.find(u => u.id === user.userId)
+  if (!userData) {
+    return res.status(404).json({ message: '用户不存在' })
+  }
+
+  const { password, ...userWithoutPassword } = userData
+  const role = memoryDB.roles.find(r => r.id === userData.roleId)
+
+  res.json({
+    ...userWithoutPassword,
+    role
+  })
+})
+
 // 注册（内存模式，刷新后重置）
 app.post('/api/auth/register', (req, res) => {
   const { username, password, roleId = 3 } = req.body

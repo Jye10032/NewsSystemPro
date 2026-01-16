@@ -85,6 +85,13 @@ describe('SideMenu 侧边栏组件', () => {
     vi.clearAllMocks()
     // Mock axios.get 返回菜单数据
     vi.mocked(axios.get).mockResolvedValue({ data: mockMenuData })
+    // Mock localStorage 用户权限数据
+    const mockUserData = {
+      role: {
+        rights: ['/home', '/user-manage', '/user-manage/list', '/news-manage', '/news-manage/add', '/news-manage/draft']
+      }
+    }
+    localStorage.setItem('token', JSON.stringify(mockUserData))
   })
 
   describe('渲染测试', () => {
@@ -391,6 +398,8 @@ describe('SideMenu 侧边栏组件', () => {
         { id: 2, key: '/denied', title: '拒绝访问', pagepermisson: 0, children: [] }
       ]
       vi.mocked(axios.get).mockResolvedValue({ data: mixedMenuData })
+      // 设置用户权限包含 /allowed
+      localStorage.setItem('token', JSON.stringify({ role: { rights: ['/allowed', '/denied'] } }))
       const store = createTestStore()
 
       // Act
@@ -424,6 +433,8 @@ describe('SideMenu 侧边栏组件', () => {
         }
       ]
       vi.mocked(axios.get).mockResolvedValue({ data: nestedMenuData })
+      // 设置用户权限包含父菜单和允许的子菜单
+      localStorage.setItem('token', JSON.stringify({ role: { rights: ['/parent', '/parent/allowed', '/parent/denied'] } }))
       const store = createTestStore()
 
       // Act

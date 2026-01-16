@@ -5,6 +5,24 @@ const { authMiddleware } = require('../middleware/auth.cjs')
 
 const router = express.Router()
 
+// 获取当前登录用户信息
+router.get('/me', authMiddleware, (req, res) => {
+  const db = readDB()
+  const user = db.users.find(u => u.id === req.user.userId)
+
+  if (!user) {
+    return res.status(404).json({ message: '用户不存在' })
+  }
+
+  const { password, ...userWithoutPassword } = user
+  const role = db.roles.find(r => r.id === user.roleId)
+
+  res.json({
+    ...userWithoutPassword,
+    role
+  })
+})
+
 // 获取用户列表（需要认证）
 router.get('/', authMiddleware, (req, res) => {
   const db = readDB()

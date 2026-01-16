@@ -7,130 +7,52 @@
       "roleState": true,
       "default": true,
       "roleId": 1,
-      "allowedCategoryIds": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
-      ]
+      "allowedCategoryIds": [1, 2, 3, 4, 5, 6]
     },
     {
-      "username": "铁锤",
+      "id": 2,
+      "username": "tom",
       "password": "$2b$12$IcTdBylKQsrjW6ENJzPxOuFbe6QGGShEaqXU/VewTnTzJhJnqKVAa",
       "roleState": true,
       "default": false,
       "roleId": 2,
-      "id": 2,
-      "allowedCategoryIds": [
-        2,
-        3
-      ]
+      "allowedCategoryIds": [1, 2, 3]
     },
     {
-      "username": "钢蛋",
+      "id": 3,
+      "username": "jerry",
       "password": "$2b$12$5HqjUidL8ofSx12JSPj1G.TStyy7ntErZhbHzeMzqEkkENFh97iiS",
       "roleState": true,
       "default": false,
       "roleId": 2,
-      "id": 3,
-      "allowedCategoryIds": [
-        2,
-        3
-      ]
+      "allowedCategoryIds": [4, 5, 6]
     },
     {
-      "username": "诸葛山珍",
-      "password": "$2b$12$kZAeArnixxzOUr1ZfhYqhOH6HW5DZoJEUEdZUi4jG8PUqRdjxjyxi",
-      "roleState": true,
-      "default": false,
-      "roleId": 1,
       "id": 4,
-      "allowedCategoryIds": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
-      ]
-    },
-    {
-      "username": "西门吹灯",
+      "username": "alice",
       "password": "$2b$12$uAZhstr5PB3d/1y1ZEN4Je8zT6dni/kcJKk64tpdePVt/RAtgToL2",
       "roleState": true,
       "default": false,
       "roleId": 3,
-      "id": 5,
-      "allowedCategoryIds": [
-        2,
-        3
-      ]
+      "allowedCategoryIds": [1, 2]
     },
     {
-      "username": "轩辕翠花",
+      "id": 5,
+      "username": "bob",
       "password": "$2b$12$VMnVROedgHs8sZhUw0Oo1.cKN6O2DtJTvN4hHdaJqT5Vw5HHgtM42",
       "roleState": true,
       "default": false,
       "roleId": 3,
-      "id": 6,
-      "allowedCategoryIds": [
-        2,
-        3
-      ]
+      "allowedCategoryIds": [3, 4]
     },
     {
-      "username": "司马海味",
+      "id": 6,
+      "username": "charlie",
       "password": "$2b$12$YVD6DFLrI3EtHIkn06PKJONZbUZZILv59IblJHj8Oo732BcLQZL.i",
       "roleState": true,
       "default": false,
       "roleId": 3,
-      "id": 7,
-      "allowedCategoryIds": [
-        2,
-        3
-      ]
-    },
-    {
-      "username": "咕噜墩子",
-      "password": "$2b$12$gRyC/89PKd6.d5jMzE8Q1.FbEh7Sw19XTmg1ZQXJDzXbWX/R7JaLS",
-      "roleState": true,
-      "default": false,
-      "roleId": 3,
-      "id": 8,
-      "allowedCategoryIds": [
-        2,
-        3
-      ]
-    },
-    {
-      "username": "aaabbb",
-      "password": "$2b$12$rnXVvsI0ylpMQS60g0w18ev48T065a1GyzfICuOdMjUSVuKLD7e2S",
-      "roleId": 3,
-      "roleState": true,
-      "default": false,
-      "id": 9,
-      "allowedCategoryIds": [
-        2,
-        3
-      ]
-    },
-    {
-      "username": "test",
-      "password": "$2b$12$odLkVvem6Eq1s/U2U2FE5Ov8z1H9ZPKwL5VIt6h.NLKDXq8RJVQ0S",
-      "roleId": 1,
-      "default": false,
-      "roleState": true,
-      "id": 10,
-      "allowedCategoryIds": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
-      ]
+      "allowedCategoryIds": [5, 6]
     }
   ],
   "roles": [

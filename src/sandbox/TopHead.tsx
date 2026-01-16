@@ -77,7 +77,7 @@ export default function TopHead() {
 
     const breadcrumbItems = [
         {
-            key: '/home',
+            key: 'home-icon',
             title: <Link to="/home"><HomeOutlined /></Link>,
         },
         ...extraBreadcrumbItems

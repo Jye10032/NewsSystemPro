@@ -1,5 +1,7 @@
 import React, { forwardRef, useState, useEffect } from 'react'
-import { Form, Input, Select, FormInstance } from 'antd'
+import { Form, Input, Select, FormInstance, Button, Modal, message } from 'antd'
+import { KeyOutlined } from '@ant-design/icons'
+import axios from 'axios'
 import type { Role, Category } from '@/types'
 
 const { Option } = Select
@@ -9,11 +11,15 @@ interface UserFormProps {
     isSelectDisabled?: boolean
     roleList?: Role[]
     categoryList?: Category[]
+    userId?: number  // 编辑时传入用户ID，用于重置密码
 }
 
 const UserForm = forwardRef<FormInstance, UserFormProps>((props, ref) => {
     const [form] = Form.useForm()
     const [isDisabled, setIsDisabled] = useState<boolean>()
+    const [resetModalOpen, setResetModalOpen] = useState(false)
+    const [newPassword, setNewPassword] = useState('')
+    const [resetting, setResetting] = useState(false)
     const rank: Record<number, string> = {
         1: 'superAdmin',
         2: 'admin',
@@ -75,6 +81,30 @@ const UserForm = forwardRef<FormInstance, UserFormProps>((props, ref) => {
             }
         }
     }
+    // 重置密码
+    function handleResetPassword() {
+        if (!newPassword.trim()) {
+            message.error('请输入新密码')
+            return
+        }
+        if (!props.userId) {
+            message.error('用户ID不存在')
+            return
+        }
+        setResetting(true)
+        axios.patch(`/users/${props.userId}`, { password: newPassword })
+            .then(() => {
+                message.success('密码重置成功')
+                setResetModalOpen(false)
+                setNewPassword('')
+            })
+            .catch(() => {
+                message.error('密码重置失败')
+            })
+            .finally(() => {
+                setResetting(false)
+            })
+    }
     return (
         <div>
             <Form
@@ -98,18 +128,27 @@ const UserForm = forwardRef<FormInstance, UserFormProps>((props, ref) => {
                 >
                     <Input />
                 </Form.Item>
-                <Form.Item
-                    name="password"
-                    label="密码"
-                    rules={[
-                        {
-                            required: true,
-                            message: 'Please input the title of collection!'
-                        }
-                    ]}
-                >
-                    <Input />
-                </Form.Item>
+                {/* 新增用户时显示密码输入框，编辑时显示重置密码按钮 */}
+                {!props.isUpdate ? (
+                    <Form.Item
+                        name="password"
+                        label="密码"
+                        rules={[
+                            {
+                                required: true,
+                                message: '请输入密码'
+                            }
+                        ]}
+                    >
+                        <Input.Password placeholder="请输入密码" />
+                    </Form.Item>
+                ) : (
+                    <Form.Item label="密码">
+                        <Button icon={<KeyOutlined />} onClick={() => setResetModalOpen(true)}>
+                            重置密码
+                        </Button>
+                    </Form.Item>
+                )}
                 <Form.Item
                     name="allowedCategoryIds"
                     label="可管理的分类"
@@ -163,6 +202,25 @@ const UserForm = forwardRef<FormInstance, UserFormProps>((props, ref) => {
                     </Select>
                 </Form.Item>
             </Form>
+            {/* 重置密码弹窗 */}
+            <Modal
+                title="重置密码"
+                open={resetModalOpen}
+                onOk={handleResetPassword}
+                onCancel={() => {
+                    setResetModalOpen(false)
+                    setNewPassword('')
+                }}
+                okText="确认"
+                cancelText="取消"
+                confirmLoading={resetting}
+            >
+                <Input.Password
+                    placeholder="请输入新密码"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                />
+            </Modal>
         </div>
     )
 })

@@ -321,6 +321,7 @@ export default function UserList() {
                     categoryList={categoryList}
                     ref={editForm}
                     isSelectDisabled={isSelectDisabled}
+                    userId={currentId}
                 ></UserForm>
             </Modal>
         </div>

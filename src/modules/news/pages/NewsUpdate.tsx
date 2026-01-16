@@ -1,72 +1,63 @@
 import style from './NewsAdd.module.scss'
 import NewsEditor from '../components/NewsEditor'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
+import { Button, Input, Select, message, notification, Space } from 'antd'
+import { SaveOutlined, SendOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
-import { PageHeader } from '@ant-design/pro-layout'
-import { Steps, Button, Form, Input, Select, message, notification } from 'antd'
 import axios from 'axios'
 import type { Category } from '@/types'
-import type { FormInstance } from 'antd'
-
-const { Option } = Select
-
-interface FormInfo {
-  title: string
-  categoryId: number
-}
 
 export default function NewsUpdate() {
-  const navigate = useNavigate()
-  const [current, setCurrent] = useState(0)
+  const [title, setTitle] = useState('')
+  const [categoryId, setCategoryId] = useState<number | undefined>(undefined)
   const [content, setContent] = useState('')
-  const [formInfo, setFormInfo] = useState<FormInfo>({ title: '', categoryId: 0 })
   const [categoryList, setCategoryList] = useState<Category[]>([])
-  const NewsForm = useRef<FormInstance>(null)
+  const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
   const params = useParams<{ id: string }>()
-  const userInfo = JSON.parse(localStorage.getItem('token') || '{}')
 
   useEffect(() => {
-    axios.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
-    axios.get(`/news/${params.id}?_expand=category&_expand=role`).then((res) => {
-      setContent(res.data.content)
-      const { title, categoryId } = res.data
-      NewsForm.current?.setFieldsValue({
-        title,
-        categoryId
-      })
+    // 加载分类列表和新闻数据
+    Promise.all([
+      axios.get<Category[]>('/categories'),
+      axios.get(`/news/${params.id}`)
+    ]).then(([categoriesRes, newsRes]) => {
+      setCategoryList(categoriesRes.data)
+      const news = newsRes.data
+      setTitle(news.title)
+      setCategoryId(news.categoryId)
+      setContent(news.content)
+      setLoading(false)
     })
   }, [params.id])
 
-  function handlerNext() {
-    if (current === 0) {
-      NewsForm.current
-        ?.validateFields()
-        .then((value: FormInfo) => {
-          setCurrent(current + 1)
-          setFormInfo(value)
-        })
-        .catch((err) => console.log(err))
-    } else {
-      if (content === '' || content.trim() === '<p></p>') {
-        message.error('新闻内容不能为空！')
-      } else {
-        setCurrent(current + 1)
-      }
+  function validate(): boolean {
+    if (!title.trim()) {
+      message.error('请填写新闻标题')
+      return false
     }
+    if (!categoryId) {
+      message.error('请选择新闻分类')
+      return false
+    }
+    if (!content || content.trim() === '<p></p>') {
+      message.error('请填写新闻内容')
+      return false
+    }
+    return true
   }
 
   function handleSave(auditState: number) {
+    if (!validate()) return
+
+    setSaving(true)
     axios
-      .post('/news', {
-        ...formInfo,
+      .patch(`/news/${params.id}`, {
+        title,
+        categoryId,
         content,
-        author: userInfo.username,
-        roleId: userInfo.roleId,
-        auditState: auditState,
-        publishState: 0,
-        createTime: Date.now(),
-        star: 0,
-        view: 0
+        auditState: auditState
       })
       .then(
         () => {
@@ -78,120 +69,60 @@ export default function NewsUpdate() {
           })
         },
         () => {
-          message.error('出错了，请联系管理号')
+          message.error('出错了，请联系管理员')
         }
       )
+      .finally(() => setSaving(false))
+  }
+
+  if (loading) {
+    return <div style={{ padding: 20, textAlign: 'center' }}>加载中...</div>
   }
 
   return (
-    <div>
-      <PageHeader
-        title="更新新闻"
-        onBack={() => window.history.back()}
-      />
-      {/* 步骤条 */}
-      <Steps
-        style={{ marginBottom: '20px' }}
-        current={current}
-        items={[
-          {
-            title: '基本信息',
-            description: '新闻标题，新闻分类'
-          },
-          {
-            title: '新闻内容',
-            description: '新闻主体内容'
-          },
-          {
-            title: '新闻提交',
-            description: '保存草稿或提交审核'
-          }
-        ]}
-      />
-      {/* 新闻基本信息表单区域 */}
-      <Form
-        ref={NewsForm}
-        style={{ marginBottom: '20px' }}
-        className={current === 0 ? '' : style.hidden}
-      >
-        <Form.Item
-          label="新闻标题"
-          name="title"
-          rules={[{ required: true, message: '请填写新闻标题' }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="新闻分类"
-          name="categoryId"
-          rules={[{ required: true, message: '请选择新闻分类' }]}
-        >
-          <Select>
-            {categoryList.map((item) => {
-              return (
-                <Option
-                  key={item.id}
-                  value={item.id}
-                >
-                  {item.title}
-                </Option>
-              )
-            })}
-          </Select>
-        </Form.Item>
-      </Form>
-      {/* 新闻内容区域 */}
-      <div
-        style={{ marginBottom: '20px' }}
-        className={current === 1 ? '' : style.hidden}
-      >
-        <NewsEditor
-          getContent={(value) => setContent(value)}
-          content={content}
-        ></NewsEditor>
-      </div>
-      {/* 按钮区域 */}
-      {current > 0 && (
-        <Button
-          style={{
-            marginRight: '15px'
-          }}
-          type="primary"
-          onClick={() => setCurrent(current - 1)}
-        >
-          上一步
-        </Button>
-      )}
-      {current < 2 && (
-        <Button
-          style={{
-            marginRight: '15px'
-          }}
-          type="primary"
-          onClick={handlerNext}
-        >
-          下一步
-        </Button>
-      )}
-      {current === 2 && (
-        <span>
+    <div className={style.editorPage}>
+      <div className={style.toolbar}>
+        <Select
+          placeholder="选择分类"
+          value={categoryId}
+          onChange={setCategoryId}
+          style={{ width: 140 }}
+          options={categoryList.map((item) => ({
+            value: item.id,
+            label: item.title
+          }))}
+        />
+        <Space>
           <Button
-            type="primary"
-            style={{
-              marginRight: '15px'
-            }}
+            icon={<SaveOutlined />}
             onClick={() => handleSave(0)}
+            loading={saving}
           >
             保存草稿
           </Button>
           <Button
-            danger
+            type="primary"
+            icon={<SendOutlined />}
             onClick={() => handleSave(1)}
+            loading={saving}
           >
             提交审核
           </Button>
-        </span>
-      )}
+        </Space>
+      </div>
+
+      <Input
+        className={style.titleInput}
+        placeholder="请输入标题"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        maxLength={100}
+        showCount
+      />
+
+      <div className={style.editorWrapper}>
+        <NewsEditor getContent={(value) => setContent(value)} content={content} />
+      </div>
     </div>
   )
 }

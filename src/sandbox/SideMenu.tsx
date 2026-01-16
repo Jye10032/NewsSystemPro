@@ -18,6 +18,7 @@ import type { Right, RootState } from '@/types'
 const { SubMenu } = Menu
 const { Sider } = Layout
 
+// 一级菜单图标映射：key 对应路由路径
 const iconList: Record<string, ReactNode> = {
     '/home': <HomeOutlined />,
     '/news-manage': <ContainerOutlined />,
@@ -49,13 +50,24 @@ export default function SideMenu() {
     }, [])
 
     useEffect(() => {
+        // 从后端获取菜单权限数据（包含嵌套的 children 结构）
         axios.get<Right[]>("/rights").then(res => {
             setMeun(res.data)
         })
     }, [])
 
+    // 检查菜单项是否有页面权限
+    // 双重过滤：1. pagepermisson=1（菜单配置为显示）2. 用户角色有该菜单权限
     const checkPagePermission = (item: Right): boolean => {
-        return item.pagepermisson === 1
+        // 菜单本身必须配置为显示
+        if (item.pagepermisson !== 1) {
+            return false
+        }
+        // 获取用户角色的权限列表
+        const userData = JSON.parse(localStorage.getItem('token') || '{}')
+        const userRights: string[] = userData.role?.rights || []
+        // 用户必须有该菜单的权限
+        return userRights.includes(item.key)
     }
 
     const handleMenuClick = (key: string) => {
@@ -65,6 +77,7 @@ export default function SideMenu() {
         }
     }
 
+    // 递归渲染菜单：有 children 渲染 SubMenu，否则渲染 Menu.Item
     const renderMenu = (meun: Right[]): ReactNode[] => {
         return meun.map(item => {
             if (item.children && item.children.length > 0 && checkPagePermission(item)) {
@@ -86,9 +99,11 @@ export default function SideMenu() {
 
     const [hovered, setHovered] = useState(false)
 
+    // 从 Redux 获取侧边栏折叠状态
     const isCollapsible = useSelector((state: RootState) => state.collapsible)
     const dispatch = useDispatch()
 
+    // 折叠状态：用户主动折叠 && 鼠标未悬停时才真正折叠
     const showCollapsed = isCollapsible && !hovered
 
     const toggleCollapsed = () => {
@@ -102,6 +117,8 @@ export default function SideMenu() {
     const nav = useNavigate()
     const location = useLocation()
 
+    // 根据当前路径计算选中和展开的菜单项
+    // 如 /user-manage/list → parentKey='/user-manage', selectKeys=['/user-manage/list', '/user-manage']
     const parentKey = "/" + location.pathname.split("/")[1]
     const selectKeys = [location.pathname, parentKey]
 
