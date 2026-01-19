@@ -5,8 +5,18 @@ import { MemoryRouter } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { createStore } from 'redux'
 import TopHead from '../../sandbox/TopHead'
+import axios from 'axios'
 
 import { combineReducers } from 'redux'
+
+// Mock axios
+vi.mock('axios', () => ({
+  default: {
+    post: vi.fn(() => Promise.resolve({ data: { message: 'Logged out' } })),
+    get: vi.fn(),
+    defaults: { baseURL: '', withCredentials: false }
+  }
+}))
 
 // 创建测试用的 Redux store
 function createTestStore(userInfo = null) {
@@ -15,7 +25,7 @@ function createTestStore(userInfo = null) {
       if (action.type === 'change_collapsed') return !state
       return state
     },
-    isLoading: (state = false) => state,
+    isLoading: (state = 0) => state,
     user: (state = userInfo, action) => {
       if (action.type === 'set_user') return action.payload
       if (action.type === 'clear_user') return null
@@ -179,9 +189,8 @@ describe('TopHead 顶部栏组件', () => {
   })
 
   describe('退出登录功能', () => {
-    it('应该在点击退出时清除 localStorage', async () => {
+    it('应该在点击退出时调用登出 API', async () => {
       // Arrange
-      localStorage.setItem('token', JSON.stringify(mockUserInfo))
       const store = createTestStore(mockUserInfo)
       const user = userEvent.setup()
 
@@ -204,13 +213,14 @@ describe('TopHead 顶部栏组件', () => {
       const logoutButton = screen.getByText('退出')
       await user.click(logoutButton)
 
-      // Assert: localStorage 应该被清除
-      expect(localStorage.getItem('token')).toBeNull()
+      // Assert: 应该调用登出 API
+      await waitFor(() => {
+        expect(axios.post).toHaveBeenCalledWith('/api/auth/logout')
+      })
     })
 
-    it('应该在退出后跳转到登录页', async () => {
+    it('应该在退出后清除 Redux 用户状态', async () => {
       // Arrange
-      localStorage.setItem('token', JSON.stringify(mockUserInfo))
       const store = createTestStore(mockUserInfo)
       const user = userEvent.setup()
 
@@ -233,9 +243,9 @@ describe('TopHead 顶部栏组件', () => {
       const logoutButton = screen.getByText('退出')
       await user.click(logoutButton)
 
-      // Assert: 应该清除了 token
+      // Assert: Redux 状态应该被清除
       await waitFor(() => {
-        expect(localStorage.getItem('token')).toBeNull()
+        expect(store.getState().user).toBeNull()
       })
     })
   })

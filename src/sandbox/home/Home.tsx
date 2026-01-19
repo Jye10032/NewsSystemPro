@@ -11,9 +11,10 @@ import {
     ArrowDownOutlined
 } from '@ant-design/icons'
 import { Link } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import * as echarts from 'echarts'
 import _ from 'lodash'
-import type { NewsItem } from '@/types'
+import type { NewsItem, RootState } from '@/types'
 
 interface Stats {
     totalViews: number
@@ -66,10 +67,10 @@ export default function Home() {
         }
     }, [])
 
-    const tokenData = JSON.parse(localStorage.getItem('token') || '{}')
-    const username = tokenData.username || ''
-    const region = tokenData.region || ''
-    const roleName = tokenData.role?.roleName || ''
+    const user = useSelector((state: RootState) => state.user)
+    const username = user?.username || ''
+    const region = user?.region || ''
+    const roleName = user?.role?.roleName || ''
 
     function renderLineView() {
         if (!barRef.current) return

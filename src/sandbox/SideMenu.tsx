@@ -58,15 +58,14 @@ export default function SideMenu() {
 
     // 检查菜单项是否有页面权限
     // 双重过滤：1. pagepermisson=1（菜单配置为显示）2. 用户角色有该菜单权限
+    const user = useSelector((state: RootState) => state.user)
     const checkPagePermission = (item: Right): boolean => {
         // 菜单本身必须配置为显示
         if (item.pagepermisson !== 1) {
             return false
         }
-        // 获取用户角色的权限列表
-        const userData = JSON.parse(localStorage.getItem('token') || '{}')
-        const userRights: string[] = userData.role?.rights || []
         // 用户必须有该菜单的权限
+        const userRights: string[] = user?.role?.rights || []
         return userRights.includes(item.key)
     }
 

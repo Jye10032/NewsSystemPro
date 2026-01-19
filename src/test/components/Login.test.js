@@ -13,7 +13,13 @@ import Login from '../../modules/login/Login';
 import axios from 'axios';
 
 // Mock axios
-vi.mock('axios');
+vi.mock('axios', () => ({
+  default: {
+    post: vi.fn(),
+    get: vi.fn(),
+    defaults: { baseURL: '', withCredentials: false }
+  }
+}));
 
 // 创建测试用的 Redux store
 const createTestStore = () => {
@@ -24,7 +30,7 @@ const createTestStore = () => {
       return state;
     },
     collapsible: (state = false) => state,
-    isLoading: (state = false) => state,
+    isLoading: (state = 0) => state,
   });
   return createStore(rootReducer);
 };
@@ -40,11 +46,14 @@ vi.mock('tsparticles', () => ({
 
 // 测试辅助函数：在 Router 和 Redux 上下文中渲染组件
 const renderWithProviders = (component, store = createTestStore()) => {
-  return render(
-    <Provider store={store}>
-      <BrowserRouter>{component}</BrowserRouter>
-    </Provider>
-  );
+  return {
+    ...render(
+      <Provider store={store}>
+        <BrowserRouter>{component}</BrowserRouter>
+      </Provider>
+    ),
+    store
+  };
 };
 
 describe('Login 组件', () => {
@@ -100,10 +109,11 @@ describe('Login 组件', () => {
     });
   });
 
-  it('应该在用户名密码正确时登录成功', async () => {
+  it('应该在用户名密码正确时登录成功并更新 Redux', async () => {
     const user = userEvent.setup();
+    const store = createTestStore();
 
-    // Mock axios 返回成功的用户数据（新 JWT API 格式）
+    // Mock axios 返回成功的用户数据（httpOnly Cookie 方案，不返回 token）
     const mockUserData = {
       id: 1,
       username: 'admin',
@@ -113,12 +123,15 @@ describe('Login 组件', () => {
 
     axios.post.mockResolvedValueOnce({
       data: {
-        token: 'mock-jwt-token',
         user: mockUserData,
       },
     });
 
-    renderWithProviders(<Login />);
+    render(
+      <Provider store={store}>
+        <BrowserRouter><Login /></BrowserRouter>
+      </Provider>
+    );
 
     const usernameInput = screen.getByPlaceholderText('用户名');
     const passwordInput = screen.getByPlaceholderText('密码');
@@ -137,11 +150,8 @@ describe('Login 组件', () => {
         { username: 'admin', password: '123456' }
       );
 
-      // 检查是否保存了 JWT 到 localStorage
-      expect(localStorage.getItem('jwt')).toBe('mock-jwt-token');
-      // 检查是否保存了用户信息到 localStorage
-      const savedToken = JSON.parse(localStorage.getItem('token'));
-      expect(savedToken).toEqual(mockUserData);
+      // 检查 Redux 状态是否更新
+      expect(store.getState().user).toEqual(mockUserData);
     });
   });
 

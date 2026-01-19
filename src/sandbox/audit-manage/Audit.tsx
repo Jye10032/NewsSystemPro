@@ -1,56 +1,38 @@
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Table, Button, notification, message } from 'antd'
+import { useSelector } from 'react-redux'
 import '../../styles/TableStyles.css'
-import type { NewsItem } from '@/types'
+import type { NewsItem, RootState } from '@/types'
 
 export default function Audit() {
     const [newsList, setNewsList] = useState<NewsItem[]>([])
+    const user = useSelector((state: RootState) => state.user)
+    const { roleId, username, allowedCategoryIds } = user || {}
+
+    const getNewsList = useCallback(() => {
+        axios.get<NewsItem[]>(`/news?auditState=1&_expand=category`).then((res) => {
+            if (roleId === 1) {
+                return setNewsList(res.data)
+            } else if (roleId === 2) {
+                const list = res.data.filter((item) => {
+                    if (item.author === username) {
+                        return true
+                    }
+                    if (item.roleId === 3 && allowedCategoryIds?.includes(item.categoryId)) {
+                        return true
+                    }
+                    return false
+                })
+                return setNewsList(list)
+            }
+        })
+    }, [roleId, username, allowedCategoryIds])
 
     useEffect(() => {
-        const tokenData = JSON.parse(localStorage.getItem('token') || '{}')
-        const { roleId, username, allowedCategoryIds } = tokenData
-
-        axios.get<NewsItem[]>(`/news?auditState=1&_expand=category`).then((res) => {
-            if (roleId === 1) {
-                return setNewsList(res.data)
-            } else if (roleId === 2) {
-                const list = res.data.filter((item) => {
-                    if (item.author === username) {
-                        return true
-                    }
-                    if (item.roleId === 3 && allowedCategoryIds?.includes(item.categoryId)) {
-                        return true
-                    }
-                    return false
-                })
-                return setNewsList(list)
-            }
-        })
-    }, [])
-
-    function getNewsList() {
-        const tokenData = JSON.parse(localStorage.getItem('token') || '{}')
-        const { roleId, username, allowedCategoryIds } = tokenData
-
-        axios.get<NewsItem[]>(`/news?auditState=1&_expand=category`).then((res) => {
-            if (roleId === 1) {
-                return setNewsList(res.data)
-            } else if (roleId === 2) {
-                const list = res.data.filter((item) => {
-                    if (item.author === username) {
-                        return true
-                    }
-                    if (item.roleId === 3 && allowedCategoryIds?.includes(item.categoryId)) {
-                        return true
-                    }
-                    return false
-                })
-                return setNewsList(list)
-            }
-        })
-    }
+        getNewsList()
+    }, [getNewsList])
 
     function handleAudit(item: NewsItem, auditState: number, publishState: number) {
         axios

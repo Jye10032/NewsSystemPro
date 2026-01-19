@@ -1,14 +1,13 @@
 const { verifyToken } = require('../utils/jwt.cjs')
 
-// JWT 验证中间件
+// JWT 验证中间件（从 Cookie 读取）
 function authMiddleware(req, res, next) {
-  const authHeader = req.headers.authorization
+  const token = req.cookies?.jwt
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!token) {
     return res.status(401).json({ message: '未提供认证令牌' })
   }
 
-  const token = authHeader.split(' ')[1]
   const decoded = verifyToken(token)
 
   if (!decoded) {
@@ -21,10 +20,9 @@ function authMiddleware(req, res, next) {
 
 // 可选认证（不强制要求 token）
 function optionalAuth(req, res, next) {
-  const authHeader = req.headers.authorization
+  const token = req.cookies?.jwt
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1]
+  if (token) {
     const decoded = verifyToken(token)
     if (decoded) {
       req.user = decoded

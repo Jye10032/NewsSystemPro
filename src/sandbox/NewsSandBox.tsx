@@ -4,24 +4,23 @@ import NewsRouter from '../router/NewsRouter'
 import '@/styles/NewsSandBox.css'
 import { useEffect } from 'react'
 import { Layout } from 'antd'
+import { useDispatch } from 'react-redux'
 import axios from 'axios'
 const { Content } = Layout
 
 export default function NewsSandBox() {
+    const dispatch = useDispatch()
+
     useEffect(() => {
-        // 每次进入系统时刷新用户权限数据
-        const jwt = localStorage.getItem('jwt')
-        if (jwt) {
-            axios.get('/api/users/me').then(res => {
-                localStorage.setItem('token', JSON.stringify(res.data))
-            }).catch(() => {
-                // JWT 无效，清除登录状态
-                localStorage.removeItem('jwt')
-                localStorage.removeItem('token')
-                window.location.href = '/login'
-            })
-        }
-    }, [])
+        // 只在组件挂载时刷新一次用户权限数据（Cookie 自动携带）
+        axios.get('/api/users/me').then(res => {
+            dispatch({ type: 'set_user', payload: res.data })
+        }).catch(() => {
+            // Cookie 无效，清除登录状态
+            dispatch({ type: 'clear_user' })
+            window.location.href = '/login'
+        })
+    }, [dispatch])
 
     return (
         <Layout>

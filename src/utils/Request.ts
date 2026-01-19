@@ -12,17 +12,13 @@ import { store } from '../redux/store'
 // 开发环境: http://localhost:8000
 // 生产环境: 您部署的后端URL (如: https://your-project.vercel.app)
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+axios.defaults.withCredentials = true // 跨域请求携带 Cookie
 
 axios.interceptors.request.use(
   function (config) {
     store.dispatch({ type: 'loading_start' })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     console.log('[Request Start]', config.method?.toUpperCase(), config.url, '| Loading:', (store.getState() as any).isLoading)
-    // 添加 JWT Authorization header 用于后端权限校验
-    const jwt = localStorage.getItem('jwt')
-    if (jwt) {
-      config.headers.Authorization = `Bearer ${jwt}`
-    }
     return config
   },
   function (error) {

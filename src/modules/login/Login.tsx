@@ -91,15 +91,11 @@ export default function Login() {
 
     // 提交表单数据验证成功后的回调事件
     function onFinish(formData: LoginForm) {
-        axios.post<{ token: string; user: User }>('/api/auth/login', formData).then(
+        axios.post<{ user: User }>('/api/auth/login', formData).then(
             (res) => {
-                const { token, user } = res.data
-                // 存储 JWT token
-                localStorage.setItem('jwt', token)
-                // 使用 Redux 存储用户信息
+                const { user } = res.data
+                // 使用 Redux 存储用户信息（Cookie 由浏览器自动管理）
                 dispatch({ type: 'set_user', payload: user })
-                // 保留 token 兼容旧代码（NewsRouter 等仍在使用）
-                localStorage.setItem('token', JSON.stringify(user))
                 message.success('登录成功')
                 nav('/', { replace: true })
             },

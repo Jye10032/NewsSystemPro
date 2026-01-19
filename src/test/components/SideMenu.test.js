@@ -3,30 +3,44 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
-import { createStore } from 'redux'
+import { createStore, combineReducers } from 'redux'
 import axios from 'axios'
 import SideMenu from '../../sandbox/SideMenu'
 
 // Mock axios
-vi.mock('axios')
+vi.mock('axios', () => ({
+  default: {
+    get: vi.fn(),
+    defaults: { baseURL: '', withCredentials: false }
+  }
+}))
 
 // Mock CSS import
 vi.mock('../../sandbox/index.css', () => ({}))
 
 // 创建测试用的 Redux store
-function createTestReducer(initialState = { collapsible: false }) {
-  return (state = initialState, action) => {
-    switch (action.type) {
-      case 'change_collapsed':
-        return { ...state, collapsible: !state.collapsible }
-      default:
-        return state
-    }
+function createTestStore(initialState = {}) {
+  const defaultState = {
+    collapsible: false,
+    user: {
+      role: {
+        rights: ['/home', '/user-manage', '/user-manage/list', '/news-manage', '/news-manage/add', '/news-manage/draft']
+      }
+    },
+    isLoading: 0,
+    ...initialState
   }
-}
 
-function createTestStore(initialState) {
-  return createStore(createTestReducer(initialState))
+  const rootReducer = combineReducers({
+    collapsible: (state = defaultState.collapsible, action) => {
+      if (action.type === 'change_collapsed') return !state
+      return state
+    },
+    user: (state = defaultState.user) => state,
+    isLoading: (state = defaultState.isLoading) => state
+  })
+
+  return createStore(rootReducer)
 }
 
 describe('SideMenu 侧边栏组件', () => {
@@ -84,14 +98,7 @@ describe('SideMenu 侧边栏组件', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Mock axios.get 返回菜单数据
-    vi.mocked(axios.get).mockResolvedValue({ data: mockMenuData })
-    // Mock localStorage 用户权限数据
-    const mockUserData = {
-      role: {
-        rights: ['/home', '/user-manage', '/user-manage/list', '/news-manage', '/news-manage/add', '/news-manage/draft']
-      }
-    }
-    localStorage.setItem('token', JSON.stringify(mockUserData))
+    axios.get.mockResolvedValue({ data: mockMenuData })
   })
 
   describe('渲染测试', () => {
@@ -323,7 +330,7 @@ describe('SideMenu 侧边栏组件', () => {
 
     it('应该处理空菜单数据', async () => {
       // Arrange: Mock 返回空数组
-      vi.mocked(axios.get).mockResolvedValue({ data: [] })
+      axios.get.mockResolvedValue({ data: [] })
       const store = createTestStore()
 
       // Act
@@ -352,7 +359,7 @@ describe('SideMenu 侧边栏组件', () => {
           pagepermisson: 1
         }
       ]
-      vi.mocked(axios.get).mockResolvedValue({ data: menuWithoutChildren })
+      axios.get.mockResolvedValue({ data: menuWithoutChildren })
       const store = createTestStore()
 
       // Act & Assert: 不应该报错
@@ -397,10 +404,11 @@ describe('SideMenu 侧边栏组件', () => {
         { id: 1, key: '/allowed', title: '允许访问', pagepermisson: 1, children: [] },
         { id: 2, key: '/denied', title: '拒绝访问', pagepermisson: 0, children: [] }
       ]
-      vi.mocked(axios.get).mockResolvedValue({ data: mixedMenuData })
+      axios.get.mockResolvedValue({ data: mixedMenuData })
       // 设置用户权限包含 /allowed
-      localStorage.setItem('token', JSON.stringify({ role: { rights: ['/allowed', '/denied'] } }))
-      const store = createTestStore()
+      const store = createTestStore({
+        user: { role: { rights: ['/allowed', '/denied'] } }
+      })
 
       // Act
       render(
@@ -432,10 +440,11 @@ describe('SideMenu 侧边栏组件', () => {
           ]
         }
       ]
-      vi.mocked(axios.get).mockResolvedValue({ data: nestedMenuData })
+      axios.get.mockResolvedValue({ data: nestedMenuData })
       // 设置用户权限包含父菜单和允许的子菜单
-      localStorage.setItem('token', JSON.stringify({ role: { rights: ['/parent', '/parent/allowed', '/parent/denied'] } }))
-      const store = createTestStore()
+      const store = createTestStore({
+        user: { role: { rights: ['/parent', '/parent/allowed', '/parent/denied'] } }
+      })
 
       // Act
       render(

@@ -4,12 +4,21 @@ const cors = require('cors')
 const jsonServer = require('json-server')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 
 const app = express()
 
 // ============ 配置 ============
 const JWT_SECRET = process.env.JWT_SECRET || 'news-system-pro-secret-key'
 const JWT_EXPIRES_IN = '7d'
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7天
+
+// 允许的前端域名
+const ALLOWED_ORIGINS = [
+  'https://jye10032.github.io',
+  'http://localhost:5173',
+  'http://localhost:3000'
+]
 
 // ============ 加载数据（内存模式，刷新后重置）============
 const dbData = require('../db/db.json')
@@ -23,10 +32,19 @@ const memoryDB = {
 
 // ============ 中间件 ============
 app.use(cors({
-  origin: '*',
+  origin: function(origin, callback) {
+    // 允许无 origin 的请求（如 Postman）或在白名单中的域名
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(null, false)
+    }
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }))
+app.use(cookieParser())
 app.use(express.json())
 
 // ============ JWT 工具函数 ============
@@ -81,10 +99,17 @@ app.post('/api/auth/login', (req, res) => {
     roleId: user.roleId
   })
 
-  // 返回用户信息（不含密码）
+  // 设置 httpOnly Cookie
+  res.cookie('jwt', token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    maxAge: COOKIE_MAX_AGE
+  })
+
+  // 返回用户信息（不含密码，不返回 token）
   const { password: _, ...userWithoutPassword } = user
   res.json({
-    token,
     user: {
       ...userWithoutPassword,
       role
@@ -146,6 +171,16 @@ app.post('/api/auth/register', (req, res) => {
   res.status(201).json({ user: userWithoutPassword })
 })
 
+// 登出
+app.post('/api/auth/logout', (req, res) => {
+  res.clearCookie('jwt', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none'
+  })
+  res.json({ message: 'Logged out' })
+})
+
 // ============ json-server 路由 ============
 const middlewares = jsonServer.defaults({ noCors: true })
 app.use(middlewares)
@@ -155,13 +190,13 @@ const router = jsonServer.router(memoryDB)
 
 // ============ 权限校验工具函数 ============
 
-// 从请求头获取用户信息
+// 从 Cookie 获取用户信息
 function getUserFromToken(req) {
-  const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const token = req.cookies?.jwt
+  if (!token) {
     return null
   }
-  return verifyToken(authHeader.split(' ')[1])
+  return verifyToken(token)
 }
 
 // 页面权限 → API 权限映射

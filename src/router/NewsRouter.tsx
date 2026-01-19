@@ -52,12 +52,11 @@ const LocalRouterMap: Record<string, ComponentType> = {
 
 interface NewsRouterProps {
     isLoading: boolean
+    rights: string[]
 }
 
 function NewsRouter(props: NewsRouterProps) {
     console.log('[NewsRouter] isLoading prop:', props.isLoading)
-    const tokenData = JSON.parse(localStorage.getItem('token') || '{}')
-    const rights: string[] = tokenData.role?.rights || []
     const [backRouteList, setBackRouteList] = useState<Right[]>([])
 
     useEffect(() => {
@@ -74,7 +73,7 @@ function NewsRouter(props: NewsRouterProps) {
     }, [])
 
     function checkUserPermission(key: string): boolean {
-        return rights.includes(key)
+        return props.rights.includes(key)
     }
 
     function checkRoute(item: Right): boolean {
@@ -103,6 +102,7 @@ function NewsRouter(props: NewsRouterProps) {
 export default connect((state: RootState) => {
     console.log('[NewsRouter connect] raw state.isLoading:', state.isLoading)
     return {
-        isLoading: state.isLoading > 0
+        isLoading: state.isLoading > 0,
+        rights: state.user?.role?.rights || []
     }
 })(NewsRouter)

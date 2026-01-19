@@ -28,7 +28,7 @@ describe('后端权限校验', () => {
     it('超级管理员可以修改用户', async () => {
       const res = await request(app)
         .patch('/users/5')
-        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Cookie', `jwt=${adminToken}`)
         .send({ roleState: true })
 
       // 200 或 404（用户不存在）都算通过权限校验
@@ -38,7 +38,7 @@ describe('后端权限校验', () => {
     it('编辑不能修改用户（权限不足）', async () => {
       const res = await request(app)
         .patch('/users/5')
-        .set('Authorization', `Bearer ${editorToken}`)
+        .set('Cookie', `jwt=${editorToken}`)
         .send({ roleState: true })
 
       expect(res.status).toBe(403)
@@ -59,7 +59,7 @@ describe('后端权限校验', () => {
     it('超级管理员可以修改角色', async () => {
       const res = await request(app)
         .patch('/roles/2')
-        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Cookie', `jwt=${adminToken}`)
         .send({ rights: ['/home'] })
 
       expect([200, 404]).toContain(res.status)
@@ -68,7 +68,7 @@ describe('后端权限校验', () => {
     it('分类管理员不能修改角色', async () => {
       const res = await request(app)
         .patch('/roles/2')
-        .set('Authorization', `Bearer ${managerToken}`)
+        .set('Cookie', `jwt=${managerToken}`)
         .send({ rights: ['/home'] })
 
       expect(res.status).toBe(403)
@@ -79,7 +79,7 @@ describe('后端权限校验', () => {
     it('超级管理员可以删除分类', async () => {
       const res = await request(app)
         .delete('/categories/999')
-        .set('Authorization', `Bearer ${adminToken}`)
+        .set('Cookie', `jwt=${adminToken}`)
 
       // 200 或 404 都算通过权限校验
       expect([200, 404]).toContain(res.status)
@@ -88,7 +88,7 @@ describe('后端权限校验', () => {
     it('编辑不能删除分类', async () => {
       const res = await request(app)
         .delete('/categories/1')
-        .set('Authorization', `Bearer ${editorToken}`)
+        .set('Cookie', `jwt=${editorToken}`)
 
       expect(res.status).toBe(403)
     })
@@ -118,7 +118,7 @@ describe('后端权限校验', () => {
         const otherToken = author === 'admin' ? editorToken : adminToken
         const res = await request(app)
           .get(`/news/${newsId}`)
-          .set('Authorization', `Bearer ${otherToken}`)
+          .set('Cookie', `jwt=${otherToken}`)
 
         expect(res.status).toBe(403)
         expect(res.body.error).toBe('无权访问未发布内容')
@@ -133,7 +133,7 @@ describe('后端权限校验', () => {
         const newsId = listRes.body[0].id
         const res = await request(app)
           .get(`/news/${newsId}`)
-          .set('Authorization', `Bearer ${adminToken}`)
+          .set('Cookie', `jwt=${adminToken}`)
 
         expect(res.status).toBe(200)
       }

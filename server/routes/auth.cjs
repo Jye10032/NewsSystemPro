@@ -5,6 +5,8 @@ const { generateToken } = require('../utils/jwt.cjs')
 
 const router = express.Router()
 
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7天
+
 // 登录
 router.post('/login', (req, res) => {
   const { username, password } = req.body
@@ -43,15 +45,26 @@ router.post('/login', (req, res) => {
     roleId: user.roleId
   })
 
-  // 返回用户信息（不含密码）
+  // 设置 httpOnly Cookie
+  res.cookie('jwt', token, {
+    httpOnly: true,
+    maxAge: COOKIE_MAX_AGE
+  })
+
+  // 返回用户信息（不含密码，不返回 token）
   const { password: _, ...userWithoutPassword } = user
   res.json({
-    token,
     user: {
       ...userWithoutPassword,
       role
     }
   })
+})
+
+// 登出
+router.post('/logout', (req, res) => {
+  res.clearCookie('jwt', { httpOnly: true })
+  res.json({ message: 'Logged out' })
 })
 
 // 注册（可选）

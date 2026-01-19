@@ -2,12 +2,21 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { Provider } from 'react-redux'
+import { createStore, combineReducers } from 'redux'
 import axios from 'axios'
 import { message, notification } from 'antd'
 import NewsDraft from '../../modules/news/pages/NewsDraft'
 
 // Mock dependencies
-vi.mock('axios')
+vi.mock('axios', () => ({
+  default: {
+    get: vi.fn(),
+    delete: vi.fn(),
+    patch: vi.fn(),
+    defaults: { baseURL: '', withCredentials: false }
+  }
+}))
 vi.mock('antd', async () => {
   const actual = await vi.importActual('antd')
   return {
@@ -27,9 +36,19 @@ vi.mock('antd', async () => {
 })
 vi.mock('../../../styles/TableStyles.css', () => ({}))
 
+// 创建测试用的 Redux store
+function createTestStore(user = null) {
+  const rootReducer = combineReducers({
+    user: (state = user) => state,
+    collapsible: (state = false) => state,
+    isLoading: (state = 0) => state
+  })
+  return createStore(rootReducer)
+}
+
 describe('NewsDraft 草稿箱组件', () => {
   const mockUsername = 'testuser'
-  const mockToken = JSON.stringify({ username: mockUsername })
+  const mockUser = { username: mockUsername }
 
   const mockNewsList = [
     {
@@ -57,12 +76,10 @@ describe('NewsDraft 草稿箱组件', () => {
   ]
 
   beforeEach(async () => {
-    // 设置 localStorage
-    localStorage.setItem('token', mockToken)
     vi.clearAllMocks()
 
     // Mock axios 请求
-    vi.mocked(axios.get).mockImplementation((url) => {
+    axios.get.mockImplementation((url) => {
       if (url.includes('/news')) {
         return Promise.resolve({ data: mockNewsList })
       }
@@ -82,17 +99,16 @@ describe('NewsDraft 草稿箱组件', () => {
     })
   })
 
-  afterEach(() => {
-    localStorage.clear()
-  })
-
   describe('渲染测试', () => {
     it('应该正确渲染草稿箱列表', async () => {
       // Act
+      const store = createTestStore(mockUser)
       render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       // Assert: 应该显示新闻标题
@@ -104,10 +120,13 @@ describe('NewsDraft 草稿箱组件', () => {
 
     it('应该根据当前用户获取草稿列表', async () => {
       // Act
+      const store = createTestStore(mockUser)
       render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       // Assert: 应该调用正确的 API
@@ -120,10 +139,13 @@ describe('NewsDraft 草稿箱组件', () => {
 
     it('应该获取分类列表', async () => {
       // Act
+      const store = createTestStore(mockUser)
       render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       // Assert
@@ -134,10 +156,13 @@ describe('NewsDraft 草稿箱组件', () => {
 
     it('应该显示表格列', async () => {
       // Act
+      const store = createTestStore(mockUser)
       const { container } = render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       // Assert: 应该有表格
@@ -152,13 +177,16 @@ describe('NewsDraft 草稿箱组件', () => {
     it('应该能够删除新闻', async () => {
       // Arrange
       const user = userEvent.setup()
-      vi.mocked(axios.delete).mockResolvedValue({ data: { success: true } })
+      axios.delete.mockResolvedValue({ data: { success: true } })
+      const store = createTestStore(mockUser)
 
       // Act
       const { container } = render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       await waitFor(() => {
@@ -181,13 +209,16 @@ describe('NewsDraft 草稿箱组件', () => {
     it('应该在删除失败时显示错误消息', async () => {
       // Arrange
       const user = userEvent.setup()
-      vi.mocked(axios.delete).mockRejectedValue(new Error('Delete failed'))
+      axios.delete.mockRejectedValue(new Error('Delete failed'))
+      const store = createTestStore(mockUser)
 
       // Act
       const { container } = render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       await waitFor(() => {
@@ -207,12 +238,15 @@ describe('NewsDraft 草稿箱组件', () => {
       // Arrange
       const user = userEvent.setup()
       const { Modal } = await import('antd')
+      const store = createTestStore(mockUser)
 
       // Act
       const { container } = render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       await waitFor(() => {
@@ -242,13 +276,16 @@ describe('NewsDraft 草稿箱组件', () => {
   describe('链接跳转', () => {
     it('应该能够点击新闻标题跳转到预览页', async () => {
       // Act
+      const store = createTestStore(mockUser)
       render(
-        <MemoryRouter>
-          <Routes>
-            <Route path="/" element={<NewsDraft />} />
-            <Route path="/news-manage/preview/:id" element={<div>预览页面</div>} />
-          </Routes>
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <Routes>
+              <Route path="/" element={<NewsDraft />} />
+              <Route path="/news-manage/preview/:id" element={<div>预览页面</div>} />
+            </Routes>
+          </MemoryRouter>
+        </Provider>
       )
 
       // Assert: 标题应该是链接
@@ -261,10 +298,13 @@ describe('NewsDraft 草稿箱组件', () => {
 
     it('应该显示编辑按钮', async () => {
       // Act
+      const store = createTestStore(mockUser)
       const { container } = render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       // Assert: 应该有编辑图标
@@ -283,7 +323,7 @@ describe('NewsDraft 草稿箱组件', () => {
 
     it('应该处理空的新闻列表', async () => {
       // Arrange: 返回空列表
-      vi.mocked(axios.get).mockImplementation((url) => {
+      axios.get.mockImplementation((url) => {
         if (url.includes('/news')) {
           return Promise.resolve({ data: [] })
         }
@@ -291,12 +331,15 @@ describe('NewsDraft 草稿箱组件', () => {
           return Promise.resolve({ data: mockCategoryList })
         }
       })
+      const store = createTestStore(mockUser)
 
       // Act
       const { container } = render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       // Assert: 应该显示空表格
@@ -306,28 +349,33 @@ describe('NewsDraft 草稿箱组件', () => {
       })
     })
 
-    it('应该处理无效的 localStorage 数据', () => {
-      // Arrange: 无效的 token
-      localStorage.setItem('token', 'invalid-json')
+    it('应该处理 user 为 null 的情况', () => {
+      // Arrange: Redux 中没有用户数据
+      const store = createTestStore(null)
 
-      // Act & Assert: 应该抛出错误
+      // Act & Assert: 组件应该正常渲染（使用可选链）
       expect(() => {
         render(
-          <MemoryRouter>
-            <NewsDraft />
-          </MemoryRouter>
+          <Provider store={store}>
+            <MemoryRouter>
+              <NewsDraft />
+            </MemoryRouter>
+          </Provider>
         )
-      }).toThrow()
+      }).not.toThrow()
     })
   })
 
   describe('新闻分类显示', () => {
     it('应该正确显示新闻分类', async () => {
       // Act
+      const store = createTestStore(mockUser)
       render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       // Assert: 应该根据 categoryId 显示分类名称
@@ -347,7 +395,7 @@ describe('NewsDraft 草稿箱组件', () => {
         auditState: 0
       }]
 
-      vi.mocked(axios.get).mockImplementation((url) => {
+      axios.get.mockImplementation((url) => {
         if (url.includes('/news')) {
           return Promise.resolve({ data: newsWithInvalidCategory })
         }
@@ -355,12 +403,15 @@ describe('NewsDraft 草稿箱组件', () => {
           return Promise.resolve({ data: mockCategoryList })
         }
       })
+      const store = createTestStore(mockUser)
 
       // Act
       render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       // Assert: 组件不应该崩溃
@@ -373,10 +424,13 @@ describe('NewsDraft 草稿箱组件', () => {
   describe('表格功能', () => {
     it('应该显示正确的列标题', async () => {
       // Act
+      const store = createTestStore(mockUser)
       render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       // Assert: 应该有表格列头
@@ -391,10 +445,13 @@ describe('NewsDraft 草稿箱组件', () => {
 
     it('应该显示作者名称', async () => {
       // Act
+      const store = createTestStore(mockUser)
       render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       // Assert
@@ -406,10 +463,13 @@ describe('NewsDraft 草稿箱组件', () => {
 
     it('应该显示新闻 ID', async () => {
       // Act
+      const store = createTestStore(mockUser)
       render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       // Assert: 应该显示ID列（表格中会有ID）
@@ -423,13 +483,16 @@ describe('NewsDraft 草稿箱组件', () => {
     it('应该能够删除多条新闻', async () => {
       // Arrange
       const user = userEvent.setup()
-      vi.mocked(axios.delete).mockResolvedValue({ data: { success: true } })
+      axios.delete.mockResolvedValue({ data: { success: true } })
+      const store = createTestStore(mockUser)
 
       // Act
       const { container } = render(
-        <MemoryRouter>
-          <NewsDraft />
-        </MemoryRouter>
+        <Provider store={store}>
+          <MemoryRouter>
+            <NewsDraft />
+          </MemoryRouter>
+        </Provider>
       )
 
       await waitFor(() => {

@@ -3,8 +3,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Table, Button, notification, Modal, message } from 'antd'
 import axios from 'axios'
 import { EditOutlined, DeleteOutlined, VerticalAlignTopOutlined, ExclamationCircleFilled } from '@ant-design/icons'
+import { useSelector } from 'react-redux'
 import '../../../styles/TableStyles.css'
-import type { Category, NewsItem } from '@/types'
+import type { Category, NewsItem, RootState } from '@/types'
 
 const { confirm } = Modal
 
@@ -12,7 +13,8 @@ export default function NewsDraft() {
   const navigate = useNavigate()
   const [newsList, setNewsList] = useState<NewsItem[]>([])
   const [categoryList, setCategoryList] = useState<Category[]>([])
-  const { username } = JSON.parse(localStorage.getItem('token') || '{}')
+  const user = useSelector((state: RootState) => state.user)
+  const username = user?.username || ''
 
   useEffect(() => {
     axios.get<NewsItem[]>(`/news?author=${username}&auditState=0&_expand=category`).then((res) => {

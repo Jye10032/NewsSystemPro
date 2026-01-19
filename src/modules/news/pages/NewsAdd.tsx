@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { Button, Input, Select, message, notification, Space } from 'antd'
 import { SaveOutlined, SendOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import axios from 'axios'
-import type { Category } from '@/types'
+import type { Category, RootState } from '@/types'
 
 export default function NewsAdd() {
   const [title, setTitle] = useState('')
@@ -13,7 +14,7 @@ export default function NewsAdd() {
   const [content, setContent] = useState('')
   const [categoryList, setCategoryList] = useState<Category[]>([])
   const [saving, setSaving] = useState(false)
-  const userInfo = JSON.parse(localStorage.getItem('token') || '{}')
+  const user = useSelector((state: RootState) => state.user)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -45,8 +46,8 @@ export default function NewsAdd() {
         title,
         categoryId,
         content,
-        author: userInfo.username,
-        roleId: userInfo.roleId,
+        author: user?.username,
+        roleId: user?.roleId,
         auditState: auditState,
         publishState: 0,
         createTime: Date.now(),

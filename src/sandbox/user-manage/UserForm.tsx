@@ -1,8 +1,9 @@
 import React, { forwardRef, useState, useEffect } from 'react'
 import { Form, Input, Select, FormInstance, Button, Modal, message } from 'antd'
 import { KeyOutlined } from '@ant-design/icons'
+import { useSelector } from 'react-redux'
 import axios from 'axios'
-import type { Role, Category } from '@/types'
+import type { Role, Category, RootState } from '@/types'
 
 const { Option } = Select
 
@@ -20,6 +21,7 @@ const UserForm = forwardRef<FormInstance, UserFormProps>((props, ref) => {
     const [resetModalOpen, setResetModalOpen] = useState(false)
     const [newPassword, setNewPassword] = useState('')
     const [resetting, setResetting] = useState(false)
+    const user = useSelector((state: RootState) => state.user)
     const rank: Record<number, string> = {
         1: 'superAdmin',
         2: 'admin',
@@ -42,18 +44,18 @@ const UserForm = forwardRef<FormInstance, UserFormProps>((props, ref) => {
     }
     // 根据登录用户的权限来显示可选的分类
     function checkCategoryDisable(item: Category) {
-        const { roleId, allowedCategoryIds } = JSON.parse(localStorage.getItem('token') || '{}')
+        const { roleId, allowedCategoryIds } = user || {}
         // 若打开的是编辑对话框
         if (props.isUpdate) {
             // 除超级管理员，其他角色不能修改分类选择
-            if (rank[roleId] === 'superAdmin') {
+            if (rank[roleId || 0] === 'superAdmin') {
                 return false
             } else {
                 return true
             }
         } else {
             // 若打开的是添加对话框，除超级管理员，其他角色只能选择自己拥有权限的分类
-            if (rank[roleId] === 'superAdmin') {
+            if (rank[roleId || 0] === 'superAdmin') {
                 return false
             } else {
                 // 处理 allowedCategoryIds 可能为 undefined 的情况
@@ -63,18 +65,18 @@ const UserForm = forwardRef<FormInstance, UserFormProps>((props, ref) => {
     }
     // 根据登录用户的权限来显示可选的角色
     function checkRoleDisable(item: Role) {
-        const { roleId } = JSON.parse(localStorage.getItem('token') || '{}')
+        const { roleId } = user || {}
         // 若打开的是编辑对话框
         if (props.isUpdate) {
             // 除超级管理员，其他角色只不能修改角色
-            if (rank[roleId] === 'superAdmin') {
+            if (rank[roleId || 0] === 'superAdmin') {
                 return false
             } else {
                 return true
             }
         } else {
             // 若打开的是添加对话框，除超级管理员，其他角色只能选择比自己低一级的角色（即只管理员能选编辑，编辑什么也不能选）
-            if (rank[roleId] === 'superAdmin') {
+            if (rank[roleId || 0] === 'superAdmin') {
                 return false
             } else {
                 return rank[item.id] !== 'editor'

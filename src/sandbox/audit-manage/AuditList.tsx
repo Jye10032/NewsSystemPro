@@ -2,19 +2,21 @@ import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { Table, Button, Tag, notification, message } from 'antd'
 import { Link } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import '../../styles/TableStyles.css'
-import type { NewsItem } from '@/types'
+import type { NewsItem, RootState } from '@/types'
 
 export default function AuditList() {
     const auditList = ['未审核', '审核中', '已通过', '未通过']
     const [newsList, setNewsList] = useState<NewsItem[]>([])
+    const user = useSelector((state: RootState) => state.user)
+    const username = user?.username || ''
 
     useEffect(() => {
-        const { username } = JSON.parse(localStorage.getItem('token') || '{}')
         axios.get<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState_lte=1&_expand=category`).then((res) => {
             setNewsList(res.data)
         })
-    }, [])
+    }, [username])
 
     function handleRervert(item: NewsItem) {
         setNewsList(newsList.filter((data) => data.id !== item.id))
@@ -24,7 +26,6 @@ export default function AuditList() {
                 auditState: 0
             })
             .then(() => {
-                const { username } = JSON.parse(localStorage.getItem('token') || '{}')
                 axios.get<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState_lte=1&_expand=category`).then((res) => {
                     setNewsList(res.data)
                 })
@@ -44,7 +45,6 @@ export default function AuditList() {
             })
             .then(
                 () => {
-                    const { username } = JSON.parse(localStorage.getItem('token') || '{}')
                     axios.get<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState_lte=1&_expand=category`).then((res) => {
                         setNewsList(res.data)
                     })

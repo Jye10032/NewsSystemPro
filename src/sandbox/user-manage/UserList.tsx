@@ -3,7 +3,8 @@ import React, { useEffect, useState, useRef } from 'react'
 import { Table, Switch, Button, Modal, message, Tag, FormInstance } from 'antd'
 import axios from 'axios'
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, UserAddOutlined } from '@ant-design/icons'
-import type { User, Role, Category } from '@/types'
+import { useSelector } from 'react-redux'
+import type { User, Role, Category, RootState } from '@/types'
 
 const { confirm } = Modal
 
@@ -18,18 +19,20 @@ export default function UserList() {
     const [currentId, setCurrentId] = useState(0)
     const [isSelectDisabled, setIsSelectDisabled] = useState(false)
     const [isUpdate, setIsUpdate] = useState(false)
+    const currentUser = useSelector((state: RootState) => state.user)
+
     useEffect(() => {
         const rank: Record<number, string> = {
             1: 'superAdmin',
             2: 'admin',
             3: 'editor'
         }
+        const { roleId, username, allowedCategoryIds } = currentUser || {}
         axios.get('/users?_expand=role').then((res) => {
             //过滤权限比登录用户大的用户
-            const { roleId, username, allowedCategoryIds } = JSON.parse(localStorage.getItem('token') || '{}')
             const list = res.data as User[]
             setUserList(
-                rank[roleId] === 'superAdmin'
+                rank[roleId || 0] === 'superAdmin'
                     ? list
                     : [
                         ...list.filter((user) => {
@@ -37,7 +40,7 @@ export default function UserList() {
                         }),
                         ...list.filter((user) => {
                             // 只显示与当前用户有相同分类权限且角色为编辑的用户
-                            return user.allowedCategoryIds?.some(id => allowedCategoryIds.includes(id)) && rank[user.roleId] === 'editor'
+                            return user.allowedCategoryIds?.some(id => allowedCategoryIds?.includes(id)) && rank[user.roleId] === 'editor'
                         })
                     ]
             )
@@ -49,7 +52,7 @@ export default function UserList() {
         axios.get('/roles').then((res) => {
             setRoleList(res.data)
         })
-    }, [])
+    }, [currentUser])
     // table表格要渲染的数据
     const columns = [
         {

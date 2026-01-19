@@ -1,11 +1,18 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
+import { Provider } from 'react-redux'
+import { createStore, combineReducers } from 'redux'
 import axios from 'axios'
 import { message, notification } from 'antd'
 import usePublish from '../../modules/publish/hooks/usePublish'
 
 // Mock dependencies
-vi.mock('axios')
+vi.mock('axios', () => {
+  const mockAxios = vi.fn()
+  mockAxios.patch = vi.fn()
+  mockAxios.delete = vi.fn()
+  return { default: mockAxios }
+})
 vi.mock('antd', () => ({
   message: {
     error: vi.fn()
@@ -18,14 +25,29 @@ vi.mock('antd', () => ({
   }
 }))
 
+// 创建测试用的 Redux store
+function createTestStore(user = null) {
+  const rootReducer = combineReducers({
+    user: (state = user) => state,
+    collapsible: (state = false) => state,
+    isLoading: (state = 0) => state
+  })
+  return createStore(rootReducer)
+}
+
+// 创建 wrapper 组件
+function createWrapper(user) {
+  const store = createTestStore(user)
+  return function Wrapper({ children }) {
+    return <Provider store={store}>{children}</Provider>
+  }
+}
+
 describe('usePublish Hook', () => {
   const mockUsername = 'testuser'
-  const mockToken = JSON.stringify({ username: mockUsername })
+  const mockUser = { username: mockUsername }
 
   beforeEach(async () => {
-    // 设置 localStorage
-    localStorage.setItem('token', mockToken)
-
     // 清空所有 mock
     vi.clearAllMocks()
 
@@ -39,10 +61,6 @@ describe('usePublish Hook', () => {
     })
   })
 
-  afterEach(() => {
-    localStorage.clear()
-  })
-
   describe('初始化和数据获取', () => {
     it('应该在挂载时获取新闻列表', async () => {
       // Arrange
@@ -54,7 +72,9 @@ describe('usePublish Hook', () => {
       vi.mocked(axios).mockResolvedValue({ data: mockNewsList })
 
       // Act
-      const { result } = renderHook(() => usePublish(1))
+      const { result } = renderHook(() => usePublish(1), {
+        wrapper: createWrapper(mockUser)
+      })
 
       // Assert: 等待数据加载
       await waitFor(() => {
@@ -76,7 +96,9 @@ describe('usePublish Hook', () => {
       vi.mocked(axios).mockResolvedValue({ data: mockNewsList })
 
       // Act: publishState = 2 (已发布)
-      const { result } = renderHook(() => usePublish(2))
+      const { result } = renderHook(() => usePublish(2), {
+        wrapper: createWrapper(mockUser)
+      })
 
       // Assert
       await waitFor(() => {
@@ -95,7 +117,10 @@ describe('usePublish Hook', () => {
       // Act: 初始 publishState = 1
       const { rerender } = renderHook(
         ({ state }) => usePublish(state),
-        { initialProps: { state: 1 } }
+        {
+          initialProps: { state: 1 },
+          wrapper: createWrapper(mockUser)
+        }
       )
 
       await waitFor(() => {
@@ -123,7 +148,9 @@ describe('usePublish Hook', () => {
       vi.mocked(axios).mockResolvedValue({ data: [] })
 
       // Act
-      const { result } = renderHook(() => usePublish(1))
+      const { result } = renderHook(() => usePublish(1), {
+        wrapper: createWrapper(mockUser)
+      })
 
       // Assert
       expect(result.current).toHaveProperty('newsList')
@@ -145,7 +172,9 @@ describe('usePublish Hook', () => {
       vi.mocked(axios.patch).mockResolvedValueOnce({ data: { success: true } })
       vi.mocked(axios).mockResolvedValueOnce({ data: mockNewsList }) // 更新后重新获取
 
-      const { result } = renderHook(() => usePublish(1))
+      const { result } = renderHook(() => usePublish(1), {
+        wrapper: createWrapper(mockUser)
+      })
 
       await waitFor(() => {
         expect(result.current.newsList).toBeDefined()
@@ -177,7 +206,9 @@ describe('usePublish Hook', () => {
       vi.mocked(axios).mockResolvedValueOnce({ data: [] })
       vi.mocked(axios.patch).mockRejectedValueOnce(new Error('Network Error'))
 
-      const { result } = renderHook(() => usePublish(1))
+      const { result } = renderHook(() => usePublish(1), {
+        wrapper: createWrapper(mockUser)
+      })
 
       await waitFor(() => {
         expect(result.current.newsList).toBeDefined()
@@ -203,7 +234,9 @@ describe('usePublish Hook', () => {
       vi.mocked(axios.patch).mockResolvedValueOnce({ data: { success: true } })
       vi.mocked(axios).mockResolvedValueOnce({ data: [] })
 
-      const { result } = renderHook(() => usePublish(2))
+      const { result } = renderHook(() => usePublish(2), {
+        wrapper: createWrapper(mockUser)
+      })
 
       await waitFor(() => {
         expect(result.current.newsList).toBeDefined()
@@ -234,7 +267,9 @@ describe('usePublish Hook', () => {
       vi.mocked(axios).mockResolvedValueOnce({ data: [] })
       vi.mocked(axios.patch).mockRejectedValueOnce(new Error('Server Error'))
 
-      const { result } = renderHook(() => usePublish(2))
+      const { result } = renderHook(() => usePublish(2), {
+        wrapper: createWrapper(mockUser)
+      })
 
       await waitFor(() => {
         expect(result.current.newsList).toBeDefined()
@@ -260,7 +295,9 @@ describe('usePublish Hook', () => {
       vi.mocked(axios.delete).mockResolvedValueOnce({ data: { success: true } })
       vi.mocked(axios).mockResolvedValueOnce({ data: [] })
 
-      const { result } = renderHook(() => usePublish(3))
+      const { result } = renderHook(() => usePublish(3), {
+        wrapper: createWrapper(mockUser)
+      })
 
       await waitFor(() => {
         expect(result.current.newsList).toBeDefined()
@@ -289,7 +326,9 @@ describe('usePublish Hook', () => {
       vi.mocked(axios).mockResolvedValueOnce({ data: [] })
       vi.mocked(axios.delete).mockRejectedValueOnce(new Error('Delete failed'))
 
-      const { result } = renderHook(() => usePublish(3))
+      const { result } = renderHook(() => usePublish(3), {
+        wrapper: createWrapper(mockUser)
+      })
 
       await waitFor(() => {
         expect(result.current.newsList).toBeDefined()
@@ -312,7 +351,9 @@ describe('usePublish Hook', () => {
       // Arrange
       vi.mocked(axios).mockResolvedValueOnce({ data: [] })
 
-      const { result } = renderHook(() => usePublish(999)) // 无效的 state
+      const { result } = renderHook(() => usePublish(999), {
+        wrapper: createWrapper(mockUser)
+      }) // 无效的 state
 
       await waitFor(() => {
         expect(result.current.newsList).toBeDefined()

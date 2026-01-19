@@ -2,19 +2,21 @@ import { ExclamationCircleFilled } from '@ant-design/icons'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { notification, message, Modal } from 'antd'
-import type { NewsItem } from '@/types'
+import { useSelector } from 'react-redux'
+import type { NewsItem, RootState } from '@/types'
 
 const { confirm } = Modal
 
 function usePublish(publishState: number) {
   const [newsList, setNewsList] = useState<NewsItem[]>([])
+  const user = useSelector((state: RootState) => state.user)
+  const username = user?.username || ''
 
   useEffect(() => {
-    const { username } = JSON.parse(localStorage.getItem('token') || '{}')
     axios<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then((res) => {
       setNewsList(res.data)
     })
-  }, [publishState])
+  }, [publishState, username])
 
   function confirmMethod(id: number) {
     confirm({
@@ -45,7 +47,6 @@ function usePublish(publishState: number) {
       })
       .then(
         () => {
-          const { username } = JSON.parse(localStorage.getItem('token') || '{}')
           axios<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then(
             (res) => {
               setNewsList(res.data)
@@ -68,7 +69,6 @@ function usePublish(publishState: number) {
       })
       .then(
         () => {
-          const { username } = JSON.parse(localStorage.getItem('token') || '{}')
           axios<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then(
             (res) => {
               setNewsList(res.data)
@@ -87,7 +87,6 @@ function usePublish(publishState: number) {
   function handleDelete(id: number) {
     axios.delete(`/news/${id}`, {}).then(
       () => {
-        const { username } = JSON.parse(localStorage.getItem('token') || '{}')
         axios<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then((res) => {
           setNewsList(res.data)
         })

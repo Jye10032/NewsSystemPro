@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors')
+const cookieParser = require('cookie-parser')
 const jsonServer = require('json-server')
 const path = require('path')
 const fs = require('fs')
@@ -12,7 +13,11 @@ const app = express()
 const PORT = 8000
 
 // 中间件
-app.use(cors())
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5173'],
+  credentials: true
+}))
+app.use(cookieParser())
 app.use(express.json())
 
 // ============ 1. 自定义路由优先（JWT 认证等）============
@@ -40,13 +45,13 @@ const router = jsonServer.router(mergedData)
 
 // ============ 权限校验工具函数 ============
 
-// 从请求头获取用户信息
+// 从 Cookie 获取用户信息
 function getUserFromToken(req) {
-  const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const token = req.cookies?.jwt
+  if (!token) {
     return null
   }
-  return verifyToken(authHeader.split(' ')[1])
+  return verifyToken(token)
 }
 
 // 页面权限 → API 权限映射

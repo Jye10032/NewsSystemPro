@@ -4,6 +4,7 @@ import { UserOutlined, HomeOutlined, MenuOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../types'
+import axios from 'axios'
 
 export default function TopHead() {
     const user = useSelector((state: RootState) => state.user)
@@ -84,9 +85,9 @@ export default function TopHead() {
     ]
 
     // 退出登录
-    function logout() {
+    async function logout() {
+        await axios.post('/api/auth/logout')
         dispatch({ type: 'clear_user' })
-        localStorage.removeItem('token')
         navigate('/login', { replace: true })
     }
 
