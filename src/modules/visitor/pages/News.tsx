@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { PageHeader } from '@ant-design/pro-layout'
 import { Card, Col, Row, List } from 'antd'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import api from '@/utils/Request'
 import _ from 'lodash'
 import type { NewsItem } from '@/types'
 
@@ -12,7 +12,7 @@ export default function News() {
   const [newsList, setNewsList] = useState<GroupedNews>([])
 
   useEffect(() => {
-    axios.get<NewsItem[]>('/news?publishState=2&_expand=category').then((res) => {
+    api.get<NewsItem[]>('/news?publishState=2&_expand=category').then((res) => {
       setNewsList(Object.entries(_.groupBy(res.data, (item: NewsItem) => item.category.title)))
     })
   }, [])

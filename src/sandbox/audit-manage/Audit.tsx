@@ -1,4 +1,4 @@
-import axios from 'axios'
+import api from '@/utils/Request'
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Table, Button, notification, message } from 'antd'
@@ -12,7 +12,7 @@ export default function Audit() {
     const { roleId, username, allowedCategoryIds } = user || {}
 
     const getNewsList = useCallback(() => {
-        axios.get<NewsItem[]>(`/news?auditState=1&_expand=category`).then((res) => {
+        api.get<NewsItem[]>(`/news?auditState=1&_expand=category`).then((res) => {
             if (roleId === 1) {
                 return setNewsList(res.data)
             } else if (roleId === 2) {
@@ -35,7 +35,7 @@ export default function Audit() {
     }, [getNewsList])
 
     function handleAudit(item: NewsItem, auditState: number, publishState: number) {
-        axios
+        api
             .patch(`/news/${item.id}`, {
                 auditState,
                 publishState

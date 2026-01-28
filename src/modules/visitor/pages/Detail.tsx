@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '@ant-design/pro-layout'
 import { Descriptions, message } from 'antd'
 import { HeartTwoTone } from '@ant-design/icons'
-import axios from 'axios'
+import api from '@/utils/Request'
 import moment from 'moment'
 
 interface NewsInfo {
@@ -24,7 +24,7 @@ export default function Detail() {
   const params = useParams<{ id: string }>()
 
   useEffect(() => {
-    axios
+    api
       .get<NewsInfo>(`/news/${params.id}?_expand=category&_expand=role`)
       .then((res) => {
         // 校验发布状态，只有已发布(publishState=2)的新闻才能访问
@@ -38,7 +38,7 @@ export default function Detail() {
       })
       .then((res) => {
         if (res) {
-          axios.patch(`/news/${params.id}`, {
+          api.patch(`/news/${params.id}`, {
             view: res.view + 1
           })
         }
@@ -56,7 +56,7 @@ export default function Detail() {
         star: newsInfo.star + 1
       })
       message.success('成功点赞')
-      axios.patch(`/news/${params.id}`, {
+      api.patch(`/news/${params.id}`, {
         star: newsInfo.star + 1
       })
       if (list) {

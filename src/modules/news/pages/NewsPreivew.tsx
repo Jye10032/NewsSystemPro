@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '@ant-design/pro-layout'
 import { Descriptions } from 'antd'
-import axios from 'axios'
+import api from '@/utils/Request'
 import moment from 'moment'
 
 interface NewsInfo {
@@ -28,7 +28,7 @@ export default function NewsPreivew() {
   const params = useParams<{ id: string }>()
 
   useEffect(() => {
-    axios.get<NewsInfo>(`/news/${params.id}?_expand=category&_expand=role`).then((res) => {
+    api.get<NewsInfo>(`/news/${params.id}?_expand=category&_expand=role`).then((res) => {
       setNewsInfo(res.data)
     })
   }, [params.id])

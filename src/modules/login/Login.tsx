@@ -7,7 +7,7 @@ import { Engine } from 'tsparticles-engine'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import './Login.css'
-import axios from 'axios'
+import api from '@/utils/Request'
 import { User } from '../../types'
 
 interface LoginForm {
@@ -91,7 +91,7 @@ export default function Login() {
 
     // 提交表单数据验证成功后的回调事件
     function onFinish(formData: LoginForm) {
-        axios.post<{ user: User }>('/api/auth/login', formData).then(
+        api.post<{ user: User }>('/api/auth/login', formData).then(
             (res) => {
                 const { user } = res.data
                 // 使用 Redux 存储用户信息（Cookie 由浏览器自动管理）

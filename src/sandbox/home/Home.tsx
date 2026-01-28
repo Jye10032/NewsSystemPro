@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import axios from 'axios'
+import api from '@/utils/Request'
 import { Card, Col, Row, List, Drawer, Statistic, Progress, Table, Tag } from 'antd'
 import {
     UserOutlined,
@@ -27,8 +27,10 @@ export default function Home() {
     const barRef = useRef<HTMLDivElement>(null)
     const pieRef = useRef<HTMLDivElement>(null)
     const categoryChartRef = useRef<HTMLDivElement>(null)
+    const barChartInstance = useRef<echarts.ECharts | null>(null)
+    const categoryChartInstance = useRef<echarts.ECharts | null>(null)
+    const pieChartInstance = useRef<echarts.ECharts | null>(null)
     const [open, setOpen] = useState(false)
-    const [pieChart, setPieChart] = useState<echarts.ECharts | null>(null)
     const [newsViewList, setNewsViewList] = useState<NewsItem[]>([])
     const [newsStarList, setNewsStarList] = useState<NewsItem[]>([])
     const [allList, setAllList] = useState<NewsItem[]>([])
@@ -41,10 +43,10 @@ export default function Home() {
 
     useEffect(() => {
         Promise.all([
-            axios.get<NewsItem[]>('/news?publishState=2&_expand=category&_sort=view&_order=desc&_limit=7'),
-            axios.get<NewsItem[]>('/news?publishState=2&_expand=category&_sort=star&_order=desc&_limit=7'),
-            axios.get<NewsItem[]>('/news?publishState=2&_expand=category'),
-            axios.get<{ id: number }[]>('/users')
+            api.get<NewsItem[]>('/news?publishState=2&_expand=category&_sort=view&_order=desc&_limit=7'),
+            api.get<NewsItem[]>('/news?publishState=2&_expand=category&_sort=star&_order=desc&_limit=7'),
+            api.get<NewsItem[]>('/news?publishState=2&_expand=category'),
+            api.get<{ id: number }[]>('/users')
         ]).then((res) => {
             setNewsViewList(res[0].data)
             setNewsStarList(res[1].data)
@@ -60,12 +62,41 @@ export default function Home() {
             })
 
             renderLineView()
-            renderCategoryChart(_.groupBy(res[2].data, (item) => item.category.title))
+            renderCategoryChart(_.groupBy(res[2].data, (item) => item.category?.title))
         })
+
+        const observers: ResizeObserver[] = []
+        const canObserve = typeof ResizeObserver !== 'undefined'
+        const observe = (el: HTMLDivElement | null, instance: React.MutableRefObject<echarts.ECharts | null>) => {
+            if (!canObserve || !el) return
+            const ro = new ResizeObserver(() => {
+                instance.current?.resize()
+            })
+            ro.observe(el)
+            observers.push(ro)
+        }
+
+        observe(barRef.current, barChartInstance)
+        observe(categoryChartRef.current, categoryChartInstance)
+
         return () => {
-            window.onresize = null
+            observers.forEach((observer) => observer.disconnect())
+            barChartInstance.current?.dispose()
+            categoryChartInstance.current?.dispose()
+            pieChartInstance.current?.dispose()
         }
     }, [])
+
+    useEffect(() => {
+        if (!open || !pieRef.current) return
+        pieChartInstance.current?.resize()
+        if (typeof ResizeObserver === 'undefined') return
+        const ro = new ResizeObserver(() => {
+            pieChartInstance.current?.resize()
+        })
+        ro.observe(pieRef.current)
+        return () => ro.disconnect()
+    }, [open])
 
     const user = useSelector((state: RootState) => state.user)
     const username = user?.username || ''
@@ -75,7 +106,7 @@ export default function Home() {
     function renderLineView() {
         if (!barRef.current) return
         const myChart = echarts.init(barRef.current)
-        window.onresize = () => myChart.resize()
+        barChartInstance.current = myChart
 
         function generateSeriesData() {
             const seriesData: { date: string; views: number }[] = []
@@ -142,6 +173,7 @@ export default function Home() {
     function renderCategoryChart(groupObj: Record<string, NewsItem[]>) {
         if (!categoryChartRef.current) return
         const myChart = echarts.init(categoryChartRef.current)
+        categoryChartInstance.current = myChart
         const data = Object.entries(groupObj).map(([name, items]) => ({
             name,
             value: items.length
@@ -154,12 +186,12 @@ export default function Home() {
                 textStyle: { fontSize: 16, fontWeight: 500 }
             },
             tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-            legend: { orient: 'vertical', right: 10, top: 'center' },
+            legend: { orient: 'horizontal', bottom: 0, left: 'center' },
             series: [
                 {
                     type: 'pie',
-                    radius: ['40%', '70%'],
-                    center: ['40%', '55%'],
+                    radius: ['35%', '60%'],
+                    center: ['50%', '45%'],
                     avoidLabelOverlap: false,
                     itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
                     label: { show: false },
@@ -175,17 +207,17 @@ export default function Home() {
 
     function renderPieView() {
         const currentList = allList.filter((item) => item.author === username)
-        const groupObj = _.groupBy(currentList, (item) => item.category.title)
+        const groupObj = _.groupBy(currentList, (item) => item.category?.title)
         const list: { name: string; value: number }[] = []
         for (const i in groupObj) {
             list.push({ name: i, value: groupObj[i].length })
         }
         let myChart: echarts.ECharts
-        if (!pieChart && pieRef.current) {
+        if (!pieChartInstance.current && pieRef.current) {
             myChart = echarts.init(pieRef.current)
-            setPieChart(myChart)
-        } else if (pieChart) {
-            myChart = pieChart
+            pieChartInstance.current = myChart
+        } else if (pieChartInstance.current) {
+            myChart = pieChartInstance.current
         } else {
             return
         }

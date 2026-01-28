@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Table, Tag, Button, Modal, Popover, Switch } from 'antd'
 import { DeleteOutlined, EditOutlined, ExclamationCircleFilled } from '@ant-design/icons'
-import axios from 'axios'
+import api from '@/utils/Request'
 import '../../styles/TableStyles.css'
 import type { Right } from '@/types'
 
@@ -11,7 +11,7 @@ export default function RightList() {
     const [dataSource, setdataSource] = useState<Right[]>([])
 
     useEffect(() => {
-        axios.get<Right[]>("/rights").then(res => {
+        api.get<Right[]>("/rights").then(res => {
             const list = res.data
             list.forEach(item => {
                 if (!item.children || item.children.length === 0) {
@@ -73,14 +73,14 @@ export default function RightList() {
         const isTopLevel = item.key.split('/').filter(Boolean).length === 1
 
         if (isTopLevel) {
-            axios.patch(`/rights/${item.id}`, {
+            api.patch(`/rights/${item.id}`, {
                 pagepermisson: item.pagepermisson
             })
         } else {
             const parentKey = '/' + item.key.split('/').filter(Boolean)[0]
             const parent = dataSource.find(d => d.key === parentKey)
             if (parent) {
-                axios.patch(`/rights/${parent.id}`, {
+                api.patch(`/rights/${parent.id}`, {
                     children: parent.children
                 })
             }
@@ -106,14 +106,14 @@ export default function RightList() {
 
         if (isTopLevel) {
             setdataSource(dataSource.filter(data => data.id !== item.id))
-            axios.delete(`/rights/${item.id}`)
+            api.delete(`/rights/${item.id}`)
         } else {
             const parentKey = '/' + item.key.split('/').filter(Boolean)[0]
             const parent = dataSource.find(d => d.key === parentKey)
             if (parent && parent.children) {
                 parent.children = parent.children.filter(child => child.id !== item.id)
                 setdataSource([...dataSource])
-                axios.patch(`/rights/${parent.id}`, {
+                api.patch(`/rights/${parent.id}`, {
                     children: parent.children
                 })
             }

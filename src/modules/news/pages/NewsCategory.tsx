@@ -1,4 +1,4 @@
-import axios from 'axios'
+import api from '@/utils/Request'
 import React, { useEffect, useState, useRef, useContext, ReactNode } from 'react'
 import { DeleteOutlined, ExclamationCircleFilled } from '@ant-design/icons'
 import { Table, Button, message, Modal, Input, Form, FormInstance } from 'antd'
@@ -104,7 +104,7 @@ export default function NewsCategory() {
   const addForm = useRef<FormInstance>(null)
 
   useEffect(() => {
-    axios.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
+    api.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
   }, [])
 
   function confirmMethod(item: Category) {
@@ -123,20 +123,20 @@ export default function NewsCategory() {
 
   async function deleteCateogry(item: Category) {
     try {
-      const usersRes = await axios.get<UserWithCategories[]>('/users')
+      const usersRes = await api.get<UserWithCategories[]>('/users')
       const users = usersRes.data
 
       const updatePromises = users
         .filter(user => user.allowedCategoryIds?.includes(item.id))
         .map(user => {
           const updatedCategoryIds = user.allowedCategoryIds!.filter(id => id !== item.id)
-          return axios.patch(`/users/${user.id}`, {
+          return api.patch(`/users/${user.id}`, {
             allowedCategoryIds: updatedCategoryIds
           })
         })
 
       await Promise.all(updatePromises)
-      await axios.delete(`/categories/${item.id}`)
+      await api.delete(`/categories/${item.id}`)
 
       const list = categoryList.filter((category) => category.id !== item.id)
       setCategoryList([...list])
@@ -148,14 +148,14 @@ export default function NewsCategory() {
   }
 
   function handleSave(item: Category) {
-    axios
+    api
       .post(`/categories/${item.id}`, {
         title: item.title,
         value: item.title
       })
       .then(
         () => {
-          axios.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
+          api.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
           message.success('修改成功！')
         },
         () => message.error('修改失败！')
@@ -164,7 +164,7 @@ export default function NewsCategory() {
 
   function handleOk() {
     addForm.current?.validateFields().then((info) => {
-      axios
+      api
         .post('/categories', {
           title: info.title,
           value: info.title
@@ -172,7 +172,7 @@ export default function NewsCategory() {
         .then(
           () => {
             message.success('添加成功！')
-            axios.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
+            api.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
             setIsModalOpen(false)
           },
           () => message.error('添加失败！请稍后再试')

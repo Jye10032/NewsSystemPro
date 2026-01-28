@@ -1,7 +1,7 @@
 import { useEffect, useState, lazy, Suspense, ComponentType } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { Spin } from 'antd'
-import axios from 'axios'
+import api from '@/utils/Request'
 import { connect } from 'react-redux'
 import type { Right, RootState } from '@/types'
 
@@ -60,7 +60,7 @@ function NewsRouter(props: NewsRouterProps) {
     const [backRouteList, setBackRouteList] = useState<Right[]>([])
 
     useEffect(() => {
-        axios.get<Right[]>('/rights').then((res) => {
+        api.get<Right[]>('/rights').then((res) => {
             const flatList = res.data.reduce<Right[]>((acc, item) => {
                 acc.push(item)
                 if (item.children && item.children.length > 0) {

@@ -12,7 +12,7 @@ import {
     SettingOutlined
 } from '@ant-design/icons'
 import './index.css'
-import axios from 'axios'
+import api from '@/utils/Request'
 import type { Right, RootState } from '@/types'
 
 const { SubMenu } = Menu
@@ -51,7 +51,7 @@ export default function SideMenu() {
 
     useEffect(() => {
         // 从后端获取菜单权限数据（包含嵌套的 children 结构）
-        axios.get<Right[]>("/rights").then(res => {
+        api.get<Right[]>("/rights").then(res => {
             setMeun(res.data)
         })
     }, [])

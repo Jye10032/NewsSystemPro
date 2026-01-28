@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Table, Button, notification, Modal, message } from 'antd'
-import axios from 'axios'
+import api from '@/utils/Request'
 import { EditOutlined, DeleteOutlined, VerticalAlignTopOutlined, ExclamationCircleFilled } from '@ant-design/icons'
 import { useSelector } from 'react-redux'
 import '../../../styles/TableStyles.css'
@@ -17,14 +17,14 @@ export default function NewsDraft() {
   const username = user?.username || ''
 
   useEffect(() => {
-    axios.get<NewsItem[]>(`/news?author=${username}&auditState=0&_expand=category`).then((res) => {
+    api.get<NewsItem[]>(`/news?author=${username}&auditState=0&_expand=category`).then((res) => {
       setNewsList(res.data)
     })
-    axios.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
+    api.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
   }, [username])
 
   function handleCheck(id: number) {
-    axios
+    api
       .patch(`news/${id}`, {
         auditState: 1
       })
@@ -54,7 +54,7 @@ export default function NewsDraft() {
 
   function deleteNews(news: NewsItem) {
     const list = newsList.filter((item) => news.id !== item.id)
-    axios.delete(`/news/${news.id}`).then(
+    api.delete(`/news/${news.id}`).then(
       () => {
         setNewsList([...list])
         message.success('删除成功')

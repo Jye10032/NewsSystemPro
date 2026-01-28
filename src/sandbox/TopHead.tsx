@@ -4,7 +4,7 @@ import { UserOutlined, HomeOutlined, MenuOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../types'
-import axios from 'axios'
+import api from '@/utils/Request'
 
 export default function TopHead() {
     const user = useSelector((state: RootState) => state.user)
@@ -86,7 +86,7 @@ export default function TopHead() {
 
     // 退出登录
     async function logout() {
-        await axios.post('/api/auth/logout')
+        await api.post('/api/auth/logout')
         dispatch({ type: 'clear_user' })
         navigate('/login', { replace: true })
     }

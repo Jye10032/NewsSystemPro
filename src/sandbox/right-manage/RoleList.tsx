@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Table, Button, Modal, Tree } from 'antd'
 import { DeleteOutlined, EditOutlined, ExclamationCircleFilled } from '@ant-design/icons'
-import axios from 'axios'
+import api from '@/utils/Request'
 import '../../styles/TableStyles.css'
 import type { Role, Right } from '@/types'
 
@@ -30,17 +30,17 @@ export default function RoleList() {
 
     const deleteMethod = (item: Role) => {
         setdataSource(dataSource.filter(data => data.id !== item.id))
-        axios.delete(`/roles/${item.id}`)
+        api.delete(`/roles/${item.id}`)
     }
 
     useEffect(() => {
-        axios.get<Role[]>("/roles").then(res => {
+        api.get<Role[]>("/roles").then(res => {
             setdataSource(res.data)
         })
     }, [])
 
     useEffect(() => {
-        axios.get<Right[]>("/rights?_embed=children").then(res => {
+        api.get<Right[]>("/rights?_embed=children").then(res => {
             setRightList(res.data)
         })
     }, [])
@@ -87,7 +87,7 @@ export default function RoleList() {
             }
             return item
         }))
-        axios.patch(`/roles/${currentId}`, {
+        api.patch(`/roles/${currentId}`, {
             rights: currentRights
         })
     }

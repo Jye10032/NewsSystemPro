@@ -5,7 +5,7 @@ import { Button, Input, Select, message, notification, Space } from 'antd'
 import { SaveOutlined, SendOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import axios from 'axios'
+import api from '@/utils/Request'
 import type { Category, RootState } from '@/types'
 
 export default function NewsAdd() {
@@ -18,7 +18,7 @@ export default function NewsAdd() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    axios.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
+    api.get<Category[]>('/categories').then((res) => setCategoryList(res.data))
   }, [])
 
   function validate(): boolean {
@@ -41,7 +41,7 @@ export default function NewsAdd() {
     if (!validate()) return
 
     setSaving(true)
-    axios
+    api
       .post('/news', {
         title,
         categoryId,

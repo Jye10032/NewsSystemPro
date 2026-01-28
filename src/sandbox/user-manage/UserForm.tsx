@@ -2,7 +2,7 @@ import React, { forwardRef, useState, useEffect } from 'react'
 import { Form, Input, Select, FormInstance, Button, Modal, message } from 'antd'
 import { KeyOutlined } from '@ant-design/icons'
 import { useSelector } from 'react-redux'
-import axios from 'axios'
+import api from '@/utils/Request'
 import type { Role, Category, RootState } from '@/types'
 
 const { Option } = Select
@@ -94,7 +94,7 @@ const UserForm = forwardRef<FormInstance, UserFormProps>((props, ref) => {
             return
         }
         setResetting(true)
-        axios.patch(`/users/${props.userId}`, { password: newPassword })
+        api.patch(`/users/${props.userId}`, { password: newPassword })
             .then(() => {
                 message.success('密码重置成功')
                 setResetModalOpen(false)

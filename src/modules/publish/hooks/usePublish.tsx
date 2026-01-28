@@ -1,6 +1,6 @@
 import { ExclamationCircleFilled } from '@ant-design/icons'
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import api from '@/utils/Request'
 import { notification, message, Modal } from 'antd'
 import { useSelector } from 'react-redux'
 import type { NewsItem, RootState } from '@/types'
@@ -13,7 +13,7 @@ function usePublish(publishState: number) {
   const username = user?.username || ''
 
   useEffect(() => {
-    axios<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then((res) => {
+    api<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then((res) => {
       setNewsList(res.data)
     })
   }, [publishState, username])
@@ -41,13 +41,13 @@ function usePublish(publishState: number) {
   }
 
   function handlePublish(id: number) {
-    axios
+    api
       .patch(`/news/${id}`, {
         publishState: 2
       })
       .then(
         () => {
-          axios<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then(
+          api<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then(
             (res) => {
               setNewsList(res.data)
             }
@@ -63,13 +63,13 @@ function usePublish(publishState: number) {
   }
 
   function handleSunset(id: number) {
-    axios
+    api
       .patch(`/news/${id}`, {
         publishState: 3
       })
       .then(
         () => {
-          axios<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then(
+          api<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then(
             (res) => {
               setNewsList(res.data)
             }
@@ -85,9 +85,9 @@ function usePublish(publishState: number) {
   }
 
   function handleDelete(id: number) {
-    axios.delete(`/news/${id}`, {}).then(
+    api.delete(`/news/${id}`, {}).then(
       () => {
-        axios<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then((res) => {
+        api<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then((res) => {
           setNewsList(res.data)
         })
         notification.info({

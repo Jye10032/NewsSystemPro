@@ -1,26 +1,36 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import axios from 'axios'
+import { message } from 'antd'
+import api from '../../utils/Request'
+import { __mockDispatch as mockDispatch } from '../../redux/store'
 
 // Mock Redux store - 使用工厂函数
 vi.mock('../../redux/store', () => {
   const mockDispatch = vi.fn()
+  const mockGetState = vi.fn(() => ({ isLoading: 0 }))
   return {
     store: {
-      dispatch: mockDispatch
+      dispatch: mockDispatch,
+      getState: mockGetState
     },
     // 导出 mockDispatch 供测试使用
-    __mockDispatch: mockDispatch
+    __mockDispatch: mockDispatch,
+    __mockGetState: mockGetState
   }
 })
 
-// 导入 Request 来触发拦截器的设置
-import '../../utils/Request'
-import { __mockDispatch as mockDispatch } from '../../redux/store'
+// Mock antd message
+vi.mock('antd', () => ({
+  message: {
+    error: vi.fn()
+  }
+}))
 
 describe('Axios 拦截器', () => {
   beforeEach(() => {
     // 清空所有 mock 调用记录
     mockDispatch.mockClear()
+    message.error.mockClear()
   })
 
   afterEach(() => {
@@ -231,6 +241,38 @@ describe('Axios 拦截器', () => {
 
       // 每个请求应该触发 2 次 change_loading (请求前 + 响应后)
       expect(mockDispatch).toHaveBeenCalledTimes(4) // 2个请求 × 2次调用
+    })
+  })
+
+  describe('Request 模块默认配置', () => {
+    it('应该设置 baseURL 和 withCredentials', () => {
+      const expectedBaseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+      expect(api.defaults.baseURL).toBe(expectedBaseURL)
+      expect(api.defaults.withCredentials).toBe(true)
+    })
+
+    it('成功请求应触发 loading_start 和 loading_end', async () => {
+      axios.defaults.adapter = async (config) => {
+        return { data: { ok: true }, status: 200, statusText: 'OK', headers: {}, config }
+      }
+
+      await api.get('/health')
+
+      expect(mockDispatch).toHaveBeenCalledWith({ type: 'loading_start' })
+      expect(mockDispatch).toHaveBeenCalledWith({ type: 'loading_end' })
+    })
+
+    it('请求失败应提示错误并结束 loading', async () => {
+      const error = new Error('Server Error')
+      error.response = { data: { message: '请求失败' } }
+
+      axios.defaults.adapter = async () => {
+        throw error
+      }
+
+      await expect(api.get('/fail')).rejects.toThrow('Server Error')
+      expect(message.error).toHaveBeenCalledWith('请求失败')
+      expect(mockDispatch).toHaveBeenCalledWith({ type: 'loading_end' })
     })
   })
 })

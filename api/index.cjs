@@ -294,8 +294,8 @@ app.get('/news/:id', (req, res, next) => {
     return res.status(404).json({ error: '新闻不存在' })
   }
 
-  // 已发布的新闻，所有人可访问
-  if (news.publishState === 2) {
+  // 已发布的新闻，所有人可访问（兼容字符串类型）
+  if (Number(news.publishState) === 2) {
     return next()
   }
 

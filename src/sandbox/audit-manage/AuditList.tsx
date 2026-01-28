@@ -1,4 +1,4 @@
-import axios from 'axios'
+import api from '@/utils/Request'
 import { useEffect, useState } from 'react'
 import { Table, Button, Tag, notification, message } from 'antd'
 import { Link } from 'react-router-dom'
@@ -13,7 +13,7 @@ export default function AuditList() {
     const username = user?.username || ''
 
     useEffect(() => {
-        axios.get<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState_lte=1&_expand=category`).then((res) => {
+        api.get<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState_lte=1&_expand=category`).then((res) => {
             setNewsList(res.data)
         })
     }, [username])
@@ -21,12 +21,12 @@ export default function AuditList() {
     function handleRervert(item: NewsItem) {
         setNewsList(newsList.filter((data) => data.id !== item.id))
 
-        axios
+        api
             .patch(`/news/${item.id}`, {
                 auditState: 0
             })
             .then(() => {
-                axios.get<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState_lte=1&_expand=category`).then((res) => {
+                api.get<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState_lte=1&_expand=category`).then((res) => {
                     setNewsList(res.data)
                 })
                 notification.info({
@@ -38,14 +38,14 @@ export default function AuditList() {
     }
 
     function handlePublish(item: NewsItem) {
-        axios
+        api
             .patch(`/news/${item.id}`, {
                 publishState: 2,
                 publishTime: Date.now()
             })
             .then(
                 () => {
-                    axios.get<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState_lte=1&_expand=category`).then((res) => {
+                    api.get<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState_lte=1&_expand=category`).then((res) => {
                         setNewsList(res.data)
                     })
                     notification.info({

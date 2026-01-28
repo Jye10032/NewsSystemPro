@@ -5,7 +5,7 @@ import '@/styles/NewsSandBox.css'
 import { useEffect } from 'react'
 import { Layout } from 'antd'
 import { useDispatch } from 'react-redux'
-import axios from 'axios'
+import api from '@/utils/Request'
 const { Content } = Layout
 
 export default function NewsSandBox() {
@@ -13,7 +13,7 @@ export default function NewsSandBox() {
 
     useEffect(() => {
         // 只在组件挂载时刷新一次用户权限数据（Cookie 自动携带）
-        axios.get('/api/users/me').then(res => {
+        api.get('/api/users/me').then(res => {
             dispatch({ type: 'set_user', payload: res.data })
         }).catch(() => {
             // Cookie 无效，清除登录状态

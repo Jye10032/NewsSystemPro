@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button, Input, Select, message, notification, Space } from 'antd'
 import { SaveOutlined, SendOutlined } from '@ant-design/icons'
 import { useNavigate, useParams } from 'react-router-dom'
-import axios from 'axios'
+import api from '@/utils/Request'
 import type { Category } from '@/types'
 
 export default function NewsUpdate() {
@@ -20,8 +20,8 @@ export default function NewsUpdate() {
   useEffect(() => {
     // 加载分类列表和新闻数据
     Promise.all([
-      axios.get<Category[]>('/categories'),
-      axios.get(`/news/${params.id}`)
+      api.get<Category[]>('/categories'),
+      api.get(`/news/${params.id}`)
     ]).then(([categoriesRes, newsRes]) => {
       setCategoryList(categoriesRes.data)
       const news = newsRes.data
@@ -52,7 +52,7 @@ export default function NewsUpdate() {
     if (!validate()) return
 
     setSaving(true)
-    axios
+    api
       .patch(`/news/${params.id}`, {
         title,
         categoryId,

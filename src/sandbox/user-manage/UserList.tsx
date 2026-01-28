@@ -1,7 +1,7 @@
 import UserForm from './UserForm'
 import React, { useEffect, useState, useRef } from 'react'
 import { Table, Switch, Button, Modal, message, Tag, FormInstance } from 'antd'
-import axios from 'axios'
+import api from '@/utils/Request'
 import { EditOutlined, DeleteOutlined, ExclamationCircleFilled, UserAddOutlined } from '@ant-design/icons'
 import { useSelector } from 'react-redux'
 import type { User, Role, Category, RootState } from '@/types'
@@ -28,7 +28,7 @@ export default function UserList() {
             3: 'editor'
         }
         const { roleId, username, allowedCategoryIds } = currentUser || {}
-        axios.get('/users?_expand=role').then((res) => {
+        api.get('/users?_expand=role').then((res) => {
             //过滤权限比登录用户大的用户
             const list = res.data as User[]
             setUserList(
@@ -46,10 +46,10 @@ export default function UserList() {
             )
             setUserList(res.data)
         })
-        axios.get('/categories').then((res) => {
+        api.get('/categories').then((res) => {
             setCategoryList(res.data)
         })
-        axios.get('/roles').then((res) => {
+        api.get('/roles').then((res) => {
             setRoleList(res.data)
         })
     }, [currentUser])
@@ -159,7 +159,7 @@ export default function UserList() {
                 }
             })
         )
-        axios.patch(`/users/${item.id}`, { roleState: !item.roleState })
+        api.patch(`/users/${item.id}`, { roleState: !item.roleState })
     }
     // 删除前的确认框
     function confirmMethod(user: User) {
@@ -180,7 +180,7 @@ export default function UserList() {
         let list = userList.filter((user) => {
             return user.id !== item.id
         })
-        axios.delete(`/users/${item.id}`).then(
+        api.delete(`/users/${item.id}`).then(
             () => {
                 setUserList([...list])
                 message.success('删除成功')
@@ -194,7 +194,7 @@ export default function UserList() {
     function handleAdd() {
         addForm.current?.validateFields().then(
             (value) => {
-                axios
+                api
                     .post('/users', {
                         ...value,
                         default: false,
@@ -203,7 +203,7 @@ export default function UserList() {
                     .then(
                         () => {
                             message.success('成功添加用户')
-                            axios.get('/users?_expand=role').then((res) => {
+                            api.get('/users?_expand=role').then((res) => {
                                 setUserList(res.data)
                             })
                             setIsAddModalOpen(false)
@@ -236,14 +236,14 @@ export default function UserList() {
     function editUser() {
         editForm.current?.validateFields().then(
             (value) => {
-                axios
+                api
                     .patch(`/users/${currentId}`, {
                         ...value
                     })
                     .then(
                         () => {
                             message.success('成功编辑用户')
-                            axios.get('/users?_expand=role').then((res) => {
+                            api.get('/users?_expand=role').then((res) => {
                                 setUserList(res.data)
                             })
                             setIsEditModalOpen(false)
