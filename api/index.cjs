@@ -13,12 +13,25 @@ const JWT_SECRET = process.env.JWT_SECRET || 'news-system-pro-secret-key'
 const JWT_EXPIRES_IN = '7d'
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7天
 
-// 允许的前端域名
-const ALLOWED_ORIGINS = [
+// 允许的前端域名（可通过环境变量追加，逗号分隔）
+const DEFAULT_ORIGINS = [
   'https://jye10032.github.io',
   'http://localhost:5173',
   'http://localhost:3000'
 ]
+const EXTRA_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean)
+const ALLOWED_ORIGINS = new Set([...DEFAULT_ORIGINS, ...EXTRA_ORIGINS])
+const GITHUB_PAGES_RE = /^https:\/\/[a-z0-9-]+\.github\.io$/i
+
+function isAllowedOrigin(origin) {
+  if (!origin) return true
+  if (ALLOWED_ORIGINS.has(origin)) return true
+  if (GITHUB_PAGES_RE.test(origin)) return true
+  return false
+}
 
 // ============ 加载数据（内存模式，刷新后重置）============
 const dbData = require('../db/db.json')
@@ -31,19 +44,21 @@ const memoryDB = {
 }
 
 // ============ 中间件 ============
-app.use(cors({
-  origin: function(origin, callback) {
+const corsOptions = {
+  origin: function (origin, callback) {
     // 允许无 origin 的请求（如 Postman）或在白名单中的域名
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
-      callback(null, true)
+    if (isAllowedOrigin(origin)) {
+      callback(null, origin || true)
     } else {
-      callback(null, false)
+      callback(new Error('Not allowed by CORS'))
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}))
+}
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 app.use(cookieParser())
 app.use(express.json())
 
