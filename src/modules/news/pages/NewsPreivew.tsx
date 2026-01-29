@@ -24,6 +24,7 @@ export default function NewsPreivew() {
   const publishList = ['未发布', '待发布', '已上线', '已下线']
   const colorList = ['black', 'orange', 'green', 'red']
   const [newsInfo, setNewsInfo] = useState<NewsInfo | null>(null)
+  const [rejectReason, setRejectReason] = useState<string>('')
   const navigate = useNavigate()
   const params = useParams<{ id: string }>()
 
@@ -31,6 +32,15 @@ export default function NewsPreivew() {
     api.get<NewsInfo>(`/news/${params.id}?_expand=category&_expand=role`).then((res) => {
       setNewsInfo(res.data)
     })
+  }, [params.id])
+
+  useEffect(() => {
+    if (!params.id) return
+    api
+      .get<{ reason?: string }[]>(`/auditLogs?newsId=${params.id}&_sort=time&_order=desc&_limit=1`)
+      .then((res) => {
+        setRejectReason(res.data?.[0]?.reason || '')
+      })
   }, [params.id])
 
   return (
@@ -53,6 +63,11 @@ export default function NewsPreivew() {
               <Descriptions.Item label="审核状态">
                 <span style={{ color: colorList[newsInfo.auditState] }}>{auditList[newsInfo.auditState]}</span>
               </Descriptions.Item>
+              {newsInfo.auditState === 3 && rejectReason && (
+                <Descriptions.Item label="驳回原因">
+                  <span style={{ color: '#cf1322' }}>{rejectReason}</span>
+                </Descriptions.Item>
+              )}
               <Descriptions.Item label="发布状态">
                 <span style={{ color: colorList[newsInfo.publishState] }}>{publishList[newsInfo.publishState]}</span>
               </Descriptions.Item>

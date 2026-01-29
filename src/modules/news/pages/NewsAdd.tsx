@@ -59,7 +59,7 @@ export default function NewsAdd() {
           navigate(auditState === 0 ? '/news-manage/draft' : '/audit-manage/list')
           notification.info({
             message: '提示',
-            description: `您可以到${auditState === 0 ? '草稿箱' : '审核列表'}中查看您的新闻`,
+            description: `您可以到${auditState === 0 ? '草稿箱' : '已审核'}中查看您的新闻`,
             placement: 'bottomRight'
           })
         },

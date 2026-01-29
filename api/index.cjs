@@ -276,7 +276,7 @@ app.use('/rights/:id', (req, res, next) => {
   next()
 })
 
-// 新闻修改/删除 - 作者本人可操作
+// 新闻修改/删除 - 作者本人可操作（审核角色可执行审核操作）
 app.use('/news/:id', (req, res, next) => {
   if (req.method === 'GET') return next()
 
@@ -295,6 +295,14 @@ app.use('/news/:id', (req, res, next) => {
   // 作者本人可操作
   if (user.username === news.author) {
     return next()
+  }
+
+  // 审核角色可执行审核操作（仅 PATCH 且包含 auditState）
+  if (req.method === 'PATCH' && typeof req.body?.auditState !== 'undefined') {
+    const role = router.db.get('roles').find({ id: user.roleId }).value()
+    if (role && Array.isArray(role.rights) && role.rights.includes('/audit-manage/audit')) {
+      return next()
+    }
   }
 
   return res.status(403).json({ error: '无权操作此新闻' })

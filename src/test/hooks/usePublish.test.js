@@ -83,7 +83,7 @@ describe('usePublish Hook', () => {
 
       // 验证 API 调用参数
       expect(axios).toHaveBeenCalledWith(
-        `/news?author=${mockUsername}&auditState_ne=0&publishState=1&_expand=category`
+        `/news?author=${mockUsername}&auditState=2&publishState=1&_expand=category`
       )
     })
 
@@ -188,7 +188,8 @@ describe('usePublish Hook', () => {
       // Assert: 验证 patch 请求
       await waitFor(() => {
         expect(axios.patch).toHaveBeenCalledWith(`/news/${newsId}`, {
-          publishState: 2
+          publishState: 2,
+          publishTime: expect.any(Number)
         })
       })
 

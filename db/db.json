@@ -151,8 +151,8 @@
       "key": "/audit-manage",
       "pagepermisson": 1,
       "children": [
-        { "id": 1, "title": "审核新闻", "key": "/audit-manage/audit", "pagepermisson": 1 },
-        { "id": 2, "title": "审核列表", "key": "/audit-manage/list", "pagepermisson": 1 }
+        { "id": 1, "title": "待审核", "key": "/audit-manage/audit", "pagepermisson": 1 },
+        { "id": 2, "title": "已审核", "key": "/audit-manage/list", "pagepermisson": 1 }
       ]
     },
     {
@@ -224,6 +224,7 @@
       "id": 7
     }
   ],
+  "auditLogs": [],
   "regions": [
     {
       "id": 1,
