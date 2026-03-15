@@ -5,6 +5,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../types'
 import api from '@/utils/Request'
+import { clearAuthToken } from '@/utils/authToken'
 
 export default function TopHead() {
     const user = useSelector((state: RootState) => state.user)
@@ -87,6 +88,7 @@ export default function TopHead() {
     // 退出登录
     async function logout() {
         await api.post('/api/auth/logout')
+        clearAuthToken()
         dispatch({ type: 'clear_user' })
         navigate('/login', { replace: true })
     }

@@ -8,6 +8,7 @@ const fs = require('fs')
 const authRoutes = require('./routes/auth.cjs')
 const usersRoutes = require('./routes/users.cjs')
 const { verifyToken } = require('./utils/jwt.cjs')
+const { extractToken } = require('./middleware/auth.cjs')
 
 const app = express()
 const PORT = 8000
@@ -47,7 +48,7 @@ const router = jsonServer.router(mergedData)
 
 // 从 Cookie 获取用户信息
 function getUserFromToken(req) {
-  const token = req.cookies?.jwt
+  const token = extractToken(req)
   if (!token) {
     return null
   }
