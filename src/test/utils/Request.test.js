@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import axios from 'axios'
-import { message } from 'antd'
 import api from '../../utils/Request'
 import { __mockDispatch as mockDispatch } from '../../redux/store'
 
@@ -19,18 +18,11 @@ vi.mock('../../redux/store', () => {
   }
 })
 
-// Mock antd message
-vi.mock('antd', () => ({
-  message: {
-    error: vi.fn()
-  }
-}))
-
 describe('Axios 拦截器', () => {
   beforeEach(() => {
     // 清空所有 mock 调用记录
     mockDispatch.mockClear()
-    message.error.mockClear()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   afterEach(() => {
@@ -271,7 +263,7 @@ describe('Axios 拦截器', () => {
       }
 
       await expect(api.get('/fail')).rejects.toThrow('Server Error')
-      expect(message.error).toHaveBeenCalledWith('请求失败')
+      expect(console.error).toHaveBeenCalledWith('请求失败')
       expect(mockDispatch).toHaveBeenCalledWith({ type: 'loading_end' })
     })
   })
