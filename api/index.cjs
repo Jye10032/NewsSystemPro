@@ -75,6 +75,15 @@ function verifyToken(token) {
   }
 }
 
+function extractToken(req) {
+  const cookieToken = req.cookies?.jwt
+  if (cookieToken) return cookieToken
+
+  const authHeader = String(req.headers?.authorization || '')
+  const match = authHeader.match(/^Bearer\s+(.+)$/i)
+  return match ? match[1].trim() : ''
+}
+
 // ============ 认证路由 ============
 
 // 登录
@@ -128,7 +137,8 @@ app.post('/api/auth/login', (req, res) => {
     user: {
       ...userWithoutPassword,
       role
-    }
+    },
+    token
   })
 })
 
@@ -207,7 +217,7 @@ const router = jsonServer.router(memoryDB)
 
 // 从 Cookie 获取用户信息
 function getUserFromToken(req) {
-  const token = req.cookies?.jwt
+  const token = extractToken(req)
   if (!token) {
     return null
   }

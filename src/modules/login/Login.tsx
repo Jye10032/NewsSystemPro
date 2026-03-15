@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Button, Form, Input, message } from 'antd'
+import { Button, Form, Input } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import Particles from 'react-tsparticles'
 import { loadFull } from 'tsparticles'
@@ -9,6 +9,8 @@ import { useDispatch } from 'react-redux'
 import './Login.css'
 import api from '@/utils/Request'
 import { User } from '../../types'
+import { setAuthToken } from '@/utils/authToken'
+import { appMessage } from '@/utils/appMessage'
 
 interface LoginForm {
     username: string
@@ -91,17 +93,17 @@ export default function Login() {
 
     // 提交表单数据验证成功后的回调事件
     function onFinish(formData: LoginForm) {
-        api.post<{ user: User }>('/api/auth/login', formData).then(
+        api.post<{ user: User; token?: string }>('/api/auth/login', formData).then(
             (res) => {
-                const { user } = res.data
-                // 使用 Redux 存储用户信息（Cookie 由浏览器自动管理）
+                const { user, token } = res.data
+                setAuthToken(String(token || ''))
                 dispatch({ type: 'set_user', payload: user })
-                message.success('登录成功')
+                appMessage.success('登录成功')
                 nav('/', { replace: true })
             },
             (err) => {
                 const errorMsg = err.response?.data?.message || '用户名或密码错误'
-                message.error(errorMsg)
+                appMessage.error(errorMsg)
             }
         )
     }
