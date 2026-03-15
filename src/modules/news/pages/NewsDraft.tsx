@@ -32,7 +32,7 @@ export default function NewsDraft() {
         navigate('/audit-manage/list')
         notification.info({
           message: '通知',
-          description: '您可以到审核列表中查看该新闻',
+          description: '您可以到已审核中查看该新闻',
           placement: 'bottomRight'
         })
       })

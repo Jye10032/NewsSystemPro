@@ -5,11 +5,14 @@ import '@/styles/NewsSandBox.css'
 import { useEffect } from 'react'
 import { Layout } from 'antd'
 import { useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 import api from '@/utils/Request'
+import { clearAuthToken } from '@/utils/authToken'
 const { Content } = Layout
 
 export default function NewsSandBox() {
     const dispatch = useDispatch()
+    const navigate = useNavigate()
 
     useEffect(() => {
         // 只在组件挂载时刷新一次用户权限数据（Cookie 自动携带）
@@ -17,10 +20,11 @@ export default function NewsSandBox() {
             dispatch({ type: 'set_user', payload: res.data })
         }).catch(() => {
             // Cookie 无效，清除登录状态
+            clearAuthToken()
             dispatch({ type: 'clear_user' })
-            window.location.href = '/login'
+            navigate('/login', { replace: true })
         })
-    }, [dispatch])
+    }, [dispatch, navigate])
 
     return (
         <Layout>
