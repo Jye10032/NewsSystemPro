@@ -5,6 +5,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../types'
 import api from '@/utils/Request'
+import { clearAuthToken } from '@/utils/authToken'
 
 export default function TopHead() {
     const user = useSelector((state: RootState) => state.user)
@@ -38,8 +39,8 @@ export default function TopHead() {
         '/news-manage/draft': '草稿箱',
         '/news-manage/category': '新闻分类',
         '/audit-manage': '审核管理',
-        '/audit-manage/audit': '审核新闻',
-        '/audit-manage/list': '审核列表',
+        '/audit-manage/audit': '待审核',
+        '/audit-manage/list': '已审核',
         '/publish-manage': '发布管理',
         '/publish-manage/unpublished': '待发布',
         '/publish-manage/published': '已发布',
@@ -87,6 +88,7 @@ export default function TopHead() {
     // 退出登录
     async function logout() {
         await api.post('/api/auth/logout')
+        clearAuthToken()
         dispatch({ type: 'clear_user' })
         navigate('/login', { replace: true })
     }

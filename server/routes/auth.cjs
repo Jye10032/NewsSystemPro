@@ -57,7 +57,8 @@ router.post('/login', (req, res) => {
     user: {
       ...userWithoutPassword,
       role
-    }
+    },
+    token
   })
 })
 

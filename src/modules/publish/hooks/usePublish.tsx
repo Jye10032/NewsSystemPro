@@ -12,8 +12,13 @@ function usePublish(publishState: number) {
   const user = useSelector((state: RootState) => state.user)
   const username = user?.username || ''
 
+  const buildQuery = () => {
+    const auditFilter = publishState === 1 ? 'auditState=2' : 'auditState_ne=0'
+    return `/news?author=${username}&${auditFilter}&publishState=${publishState}&_expand=category`
+  }
+
   useEffect(() => {
-    api<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then((res) => {
+    api<NewsItem[]>(buildQuery()).then((res) => {
       setNewsList(res.data)
     })
   }, [publishState, username])
@@ -43,11 +48,12 @@ function usePublish(publishState: number) {
   function handlePublish(id: number) {
     api
       .patch(`/news/${id}`, {
-        publishState: 2
+        publishState: 2,
+        publishTime: Date.now()
       })
       .then(
         () => {
-          api<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then(
+          api<NewsItem[]>(buildQuery()).then(
             (res) => {
               setNewsList(res.data)
             }
@@ -69,7 +75,7 @@ function usePublish(publishState: number) {
       })
       .then(
         () => {
-          api<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then(
+          api<NewsItem[]>(buildQuery()).then(
             (res) => {
               setNewsList(res.data)
             }
@@ -87,7 +93,7 @@ function usePublish(publishState: number) {
   function handleDelete(id: number) {
     api.delete(`/news/${id}`, {}).then(
       () => {
-        api<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState=${publishState}&_expand=category`).then((res) => {
+        api<NewsItem[]>(buildQuery()).then((res) => {
           setNewsList(res.data)
         })
         notification.info({

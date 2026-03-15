@@ -3,8 +3,9 @@ import IndexRouter from './router/IndexRouter'
 import { Provider } from 'react-redux'
 import { store, persistor } from './redux/store'
 import { PersistGate } from 'redux-persist/integration/react'
-import { ConfigProvider } from 'antd'
+import { App as AntdApp, ConfigProvider } from 'antd'
 import { antdTheme } from './styles/antd.theme'
+import { AppMessageBridge } from './utils/appMessage'
 
 /**
  * 主应用组件
@@ -12,14 +13,17 @@ import { antdTheme } from './styles/antd.theme'
 export default function App() {
   return (
     <ConfigProvider theme={antdTheme}>
-      <Provider store={store}>
-        <PersistGate
-          loading={null}
-          persistor={persistor}
-        >
-          <IndexRouter></IndexRouter>
-        </PersistGate>
-      </Provider>
+      <AntdApp>
+        <AppMessageBridge />
+        <Provider store={store}>
+          <PersistGate
+            loading={null}
+            persistor={persistor}
+          >
+            <IndexRouter></IndexRouter>
+          </PersistGate>
+        </Provider>
+      </AntdApp>
     </ConfigProvider>
   )
 }

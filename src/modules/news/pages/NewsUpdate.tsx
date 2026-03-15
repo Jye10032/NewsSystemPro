@@ -52,19 +52,23 @@ export default function NewsUpdate() {
     if (!validate()) return
 
     setSaving(true)
+    const payload: { title: string; categoryId: number | undefined; content: string; auditState: number; publishState?: number } = {
+      title,
+      categoryId,
+      content,
+      auditState
+    }
+    if (auditState === 0 || auditState === 1) {
+      payload.publishState = 0
+    }
     api
-      .patch(`/news/${params.id}`, {
-        title,
-        categoryId,
-        content,
-        auditState: auditState
-      })
+      .patch(`/news/${params.id}`, payload)
       .then(
         () => {
           navigate(auditState === 0 ? '/news-manage/draft' : '/audit-manage/list')
           notification.info({
             message: '提示',
-            description: `您可以到${auditState === 0 ? '草稿箱' : '审核列表'}中查看您的新闻`,
+            description: `您可以到${auditState === 0 ? '草稿箱' : '已审核'}中查看您的新闻`,
             placement: 'bottomRight'
           })
         },

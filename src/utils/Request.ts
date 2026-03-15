@@ -1,6 +1,7 @@
 import axios from 'axios'
-import { message } from 'antd'
 import { store } from '../redux/store'
+import { clearAuthToken, getAuthToken } from './authToken'
+import { appMessage } from './appMessage'
 
 /*
  * axios的二次封装
@@ -21,6 +22,11 @@ if (api.interceptors?.request && api.interceptors?.response) {
   api.interceptors.request.use(
     function (config) {
       store.dispatch({ type: 'loading_start' })
+      const token = getAuthToken()
+      if (token) {
+        config.headers = config.headers || {}
+        config.headers.Authorization = `Bearer ${token}`
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       console.log('[Request Start]', config.method?.toUpperCase(), config.url, '| Loading:', (store.getState() as any).isLoading)
       return config
@@ -40,9 +46,12 @@ if (api.interceptors?.request && api.interceptors?.response) {
       store.dispatch({ type: 'loading_end' })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       console.log('[Request Error]', error.config?.method?.toUpperCase(), error.config?.url, '| Loading:', (store.getState() as any).isLoading)
+      if (Number(error.response?.status || 0) === 401) {
+        clearAuthToken()
+      }
       // 显示错误提示
       const msg = error.response?.data?.message || error.response?.data?.error || '请求失败'
-      message.error(msg)
+      appMessage.error(msg)
       return Promise.reject(error)
     },
   )

@@ -13,29 +13,11 @@ export default function AuditList() {
     const username = user?.username || ''
 
     useEffect(() => {
+        // 获取已审核但未发布/待发布的新闻
         api.get<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState_lte=1&_expand=category`).then((res) => {
-            setNewsList(res.data)
+            setNewsList(res.data.filter((item) => item.auditState !== 1))
         })
     }, [username])
-
-    function handleRervert(item: NewsItem) {
-        setNewsList(newsList.filter((data) => data.id !== item.id))
-
-        api
-            .patch(`/news/${item.id}`, {
-                auditState: 0
-            })
-            .then(() => {
-                api.get<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState_lte=1&_expand=category`).then((res) => {
-                    setNewsList(res.data)
-                })
-                notification.info({
-                    message: `通知`,
-                    description: `您可以到草稿箱中查看您的新闻`,
-                    placement: 'bottomRight'
-                })
-            })
-    }
 
     function handlePublish(item: NewsItem) {
         api
@@ -45,8 +27,9 @@ export default function AuditList() {
             })
             .then(
                 () => {
+                    // 获取已审核但未发布/待发布的新闻
                     api.get<NewsItem[]>(`/news?author=${username}&auditState_ne=0&publishState_lte=1&_expand=category`).then((res) => {
-                        setNewsList(res.data)
+                        setNewsList(res.data.filter((item) => item.auditState !== 1))
                     })
                     notification.info({
                         message: `通知`,
@@ -58,6 +41,16 @@ export default function AuditList() {
                     message.error('发布失败，请稍后再试')
                 }
             )
+    }
+
+    function handleDelete(item: NewsItem) {
+        api.delete(`/news/${item.id}`).then(
+            () => {
+                setNewsList(newsList.filter((data) => data.id !== item.id))
+                message.success('删除成功')
+            },
+            () => message.error('删除失败')
+        )
     }
 
     const columns = [
@@ -96,18 +89,7 @@ export default function AuditList() {
             title: '操作',
             dataIndex: 'auditState',
             render: (auditState: number, item: NewsItem) => {
-                if (auditState === 1) {
-                    return (
-                        <Button
-                            danger
-                            onClick={() => {
-                                handleRervert(item)
-                            }}
-                        >
-                            撤销
-                        </Button>
-                    )
-                } else if (auditState === 2) {
+                if (auditState === 2) {
                     return (
                         <Button
                             type="primary"
@@ -120,9 +102,12 @@ export default function AuditList() {
                     )
                 } else {
                     return (
-                        <Link to={{ pathname: `/news-manage/update/${item.id}` }}>
-                            <Button>修改</Button>
-                        </Link>
+                        <div>
+                            <Link to={{ pathname: `/news-manage/update/${item.id}` }}>
+                                <Button style={{ marginRight: 8 }}>修改</Button>
+                            </Link>
+                            <Button danger onClick={() => handleDelete(item)}>删除</Button>
+                        </div>
                     )
                 }
             }
@@ -132,7 +117,7 @@ export default function AuditList() {
     return (
         <div>
             <div className="table-header">
-                <h2>审核列表</h2>
+                <h2>已审核</h2>
             </div>
             <Table
                 className="audit-list-table"

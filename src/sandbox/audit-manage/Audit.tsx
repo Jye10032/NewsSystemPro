@@ -1,7 +1,7 @@
 import api from '@/utils/Request'
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Table, Button, notification, message } from 'antd'
+import { Table, Button, notification, message, Modal, Input } from 'antd'
 import { useSelector } from 'react-redux'
 import '../../styles/TableStyles.css'
 import type { NewsItem, RootState } from '@/types'
@@ -34,7 +34,7 @@ export default function Audit() {
         getNewsList()
     }, [getNewsList])
 
-    function handleAudit(item: NewsItem, auditState: number, publishState: number) {
+    function handleAudit(item: NewsItem, auditState: number, publishState: number, reason?: string) {
         api
             .patch(`/news/${item.id}`, {
                 auditState,
@@ -42,9 +42,18 @@ export default function Audit() {
             })
             .then(
                 () => {
+                    if (auditState === 3 && reason) {
+                        api.post('/auditLogs', {
+                            newsId: item.id,
+                            result: auditState,
+                            reason,
+                            operator: username,
+                            time: Date.now()
+                        })
+                    }
                     notification.info({
                         message: `通知`,
-                        description: `您可以到[审核管理/审核列表]中查看您的新闻的审核状态`,
+                        description: `您可以到[审核管理/已审核]中查看您的新闻的审核状态`,
                         placement: 'bottomRight'
                     })
                     getNewsList()
@@ -93,7 +102,28 @@ export default function Audit() {
                         <Button
                             danger
                             onClick={() => {
-                                handleAudit(item, 3, 0)
+                                let reason = ''
+                                Modal.confirm({
+                                    title: '驳回原因',
+                                    content: (
+                                        <Input.TextArea
+                                            placeholder="请输入驳回原因"
+                                            onChange={(e) => {
+                                                reason = e.target.value
+                                            }}
+                                        />
+                                    ),
+                                    okText: '确认驳回',
+                                    cancelText: '取消',
+                                    onOk() {
+                                        if (!reason.trim()) {
+                                            message.error('请填写驳回原因')
+                                            return Promise.reject()
+                                        }
+                                        handleAudit(item, 3, 0, reason.trim())
+                                        return Promise.resolve()
+                                    }
+                                })
                             }}
                         >
                             驳回
@@ -107,7 +137,7 @@ export default function Audit() {
     return (
         <div>
             <div className="table-header">
-                <h2>审核新闻</h2>
+                <h2>待审核</h2>
             </div>
             <Table
                 className="audit-table"
