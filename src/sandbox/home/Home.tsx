@@ -13,7 +13,6 @@ import {
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import * as echarts from 'echarts'
-import _ from 'lodash'
 import type { NewsItem, RootState } from '@/types'
 
 interface Stats {
@@ -21,6 +20,24 @@ interface Stats {
     totalNews: number
     totalLikes: number
     totalUsers: number
+}
+
+interface ChartDatum {
+    name: string
+    value: number
+}
+
+interface DashboardHomeResponse {
+    stats: Stats
+    categoryDistribution: ChartDatum[]
+    topViewed: NewsItem[]
+    topLiked: NewsItem[]
+    currentUserSummary: {
+        totalNews: number
+        totalViews: number
+        totalLikes: number
+        categoryDistribution: ChartDatum[]
+    }
 }
 
 export default function Home() {
@@ -33,36 +50,30 @@ export default function Home() {
     const [open, setOpen] = useState(false)
     const [newsViewList, setNewsViewList] = useState<NewsItem[]>([])
     const [newsStarList, setNewsStarList] = useState<NewsItem[]>([])
-    const [allList, setAllList] = useState<NewsItem[]>([])
     const [stats, setStats] = useState<Stats>({
         totalViews: 0,
         totalNews: 0,
         totalLikes: 0,
         totalUsers: 0
     })
+    const [categoryDistribution, setCategoryDistribution] = useState<ChartDatum[]>([])
+    const [currentUserSummary, setCurrentUserSummary] = useState({
+        totalNews: 0,
+        totalViews: 0,
+        totalLikes: 0,
+        categoryDistribution: [] as ChartDatum[]
+    })
 
     useEffect(() => {
-        Promise.all([
-            api.get<NewsItem[]>('/news?publishState=2&_expand=category&_sort=view&_order=desc&_limit=7'),
-            api.get<NewsItem[]>('/news?publishState=2&_expand=category&_sort=star&_order=desc&_limit=7'),
-            api.get<NewsItem[]>('/news?publishState=2&_expand=category'),
-            api.get<{ id: number }[]>('/users')
-        ]).then((res) => {
-            setNewsViewList(res[0].data)
-            setNewsStarList(res[1].data)
-            setAllList(res[2].data)
-
-            const totalViews = res[2].data.reduce((sum, item) => sum + (item.view || 0), 0)
-            const totalLikes = res[2].data.reduce((sum, item) => sum + (item.star || 0), 0)
-            setStats({
-                totalViews,
-                totalNews: res[2].data.length,
-                totalLikes,
-                totalUsers: res[3].data.length
-            })
+        api.get<DashboardHomeResponse>('/api/dashboard/home').then((res) => {
+            setNewsViewList(res.data.topViewed)
+            setNewsStarList(res.data.topLiked)
+            setStats(res.data.stats)
+            setCategoryDistribution(res.data.categoryDistribution)
+            setCurrentUserSummary(res.data.currentUserSummary)
 
             renderLineView()
-            renderCategoryChart(_.groupBy(res[2].data, (item) => item.category?.title))
+            renderCategoryChart(res.data.categoryDistribution)
         })
 
         const observers: ResizeObserver[] = []
@@ -170,14 +181,10 @@ export default function Home() {
         myChart.setOption(option)
     }
 
-    function renderCategoryChart(groupObj: Record<string, NewsItem[]>) {
+    function renderCategoryChart(data: ChartDatum[]) {
         if (!categoryChartRef.current) return
         const myChart = echarts.init(categoryChartRef.current)
         categoryChartInstance.current = myChart
-        const data = Object.entries(groupObj).map(([name, items]) => ({
-            name,
-            value: items.length
-        }))
 
         const option = {
             title: {
@@ -206,12 +213,7 @@ export default function Home() {
     }
 
     function renderPieView() {
-        const currentList = allList.filter((item) => item.author === username)
-        const groupObj = _.groupBy(currentList, (item) => item.category?.title)
-        const list: { name: string; value: number }[] = []
-        for (const i in groupObj) {
-            list.push({ name: i, value: groupObj[i].length })
-        }
+        const list = currentUserSummary.categoryDistribution
         let myChart: echarts.ECharts
         if (!pieChartInstance.current && pieRef.current) {
             myChart = echarts.init(pieRef.current)
@@ -300,25 +302,21 @@ export default function Home() {
                             <Col>
                                 <Statistic
                                     title="我的新闻"
-                                    value={allList.filter((item) => item.author === username).length}
+                                    value={currentUserSummary.totalNews}
                                     valueStyle={{ fontSize: 20 }}
                                 />
                             </Col>
                             <Col>
                                 <Statistic
                                     title="我的浏览"
-                                    value={allList
-                                        .filter((item) => item.author === username)
-                                        .reduce((sum, item) => sum + (item.view || 0), 0)}
+                                    value={currentUserSummary.totalViews}
                                     valueStyle={{ fontSize: 20 }}
                                 />
                             </Col>
                             <Col>
                                 <Statistic
                                     title="我的点赞"
-                                    value={allList
-                                        .filter((item) => item.author === username)
-                                        .reduce((sum, item) => sum + (item.star || 0), 0)}
+                                    value={currentUserSummary.totalLikes}
                                     valueStyle={{ fontSize: 20 }}
                                 />
                             </Col>

@@ -43,6 +43,71 @@ const memoryDB = {
   news: Array.isArray(newsData) ? newsData : newsData.news || []
 }
 
+function enrichNewsWithCategory(items, categories) {
+  const categoryMap = new Map((categories || []).map((category) => [Number(category.id), category]))
+  return items.map((item) => ({
+    ...item,
+    category: categoryMap.get(Number(item.categoryId)) || null
+  }))
+}
+
+function buildHomeDashboardPayload(state, currentUser) {
+  const newsList = Array.isArray(state.news) ? state.news : []
+  const categories = Array.isArray(state.categories) ? state.categories : []
+  const users = Array.isArray(state.users) ? state.users : []
+  const publishedNews = newsList.filter((item) => Number(item.publishState) === 2)
+
+  const topViewed = enrichNewsWithCategory(
+    [...publishedNews]
+      .sort((a, b) => Number(b.view || 0) - Number(a.view || 0))
+      .slice(0, 7),
+    categories
+  )
+
+  const topLiked = enrichNewsWithCategory(
+    [...publishedNews]
+      .sort((a, b) => Number(b.star || 0) - Number(a.star || 0))
+      .slice(0, 7),
+    categories
+  )
+
+  const categoryCountMap = new Map()
+  for (const item of publishedNews) {
+    const category = categories.find((entry) => Number(entry.id) === Number(item.categoryId))
+    const categoryName = String(category?.title || '未分类')
+    categoryCountMap.set(categoryName, (categoryCountMap.get(categoryName) || 0) + 1)
+  }
+
+  const currentUserNews = currentUser
+    ? publishedNews.filter((item) => String(item.author || '') === String(currentUser.username || ''))
+    : []
+
+  const currentUserCategoryMap = new Map()
+  for (const item of currentUserNews) {
+    const category = categories.find((entry) => Number(entry.id) === Number(item.categoryId))
+    const categoryName = String(category?.title || '未分类')
+    currentUserCategoryMap.set(categoryName, (currentUserCategoryMap.get(categoryName) || 0) + 1)
+  }
+
+  return {
+    stats: {
+      totalViews: publishedNews.reduce((sum, item) => sum + Number(item.view || 0), 0),
+      totalNews: publishedNews.length,
+      totalLikes: publishedNews.reduce((sum, item) => sum + Number(item.star || 0), 0),
+      totalUsers: users.length
+    },
+    categoryDistribution: Array.from(categoryCountMap.entries()).map(([name, value]) => ({ name, value })),
+    topViewed,
+    topLiked,
+    currentUserSummary: {
+      totalNews: currentUserNews.length,
+      totalViews: currentUserNews.reduce((sum, item) => sum + Number(item.view || 0), 0),
+      totalLikes: currentUserNews.reduce((sum, item) => sum + Number(item.star || 0), 0),
+      categoryDistribution: Array.from(currentUserCategoryMap.entries()).map(([name, value]) => ({ name, value }))
+    }
+  }
+}
+
 // ============ 中间件 ============
 const corsOptions = {
   origin: function (origin, callback) {
@@ -161,6 +226,12 @@ app.get('/api/users/me', (req, res) => {
     ...userWithoutPassword,
     role
   })
+})
+
+app.get('/api/dashboard/home', (req, res) => {
+  const currentUser = getUserFromToken(req)
+  const payload = buildHomeDashboardPayload(memoryDB, currentUser)
+  res.json(payload)
 })
 
 // 注册（内存模式，刷新后重置）
