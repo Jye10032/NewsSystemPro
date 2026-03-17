@@ -47,6 +47,22 @@
     letter-spacing: 1px;
 }
 
+.login-helper-row {
+    display: flex;
+    justify-content: center;
+    margin: -12px 0 20px;
+}
+
+.login-helper-button.ant-btn {
+    color: #4b6382;
+    font-weight: 500;
+}
+
+.login-helper-button.ant-btn:hover {
+    color: #1677ff;
+    background: rgba(22, 119, 255, 0.08);
+}
+
 /* 定制 Antd 输入框样式以匹配毛玻璃 */
 #loginForm .ant-input-affix-wrapper {
     background: rgba(255, 255, 255, 0.8);
@@ -76,6 +92,62 @@
     background: #4096ff;
     transform: translateY(-1px);
     box-shadow: 0 6px 20px 0 rgba(22, 119, 255, 0.4);
+}
+
+.login-account-modal .ant-modal-content {
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 18px 48px rgba(31, 38, 135, 0.18);
+}
+
+.login-account-modal .ant-modal-header {
+    background: transparent;
+    margin-bottom: 20px;
+}
+
+.login-account-modal .ant-modal-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f1f1f;
+}
+
+.login-account-table {
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.login-account-row {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1fr;
+}
+
+.login-account-row span {
+    padding: 18px 20px;
+    font-size: 16px;
+    color: #1f2937;
+    border-right: 1px solid rgba(15, 23, 42, 0.08);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.login-account-row span:last-child {
+    border-right: none;
+}
+
+.login-account-row:last-child span {
+    border-bottom: none;
+}
+
+.login-account-head {
+    background: rgba(22, 119, 255, 0.08);
+}
+
+.login-account-head span {
+    font-weight: 700;
+    color: #111827;
 }
 
 @keyframes fadeInUp {
