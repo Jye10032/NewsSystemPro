@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import api from '@/utils/Request'
-import { Card, Col, Row, List, Drawer, Statistic, Progress, Table, Tag } from 'antd'
+import { Card, Col, Row, List, Drawer, Statistic, Progress, Table, Tag, Skeleton } from 'antd'
 import {
     UserOutlined,
     EyeOutlined,
@@ -63,6 +63,25 @@ export default function Home() {
         totalLikes: 0,
         categoryDistribution: [] as ChartDatum[]
     })
+    const [chartsReady, setChartsReady] = useState(false)
+
+    const scheduleChartInit = useCallback((callback: () => void) => {
+        if (typeof window === 'undefined') {
+            callback()
+            return
+        }
+
+        const idleWindow = window as typeof window & {
+            requestIdleCallback?: (cb: () => void) => number
+        }
+
+        if (typeof idleWindow.requestIdleCallback === 'function') {
+            idleWindow.requestIdleCallback(() => callback())
+            return
+        }
+
+        window.setTimeout(callback, 120)
+    }, [])
 
     useEffect(() => {
         api.get<DashboardHomeResponse>('/api/dashboard/home').then((res) => {
@@ -71,9 +90,11 @@ export default function Home() {
             setStats(res.data.stats)
             setCategoryDistribution(res.data.categoryDistribution)
             setCurrentUserSummary(res.data.currentUserSummary)
-
-            renderLineView()
-            renderCategoryChart(res.data.categoryDistribution)
+            scheduleChartInit(() => {
+                renderLineView()
+                renderCategoryChart(res.data.categoryDistribution)
+                setChartsReady(true)
+            })
         })
 
         const observers: ResizeObserver[] = []
@@ -96,7 +117,7 @@ export default function Home() {
             categoryChartInstance.current?.dispose()
             pieChartInstance.current?.dispose()
         }
-    }, [])
+    }, [scheduleChartInit])
 
     useEffect(() => {
         if (!open || !pieRef.current) return
@@ -401,12 +422,28 @@ export default function Home() {
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                 <Col xs={24} lg={16}>
                     <Card>
-                        <div ref={barRef} style={{ width: '100%', height: 300 }}></div>
+                        {!chartsReady && <Skeleton.Node active style={{ width: '100%', height: 300 }} />}
+                        <div
+                            ref={barRef}
+                            style={{
+                                width: '100%',
+                                height: 300,
+                                display: chartsReady ? 'block' : 'none'
+                            }}
+                        ></div>
                     </Card>
                 </Col>
                 <Col xs={24} lg={8}>
                     <Card>
-                        <div ref={categoryChartRef} style={{ width: '100%', height: 300 }}></div>
+                        {!chartsReady && <Skeleton.Node active style={{ width: '100%', height: 300 }} />}
+                        <div
+                            ref={categoryChartRef}
+                            style={{
+                                width: '100%',
+                                height: 300,
+                                display: chartsReady ? 'block' : 'none'
+                            }}
+                        ></div>
                     </Card>
                 </Col>
             </Row>
