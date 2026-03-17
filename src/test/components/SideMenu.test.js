@@ -4,15 +4,12 @@ import { MemoryRouter } from 'react-router-dom'
 import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import { createStore, combineReducers } from 'redux'
-import axios from 'axios'
 import SideMenu from '../../sandbox/SideMenu'
+import { fetchRightsTree, getCachedRights } from '../../utils/bootstrapCache'
 
-// Mock axios
-vi.mock('axios', () => ({
-  default: {
-    get: vi.fn(),
-    defaults: { baseURL: '', withCredentials: false }
-  }
+vi.mock('../../utils/bootstrapCache', () => ({
+  fetchRightsTree: vi.fn(),
+  getCachedRights: vi.fn()
 }))
 
 // Mock CSS import
@@ -97,8 +94,8 @@ describe('SideMenu 侧边栏组件', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    // Mock axios.get 返回菜单数据
-    axios.get.mockResolvedValue({ data: mockMenuData })
+    getCachedRights.mockReturnValue(null)
+    fetchRightsTree.mockResolvedValue(mockMenuData)
   })
 
   describe('渲染测试', () => {
@@ -141,7 +138,7 @@ describe('SideMenu 侧边栏组件', () => {
 
       // Assert
       await waitFor(() => {
-        expect(axios.get).toHaveBeenCalledWith('/rights')
+        expect(fetchRightsTree).toHaveBeenCalled()
       })
     })
 
@@ -330,7 +327,7 @@ describe('SideMenu 侧边栏组件', () => {
 
     it('应该处理空菜单数据', async () => {
       // Arrange: Mock 返回空数组
-      axios.get.mockResolvedValue({ data: [] })
+      fetchRightsTree.mockResolvedValue([])
       const store = createTestStore()
 
       // Act
@@ -359,7 +356,7 @@ describe('SideMenu 侧边栏组件', () => {
           pagepermisson: 1
         }
       ]
-      axios.get.mockResolvedValue({ data: menuWithoutChildren })
+      fetchRightsTree.mockResolvedValue(menuWithoutChildren)
       const store = createTestStore()
 
       // Act & Assert: 不应该报错
@@ -404,7 +401,7 @@ describe('SideMenu 侧边栏组件', () => {
         { id: 1, key: '/allowed', title: '允许访问', pagepermisson: 1, children: [] },
         { id: 2, key: '/denied', title: '拒绝访问', pagepermisson: 0, children: [] }
       ]
-      axios.get.mockResolvedValue({ data: mixedMenuData })
+      fetchRightsTree.mockResolvedValue(mixedMenuData)
       // 设置用户权限包含 /allowed
       const store = createTestStore({
         user: { role: { rights: ['/allowed', '/denied'] } }
@@ -440,7 +437,7 @@ describe('SideMenu 侧边栏组件', () => {
           ]
         }
       ]
-      axios.get.mockResolvedValue({ data: nestedMenuData })
+      fetchRightsTree.mockResolvedValue(nestedMenuData)
       // 设置用户权限包含父菜单和允许的子菜单
       const store = createTestStore({
         user: { role: { rights: ['/parent', '/parent/allowed', '/parent/denied'] } }
