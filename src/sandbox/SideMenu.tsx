@@ -12,7 +12,7 @@ import {
     SettingOutlined
 } from '@ant-design/icons'
 import './index.css'
-import api from '@/utils/Request'
+import { fetchRightsTree, getCachedRights } from '@/utils/bootstrapCache'
 import type { Right, RootState } from '@/types'
 
 const { SubMenu } = Menu
@@ -29,7 +29,7 @@ const iconList: Record<string, ReactNode> = {
 }
 
 export default function SideMenu() {
-    const [meun, setMeun] = useState<Right[]>([])
+    const [meun, setMeun] = useState<Right[]>(() => getCachedRights() || [])
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
     const [mobileVisible, setMobileVisible] = useState(false)
 
@@ -50,9 +50,8 @@ export default function SideMenu() {
     }, [])
 
     useEffect(() => {
-        // 从后端获取菜单权限数据（包含嵌套的 children 结构）
-        api.get<Right[]>("/rights").then(res => {
-            setMeun(res.data)
+        fetchRightsTree().then((rights) => {
+            setMeun(rights)
         })
     }, [])
 

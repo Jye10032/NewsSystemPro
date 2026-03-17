@@ -6,8 +6,8 @@ import { useEffect } from 'react'
 import { Layout } from 'antd'
 import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import api from '@/utils/Request'
 import { clearAuthToken } from '@/utils/authToken'
+import { clearBootstrapCache, fetchBootstrapUser, fetchRightsTree, getCachedBootstrapUser } from '@/utils/bootstrapCache'
 const { Content } = Layout
 
 export default function NewsSandBox() {
@@ -15,15 +15,21 @@ export default function NewsSandBox() {
     const navigate = useNavigate()
 
     useEffect(() => {
-        // 只在组件挂载时刷新一次用户权限数据（Cookie 自动携带）
-        api.get('/api/users/me').then(res => {
-            dispatch({ type: 'set_user', payload: res.data })
-        }).catch(() => {
-            // Cookie 无效，清除登录状态
-            clearAuthToken()
-            dispatch({ type: 'clear_user' })
-            navigate('/login', { replace: true })
-        })
+        const cachedUser = getCachedBootstrapUser()
+        if (cachedUser) {
+            dispatch({ type: 'set_user', payload: cachedUser })
+        }
+
+        Promise.all([fetchBootstrapUser(), fetchRightsTree()])
+            .then(([user]) => {
+                dispatch({ type: 'set_user', payload: user })
+            })
+            .catch(() => {
+                clearAuthToken()
+                clearBootstrapCache()
+                dispatch({ type: 'clear_user' })
+                navigate('/login', { replace: true })
+            })
     }, [dispatch, navigate])
 
     return (
