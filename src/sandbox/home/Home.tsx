@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import api from '@/utils/Request'
-import { Card, Col, Row, List, Drawer, Statistic, Progress, Table, Tag, Skeleton } from 'antd'
+import { Card, Col, Row, List, Drawer, Statistic, Progress, Table, Tag } from 'antd'
 import {
     UserOutlined,
     EyeOutlined,
@@ -12,7 +12,6 @@ import {
 } from '@ant-design/icons'
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import * as echarts from 'echarts'
 import type { NewsItem, RootState } from '@/types'
 
 interface Stats {
@@ -40,13 +39,29 @@ interface DashboardHomeResponse {
     }
 }
 
+const HomeTrendChart = lazy(() => import('./components/HomeTrendChart'))
+const HomeCategoryChart = lazy(() => import('./components/HomeCategoryChart'))
+const HomePersonalPieChart = lazy(() => import('./components/HomePersonalPieChart'))
+
+function ChartPlaceholder({ height = 300, text = '图表加载中...' }: { height?: number; text?: string }) {
+    return (
+        <div
+            style={{
+                height,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#8c8c8c',
+                background: 'linear-gradient(135deg, rgba(245,247,250,0.9) 0%, rgba(233,238,245,0.95) 100%)',
+                borderRadius: 12
+            }}
+        >
+            <span>{text}</span>
+        </div>
+    )
+}
+
 export default function Home() {
-    const barRef = useRef<HTMLDivElement>(null)
-    const pieRef = useRef<HTMLDivElement>(null)
-    const categoryChartRef = useRef<HTMLDivElement>(null)
-    const barChartInstance = useRef<echarts.ECharts | null>(null)
-    const categoryChartInstance = useRef<echarts.ECharts | null>(null)
-    const pieChartInstance = useRef<echarts.ECharts | null>(null)
     const [open, setOpen] = useState(false)
     const [newsViewList, setNewsViewList] = useState<NewsItem[]>([])
     const [newsStarList, setNewsStarList] = useState<NewsItem[]>([])
@@ -63,25 +78,6 @@ export default function Home() {
         totalLikes: 0,
         categoryDistribution: [] as ChartDatum[]
     })
-    const [chartsReady, setChartsReady] = useState(false)
-
-    const scheduleChartInit = useCallback((callback: () => void) => {
-        if (typeof window === 'undefined') {
-            callback()
-            return
-        }
-
-        const idleWindow = window as typeof window & {
-            requestIdleCallback?: (cb: () => void) => number
-        }
-
-        if (typeof idleWindow.requestIdleCallback === 'function') {
-            idleWindow.requestIdleCallback(() => callback())
-            return
-        }
-
-        window.setTimeout(callback, 120)
-    }, [])
 
     useEffect(() => {
         api.get<DashboardHomeResponse>('/api/dashboard/home').then((res) => {
@@ -90,183 +86,13 @@ export default function Home() {
             setStats(res.data.stats)
             setCategoryDistribution(res.data.categoryDistribution)
             setCurrentUserSummary(res.data.currentUserSummary)
-            scheduleChartInit(() => {
-                renderLineView()
-                renderCategoryChart(res.data.categoryDistribution)
-                setChartsReady(true)
-            })
         })
-
-        const observers: ResizeObserver[] = []
-        const canObserve = typeof ResizeObserver !== 'undefined'
-        const observe = (el: HTMLDivElement | null, instance: React.MutableRefObject<echarts.ECharts | null>) => {
-            if (!canObserve || !el) return
-            const ro = new ResizeObserver(() => {
-                instance.current?.resize()
-            })
-            ro.observe(el)
-            observers.push(ro)
-        }
-
-        observe(barRef.current, barChartInstance)
-        observe(categoryChartRef.current, categoryChartInstance)
-
-        return () => {
-            observers.forEach((observer) => observer.disconnect())
-            barChartInstance.current?.dispose()
-            categoryChartInstance.current?.dispose()
-            pieChartInstance.current?.dispose()
-        }
-    }, [scheduleChartInit])
-
-    useEffect(() => {
-        if (!open || !pieRef.current) return
-        pieChartInstance.current?.resize()
-        if (typeof ResizeObserver === 'undefined') return
-        const ro = new ResizeObserver(() => {
-            pieChartInstance.current?.resize()
-        })
-        ro.observe(pieRef.current)
-        return () => ro.disconnect()
-    }, [open])
+    }, [])
 
     const user = useSelector((state: RootState) => state.user)
     const username = user?.username || ''
     const region = user?.region || ''
     const roleName = user?.role?.roleName || ''
-
-    function renderLineView() {
-        if (!barRef.current) return
-        const myChart = echarts.init(barRef.current)
-        barChartInstance.current = myChart
-
-        function generateSeriesData() {
-            const seriesData: { date: string; views: number }[] = []
-            const startDate = new Date()
-            const DATA_COUNT = 14
-            let baseViews = 400
-            let growth = 30
-
-            for (let i = 0; i < DATA_COUNT; i++) {
-                const date = new Date(startDate)
-                date.setDate(startDate.getDate() - (DATA_COUNT - 1 - i))
-                const mm = String(date.getMonth() + 1).padStart(2, '0')
-                const dd = String(date.getDate()).padStart(2, '0')
-                const dayStr = `${mm}-${dd}`
-                const noise = (Math.random() - 0.5) * 40
-                const views = Math.round(baseViews + i * growth + noise)
-                seriesData.push({ date: dayStr, views })
-            }
-            return seriesData
-        }
-
-        const data = generateSeriesData()
-
-        const option = {
-            title: {
-                text: '近两周访问趋势',
-                left: 'left',
-                textStyle: { fontSize: 16, fontWeight: 500 }
-            },
-            tooltip: {
-                trigger: 'axis',
-                formatter: (params: { name: string; value: number }[]) => {
-                    const item = params[0]
-                    return `${item.name}<br/>浏览量：<b>${item.value}</b>`
-                }
-            },
-            grid: { top: 50, bottom: 30, left: 50, right: 20 },
-            xAxis: {
-                type: 'category',
-                data: data.map((d) => d.date),
-                axisTick: { show: false },
-                axisLabel: { rotate: 40 }
-            },
-            yAxis: { type: 'value', axisTick: { show: true } },
-            series: [
-                {
-                    type: 'line',
-                    data: data.map((d) => d.views),
-                    smooth: true,
-                    areaStyle: {
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: 'rgba(24, 144, 255, 0.3)' },
-                            { offset: 1, color: 'rgba(24, 144, 255, 0.05)' }
-                        ])
-                    },
-                    lineStyle: { width: 2, color: '#1890ff' },
-                    itemStyle: { color: '#1890ff' }
-                }
-            ]
-        }
-        myChart.setOption(option)
-    }
-
-    function renderCategoryChart(data: ChartDatum[]) {
-        if (!categoryChartRef.current) return
-        const myChart = echarts.init(categoryChartRef.current)
-        categoryChartInstance.current = myChart
-
-        const option = {
-            title: {
-                text: '新闻分类分布',
-                left: 'left',
-                textStyle: { fontSize: 16, fontWeight: 500 }
-            },
-            tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-            legend: { orient: 'horizontal', bottom: 0, left: 'center' },
-            series: [
-                {
-                    type: 'pie',
-                    radius: ['35%', '60%'],
-                    center: ['50%', '45%'],
-                    avoidLabelOverlap: false,
-                    itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
-                    label: { show: false },
-                    emphasis: {
-                        label: { show: true, fontSize: 14, fontWeight: 'bold' }
-                    },
-                    data
-                }
-            ]
-        }
-        myChart.setOption(option)
-    }
-
-    function renderPieView() {
-        const list = currentUserSummary.categoryDistribution
-        let myChart: echarts.ECharts
-        if (!pieChartInstance.current && pieRef.current) {
-            myChart = echarts.init(pieRef.current)
-            pieChartInstance.current = myChart
-        } else if (pieChartInstance.current) {
-            myChart = pieChartInstance.current
-        } else {
-            return
-        }
-
-        const option = {
-            title: { text: '个人新闻分类', left: 'center' },
-            tooltip: { trigger: 'item' },
-            legend: { orient: 'vertical', left: 'left' },
-            series: [
-                {
-                    name: '发布数量',
-                    type: 'pie',
-                    radius: '50%',
-                    data: list,
-                    emphasis: {
-                        itemStyle: {
-                            shadowBlur: 10,
-                            shadowOffsetX: 0,
-                            shadowColor: 'rgba(0, 0, 0, 0.5)'
-                        }
-                    }
-                }
-            ]
-        }
-        myChart.setOption(option)
-    }
 
     const colorMap = ['blue', 'green', 'orange', 'red', 'purple', 'cyan']
     const hotColors = ['#ff4d4f', '#ff7a45', '#ffa940']
@@ -347,7 +173,6 @@ export default function Home() {
                         <a
                             onClick={() => {
                                 setOpen(true)
-                                setTimeout(() => renderPieView(), 0)
                             }}
                         >
                             查看个人数据分析 →
@@ -422,28 +247,16 @@ export default function Home() {
             <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                 <Col xs={24} lg={16}>
                     <Card>
-                        {!chartsReady && <Skeleton.Node active style={{ width: '100%', height: 300 }} />}
-                        <div
-                            ref={barRef}
-                            style={{
-                                width: '100%',
-                                height: 300,
-                                display: chartsReady ? 'block' : 'none'
-                            }}
-                        ></div>
+                        <Suspense fallback={<ChartPlaceholder text="趋势图加载中..." />}>
+                            <HomeTrendChart />
+                        </Suspense>
                     </Card>
                 </Col>
                 <Col xs={24} lg={8}>
                     <Card>
-                        {!chartsReady && <Skeleton.Node active style={{ width: '100%', height: 300 }} />}
-                        <div
-                            ref={categoryChartRef}
-                            style={{
-                                width: '100%',
-                                height: 300,
-                                display: chartsReady ? 'block' : 'none'
-                            }}
-                        ></div>
+                        <Suspense fallback={<ChartPlaceholder text="分类图加载中..." />}>
+                            <HomeCategoryChart data={categoryDistribution} />
+                        </Suspense>
                     </Card>
                 </Col>
             </Row>
@@ -513,7 +326,9 @@ export default function Home() {
                 onClose={() => setOpen(false)}
                 open={open}
             >
-                <div ref={pieRef} style={{ width: '100%', height: '400px' }}></div>
+                <Suspense fallback={<ChartPlaceholder height={400} text="个人图表加载中..." />}>
+                    {open ? <HomePersonalPieChart data={currentUserSummary.categoryDistribution} /> : null}
+                </Suspense>
             </Drawer>
         </div>
     )
