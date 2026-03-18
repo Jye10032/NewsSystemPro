@@ -112,7 +112,7 @@ export function fetchBootstrapUser(): Promise<User> {
     if (cached) return Promise.resolve(cached)
     if (userPromise) return userPromise
 
-    userPromise = api.get<User>('/api/users/me')
+    userPromise = api.get<User>('/api/users/me', { skipGlobalLoading: true })
         .then((res) => {
             writeUserCache(res.data)
             return res.data
@@ -129,7 +129,7 @@ export function fetchRightsTree(): Promise<Right[]> {
     if (cached) return Promise.resolve(cached)
     if (rightsPromise) return rightsPromise
 
-    rightsPromise = api.get<Right[]>('/rights')
+    rightsPromise = api.get<Right[]>('/rights', { skipGlobalLoading: true })
         .then((res) => {
             writeRightsCache(res.data)
             return res.data

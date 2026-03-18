@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import api from '@/utils/Request'
-import { Card, Col, Row, List, Drawer, Statistic, Progress, Table, Tag } from 'antd'
+import { Card, Col, Row, List, Drawer, Statistic, Progress, Tag } from 'antd'
 import {
     EyeOutlined,
     FileTextOutlined,
@@ -144,7 +144,7 @@ export default function Home() {
     useEffect(() => {
         let isMounted = true
 
-        api.get<DashboardHomeResponse>('/api/dashboard/home').then((res) => {
+        api.get<DashboardHomeResponse>('/api/dashboard/home', { skipGlobalLoading: true }).then((res) => {
             if (!isMounted) return
 
             writeDashboardCache(res.data)
@@ -171,36 +171,6 @@ export default function Home() {
 
     const colorMap = ['blue', 'green', 'orange', 'red', 'purple', 'cyan']
     const hotColors = ['#ff4d4f', '#ff7a45', '#ffa940']
-
-    const recentNewsColumns = [
-        {
-            title: '标题',
-            dataIndex: 'title',
-            key: 'title',
-            ellipsis: true,
-            render: (text: string, record: NewsItem) => (
-                <Link to={{ pathname: `/news-manage/preview/${record.id}` }}>{text}</Link>
-            )
-        },
-        {
-            title: '分类',
-            dataIndex: ['category', 'title'],
-            key: 'category',
-            width: 100,
-            render: (text: string, record: NewsItem) => (
-                <Tag color={colorMap[(record.categoryId - 1) % colorMap.length]} bordered={false}>
-                    {text}
-                </Tag>
-            )
-        },
-        {
-            title: '浏览',
-            dataIndex: 'view',
-            key: 'view',
-            width: 80,
-            render: (val: number) => <span style={{ color: '#1890ff' }}>{val || 0}</span>
-        }
-    ]
 
     return (
         <div style={{ padding: '24px', minHeight: '100vh' }}>
@@ -300,12 +270,38 @@ export default function Home() {
                         extra={<Link to="/news-manage/draft">更多</Link>}
                         bodyStyle={{ padding: 0 }}
                     >
-                        <Table
+                        <List
                             dataSource={newsViewList}
-                            columns={recentNewsColumns}
-                            pagination={false}
                             size="small"
-                            rowKey="id"
+                            renderItem={(item) => (
+                                <List.Item
+                                    key={item.id}
+                                    style={{
+                                        padding: '10px 16px',
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr auto auto',
+                                        alignItems: 'center',
+                                        columnGap: 12
+                                    }}
+                                >
+                                    <Link
+                                        to={{ pathname: `/news-manage/preview/${item.id}` }}
+                                        style={{
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                    >
+                                        {item.title}
+                                    </Link>
+                                    <Tag color={colorMap[(item.categoryId - 1) % colorMap.length]} bordered={false}>
+                                        {item.category?.title || '未分类'}
+                                    </Tag>
+                                    <span style={{ color: '#1890ff', minWidth: 36, textAlign: 'right' }}>
+                                        {item.view || 0}
+                                    </span>
+                                </List.Item>
+                            )}
                         />
                     </Card>
                 </Col>

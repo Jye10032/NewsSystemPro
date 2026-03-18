@@ -2,6 +2,7 @@ import axios from 'axios'
 import { store } from '../redux/store'
 import { clearAuthToken, getAuthToken } from './authToken'
 import { appMessage } from './appMessage'
+import type { InternalAxiosRequestConfig } from 'axios'
 
 /*
  * axios的二次封装
@@ -18,17 +19,25 @@ if (api.defaults) {
   api.defaults.withCredentials = true // 跨域请求携带 Cookie
 }
 
+type ExtendedAxiosConfig = InternalAxiosRequestConfig & {
+  skipGlobalLoading?: boolean
+}
+
 if (api.interceptors?.request && api.interceptors?.response) {
   api.interceptors.request.use(
-    function (config) {
-      store.dispatch({ type: 'loading_start' })
+    function (config: ExtendedAxiosConfig) {
+      if (!config.skipGlobalLoading) {
+        store.dispatch({ type: 'loading_start' })
+      }
       const token = getAuthToken()
       if (token) {
         config.headers = config.headers || {}
         config.headers.Authorization = `Bearer ${token}`
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      console.log('[Request Start]', config.method?.toUpperCase(), config.url, '| Loading:', (store.getState() as any).isLoading)
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        console.log('[Request Start]', config.method?.toUpperCase(), config.url, '| Loading:', (store.getState() as any).isLoading)
+      }
       return config
     },
     function (error) {
@@ -37,15 +46,23 @@ if (api.interceptors?.request && api.interceptors?.response) {
   )
   api.interceptors.response.use(
     function (response) {
-      store.dispatch({ type: 'loading_end' })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      console.log('[Request End]', response.config.method?.toUpperCase(), response.config.url, '| Loading:', (store.getState() as any).isLoading)
+      if (!(response.config as ExtendedAxiosConfig).skipGlobalLoading) {
+        store.dispatch({ type: 'loading_end' })
+      }
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        console.log('[Request End]', response.config.method?.toUpperCase(), response.config.url, '| Loading:', (store.getState() as any).isLoading)
+      }
       return response
     },
     function (error) {
-      store.dispatch({ type: 'loading_end' })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      console.log('[Request Error]', error.config?.method?.toUpperCase(), error.config?.url, '| Loading:', (store.getState() as any).isLoading)
+      if (!(error.config as ExtendedAxiosConfig | undefined)?.skipGlobalLoading) {
+        store.dispatch({ type: 'loading_end' })
+      }
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        console.log('[Request Error]', error.config?.method?.toUpperCase(), error.config?.url, '| Loading:', (store.getState() as any).isLoading)
+      }
       if (Number(error.response?.status || 0) === 401) {
         clearAuthToken()
       }

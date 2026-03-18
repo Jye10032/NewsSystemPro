@@ -64,7 +64,6 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          antd: ['antd'],
           redux: ['redux', 'react-redux', 'redux-thunk', 'redux-persist'],
         },
       },
