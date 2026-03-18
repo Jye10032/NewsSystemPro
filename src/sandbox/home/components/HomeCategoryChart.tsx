@@ -1,5 +1,10 @@
 import { useEffect, useRef } from 'react'
-import * as echarts from 'echarts'
+import { use, init } from 'echarts/core'
+import { PieChart } from 'echarts/charts'
+import { TitleComponent, TooltipComponent, LegendComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+
+use([PieChart, TitleComponent, TooltipComponent, LegendComponent, CanvasRenderer])
 
 interface ChartDatum {
     name: string
@@ -11,7 +16,7 @@ export default function HomeCategoryChart({ data }: { data: ChartDatum[] }) {
 
     useEffect(() => {
         if (!chartRef.current) return
-        const chart = echarts.init(chartRef.current)
+        const chart = init(chartRef.current)
 
         chart.setOption({
             title: {

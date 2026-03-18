@@ -1,12 +1,17 @@
 import { useEffect, useRef } from 'react'
-import * as echarts from 'echarts'
+import { use, init, graphic } from 'echarts/core'
+import { LineChart } from 'echarts/charts'
+import { TitleComponent, TooltipComponent, GridComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+
+use([LineChart, TitleComponent, TooltipComponent, GridComponent, CanvasRenderer])
 
 export default function HomeTrendChart() {
     const chartRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         if (!chartRef.current) return
-        const chart = echarts.init(chartRef.current)
+        const chart = init(chartRef.current)
 
         const seriesData: { date: string; views: number }[] = []
         const startDate = new Date()
@@ -52,7 +57,7 @@ export default function HomeTrendChart() {
                     data: seriesData.map((d) => d.views),
                     smooth: true,
                     areaStyle: {
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        color: new graphic.LinearGradient(0, 0, 0, 1, [
                             { offset: 0, color: 'rgba(24, 144, 255, 0.3)' },
                             { offset: 1, color: 'rgba(24, 144, 255, 0.05)' }
                         ])
