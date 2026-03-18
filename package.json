@@ -18,7 +18,10 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "perf:lighthouse": "node scripts/lighthouse-report.mjs",
+    "perf:lighthouse:admin": "node scripts/lighthouse-report.mjs --pages scripts/lighthouse-pages-admin.json",
+    "perf:lighthouse:admin:desktop": "node scripts/lighthouse-report.mjs --pages scripts/lighthouse-pages-admin.json --desktop"
   },
   "repository": {
     "type": "git",
@@ -41,7 +44,7 @@
     "@ant-design/compatible": "5.1.3",
     "@ant-design/pro-layout": "7.17.16",
     "antd": "5.12.8",
-    "axios": "^1.7.7",
+    "axios": "1.7.7",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -85,6 +88,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
     "jsdom": "^27.2.0",
+    "lighthouse": "^13.0.3",
     "sass": "^1.58.0",
     "supertest": "^7.2.2",
     "typescript": "^5.9.3",

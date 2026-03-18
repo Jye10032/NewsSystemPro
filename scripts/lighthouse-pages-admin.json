@@ -1,0 +1,17 @@
+[
+  {
+    "name": "admin-home",
+    "path": "/NewsSystemPro/home",
+    "requiresAuth": true
+  },
+  {
+    "name": "draft",
+    "path": "/NewsSystemPro/news-manage/draft",
+    "requiresAuth": true
+  },
+  {
+    "name": "audit",
+    "path": "/NewsSystemPro/audit-manage/audit",
+    "requiresAuth": true
+  }
+]

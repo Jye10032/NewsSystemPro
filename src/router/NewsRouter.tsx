@@ -1,8 +1,8 @@
 import { useEffect, useState, lazy, Suspense, ComponentType } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { Spin } from 'antd'
-import api from '@/utils/Request'
 import { connect } from 'react-redux'
+import { fetchRightsTree, getCachedRights } from '@/utils/bootstrapCache'
 import type { Right, RootState } from '@/types'
 
 
@@ -56,12 +56,22 @@ interface NewsRouterProps {
 }
 
 function NewsRouter(props: NewsRouterProps) {
-    console.log('[NewsRouter] isLoading prop:', props.isLoading)
-    const [backRouteList, setBackRouteList] = useState<Right[]>([])
+    const [backRouteList, setBackRouteList] = useState<Right[]>(() => {
+        const cachedRights = getCachedRights()
+        if (!cachedRights) return []
+
+        return cachedRights.reduce<Right[]>((acc, item) => {
+            acc.push(item)
+            if (item.children && item.children.length > 0) {
+                acc.push(...item.children)
+            }
+            return acc
+        }, [])
+    })
 
     useEffect(() => {
-        api.get<Right[]>('/rights').then((res) => {
-            const flatList = res.data.reduce<Right[]>((acc, item) => {
+        fetchRightsTree().then((rights) => {
+            const flatList = rights.reduce<Right[]>((acc, item) => {
                 acc.push(item)
                 if (item.children && item.children.length > 0) {
                     acc.push(...item.children)
@@ -81,7 +91,12 @@ function NewsRouter(props: NewsRouterProps) {
     }
 
     return (
-        <Spin size="large" tip="加载中..." spinning={props.isLoading}>
+        <>
+            {props.isLoading && (
+                <div style={{ position: 'fixed', top: 12, right: 20, zIndex: 1200 }}>
+                    <Spin size="small" />
+                </div>
+            )}
             <Suspense fallback={<Spin size="large" tip="页面加载中..." />}>
                 <Routes>
                     {backRouteList.map((item) => {
@@ -95,12 +110,11 @@ function NewsRouter(props: NewsRouterProps) {
                     <Route path="*" element={<Nopermission />} />
                 </Routes>
             </Suspense>
-        </Spin>
+        </>
     )
 }
 
 export default connect((state: RootState) => {
-    console.log('[NewsRouter connect] raw state.isLoading:', state.isLoading)
     return {
         isLoading: state.isLoading > 0,
         rights: state.user?.role?.rights || []

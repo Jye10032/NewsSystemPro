@@ -1,0 +1,14 @@
+[
+  {
+    "name": "login",
+    "path": "/NewsSystemPro/login"
+  },
+  {
+    "name": "news",
+    "path": "/NewsSystemPro/news"
+  },
+  {
+    "name": "detail",
+    "path": "/NewsSystemPro/detail/1"
+  }
+]

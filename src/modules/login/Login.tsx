@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react'
-import { Button, Form, Input } from 'antd'
-import { UserOutlined, LockOutlined } from '@ant-design/icons'
+import React, { useEffect, useState } from 'react'
+import { Button, Form, Input, Modal } from 'antd'
+import { UserOutlined, LockOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import Particles from 'react-tsparticles'
 import { loadFull } from 'tsparticles'
 import { Engine } from 'tsparticles-engine'
@@ -17,8 +17,15 @@ interface LoginForm {
     password: string
 }
 
+const TEST_ACCOUNTS = [
+    { role: '超级管理员', username: 'admin', password: '123456' },
+    { role: '分类管理员', username: 'tom', password: '123' },
+    { role: '分类编辑', username: 'alice', password: '123' }
+]
+
 export default function Login() {
     const dispatch = useDispatch()
+    const [accountsVisible, setAccountsVisible] = useState(false)
     const particlesInit = async (main: Engine) => {
         await loadFull(main)
     }
@@ -121,6 +128,16 @@ export default function Login() {
 
             <div id="loginForm">
                 <h2>新闻发布管理系统</h2>
+                <div className="login-helper-row">
+                    <Button
+                        type="text"
+                        icon={<InfoCircleOutlined />}
+                        className="login-helper-button"
+                        onClick={() => setAccountsVisible(true)}
+                    >
+                        查看测试账号
+                    </Button>
+                </div>
                 <Form
                     name="basic"
                     style={{
@@ -172,6 +189,30 @@ export default function Login() {
                     </Form.Item>
                 </Form>
             </div>
+            <Modal
+                open={accountsVisible}
+                onCancel={() => setAccountsVisible(false)}
+                footer={null}
+                centered
+                width={560}
+                title="测试账号"
+                className="login-account-modal"
+            >
+                <div className="login-account-table">
+                    <div className="login-account-row login-account-head">
+                        <span>角色</span>
+                        <span>用户名</span>
+                        <span>密码</span>
+                    </div>
+                    {TEST_ACCOUNTS.map((account) => (
+                        <div className="login-account-row" key={account.username}>
+                            <span>{account.role}</span>
+                            <span>{account.username}</span>
+                            <span>{account.password}</span>
+                        </div>
+                    ))}
+                </div>
+            </Modal>
         </div>
     )
 }
