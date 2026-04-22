@@ -1,11 +1,23 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-export default defineConfig(({ mode }) => ({
-  // GitHub Pages 部署时需要设置 base
-  // 本地开发时为 '/', 部署到 GitHub Pages 时为 '/仓库名/'
-  base: mode === 'production' ? '/NewsSystemPro/' : '/',
+const normalizeBasePath = (value) => {
+  if (!value || value === '/') {
+    return '/'
+  }
+
+  const trimmed = value.replace(/^\/+|\/+$/g, '')
+  return `/${trimmed}/`
+}
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const basePath = normalizeBasePath(env.VITE_BASE_PATH)
+
+  return {
+    // 允许通过 VITE_BASE_PATH 在根域名和子路径部署间切换
+    base: basePath,
 
   plugins: [
     react({
@@ -119,4 +131,5 @@ export default defineConfig(({ mode }) => ({
       ],
     },
   },
-}))
+  }
+})
