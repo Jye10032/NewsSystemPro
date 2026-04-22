@@ -5,10 +5,11 @@
   <title>NewsSystemPro</title>
   <script>
     // GitHub Pages SPA 重定向解决方案
-    // 将路径参数存储在 sessionStorage 中，然后重定向到 index.html
+    // 自动适配根域名和子路径部署
     sessionStorage.redirect = location.href;
+    var basePath = location.pathname.replace(/\/404\.html$/, '/') || '/';
+    location.replace(location.origin + basePath);
   </script>
-  <meta http-equiv="refresh" content="0;URL='/NewsSystemPro/'">
 </head>
 <body>
   <p>正在加载...</p>
