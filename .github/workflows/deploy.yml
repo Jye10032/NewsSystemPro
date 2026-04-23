@@ -46,6 +46,7 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+          VITE_ROUTER_MODE: hash
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
           VITE_APP_TITLE: ${{ vars.VITE_APP_TITLE }}
           VITE_APP_VERSION: ${{ vars.VITE_APP_VERSION }}
