@@ -19,6 +19,7 @@ const REFRESH_COOKIE_NAME = 'refresh_token'
 // 允许的前端域名（可通过环境变量追加，逗号分隔）
 const DEFAULT_ORIGINS = [
   'https://jye10032.github.io',
+  'https://news.misaka.design',
   'http://localhost:5173',
   'http://localhost:3000'
 ]
