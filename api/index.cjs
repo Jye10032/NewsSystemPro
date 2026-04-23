@@ -9,9 +9,12 @@ const cookieParser = require('cookie-parser')
 const app = express()
 
 // ============ 配置 ============
-const JWT_SECRET = process.env.JWT_SECRET || 'news-system-pro-secret-key'
-const JWT_EXPIRES_IN = '7d'
+const ACCESS_SECRET = process.env.JWT_SECRET || 'news-system-pro-secret-key'
+const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || `${ACCESS_SECRET}-refresh`
+const ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m'
+const REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d'
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7天
+const REFRESH_COOKIE_NAME = 'refresh_token'
 
 // 允许的前端域名（可通过环境变量追加，逗号分隔）
 const DEFAULT_ORIGINS = [
@@ -128,25 +131,67 @@ app.use(cookieParser())
 app.use(express.json())
 
 // ============ JWT 工具函数 ============
-function generateToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
+function generateAccessToken(payload) {
+  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_EXPIRES_IN })
 }
 
-function verifyToken(token) {
+function generateRefreshToken(payload) {
+  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: REFRESH_EXPIRES_IN })
+}
+
+function verifyAccessToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET)
+    return jwt.verify(token, ACCESS_SECRET)
+  } catch (err) {
+    return null
+  }
+}
+
+function verifyRefreshToken(token) {
+  try {
+    return jwt.verify(token, REFRESH_SECRET)
   } catch (err) {
     return null
   }
 }
 
 function extractToken(req) {
-  const cookieToken = req.cookies?.jwt
+  const cookieToken = req.cookies?.access_token || req.cookies?.jwt
   if (cookieToken) return cookieToken
 
   const authHeader = String(req.headers?.authorization || '')
   const match = authHeader.match(/^Bearer\s+(.+)$/i)
   return match ? match[1].trim() : ''
+}
+
+function buildTokenPayload(user) {
+  return {
+    userId: user.id,
+    username: user.username,
+    roleId: user.roleId
+  }
+}
+
+function setRefreshCookie(res, refreshToken) {
+  res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    maxAge: COOKIE_MAX_AGE
+  })
+}
+
+function clearAuthCookies(res) {
+  res.clearCookie(REFRESH_COOKIE_NAME, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none'
+  })
+  res.clearCookie('jwt', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none'
+  })
 }
 
 // ============ 认证路由 ============
@@ -181,20 +226,10 @@ app.post('/api/auth/login', (req, res) => {
   // 获取角色信息
   const role = memoryDB.roles.find(r => r.id === user.roleId)
 
-  // 生成 JWT
-  const token = generateToken({
-    userId: user.id,
-    username: user.username,
-    roleId: user.roleId
-  })
-
-  // 设置 httpOnly Cookie
-  res.cookie('jwt', token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-    maxAge: COOKIE_MAX_AGE
-  })
+  const tokenPayload = buildTokenPayload(user)
+  const accessToken = generateAccessToken(tokenPayload)
+  const refreshToken = generateRefreshToken(tokenPayload)
+  setRefreshCookie(res, refreshToken)
 
   // 返回用户信息（不含密码，不返回 token）
   const { password: _, ...userWithoutPassword } = user
@@ -203,7 +238,37 @@ app.post('/api/auth/login', (req, res) => {
       ...userWithoutPassword,
       role
     },
-    token
+    accessToken,
+    token: accessToken
+  })
+})
+
+app.post('/api/auth/refresh', (req, res) => {
+  const refreshToken = String(req.cookies?.[REFRESH_COOKIE_NAME] || '')
+  if (!refreshToken) {
+    return res.status(401).json({ message: '刷新令牌不存在' })
+  }
+
+  const decoded = verifyRefreshToken(refreshToken)
+  if (!decoded) {
+    clearAuthCookies(res)
+    return res.status(401).json({ message: '刷新令牌无效或已过期' })
+  }
+
+  const user = memoryDB.users.find(u => u.id === decoded.userId)
+  if (!user || !user.roleState) {
+    clearAuthCookies(res)
+    return res.status(401).json({ message: '用户状态无效，请重新登录' })
+  }
+
+  const tokenPayload = buildTokenPayload(user)
+  const accessToken = generateAccessToken(tokenPayload)
+  const nextRefreshToken = generateRefreshToken(tokenPayload)
+  setRefreshCookie(res, nextRefreshToken)
+
+  res.json({
+    accessToken,
+    token: accessToken
   })
 })
 
@@ -269,11 +334,7 @@ app.post('/api/auth/register', (req, res) => {
 
 // 登出
 app.post('/api/auth/logout', (req, res) => {
-  res.clearCookie('jwt', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none'
-  })
+  clearAuthCookies(res)
   res.json({ message: 'Logged out' })
 })
 
@@ -292,7 +353,7 @@ function getUserFromToken(req) {
   if (!token) {
     return null
   }
-  return verifyToken(token)
+  return verifyAccessToken(token)
 }
 
 // 页面权限 → API 权限映射

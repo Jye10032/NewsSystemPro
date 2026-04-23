@@ -1,11 +1,37 @@
 const express = require('express')
 const bcrypt = require('bcryptjs')
 const { readDB, writeDB } = require('../utils/db.cjs')
-const { generateToken } = require('../utils/jwt.cjs')
+const {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken
+} = require('../utils/jwt.cjs')
 
 const router = express.Router()
 
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7天
+const REFRESH_COOKIE_NAME = 'refresh_token'
+
+function buildTokenPayload(user) {
+  return {
+    userId: user.id,
+    username: user.username,
+    roleId: user.roleId
+  }
+}
+
+function setRefreshCookie(res, refreshToken) {
+  res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
+    httpOnly: true,
+    maxAge: COOKIE_MAX_AGE,
+    sameSite: 'lax'
+  })
+}
+
+function clearAuthCookies(res) {
+  res.clearCookie(REFRESH_COOKIE_NAME, { httpOnly: true, sameSite: 'lax' })
+  res.clearCookie('jwt', { httpOnly: true })
+}
 
 // 登录
 router.post('/login', (req, res) => {
@@ -38,33 +64,55 @@ router.post('/login', (req, res) => {
   // 获取角色信息
   const role = db.roles.find(r => r.id === user.roleId)
 
-  // 生成 JWT
-  const token = generateToken({
-    userId: user.id,
-    username: user.username,
-    roleId: user.roleId
-  })
+  const tokenPayload = buildTokenPayload(user)
+  const accessToken = generateAccessToken(tokenPayload)
+  const refreshToken = generateRefreshToken(tokenPayload)
+  setRefreshCookie(res, refreshToken)
 
-  // 设置 httpOnly Cookie
-  res.cookie('jwt', token, {
-    httpOnly: true,
-    maxAge: COOKIE_MAX_AGE
-  })
-
-  // 返回用户信息（不含密码，不返回 token）
   const { password: _, ...userWithoutPassword } = user
   res.json({
     user: {
       ...userWithoutPassword,
       role
     },
-    token
+    accessToken,
+    token: accessToken
+  })
+})
+
+router.post('/refresh', (req, res) => {
+  const refreshToken = String(req.cookies?.[REFRESH_COOKIE_NAME] || '')
+  if (!refreshToken) {
+    return res.status(401).json({ message: '刷新令牌不存在' })
+  }
+
+  const decoded = verifyRefreshToken(refreshToken)
+  if (!decoded) {
+    clearAuthCookies(res)
+    return res.status(401).json({ message: '刷新令牌无效或已过期' })
+  }
+
+  const db = readDB()
+  const user = db.users.find(u => u.id === decoded.userId)
+  if (!user || !user.roleState) {
+    clearAuthCookies(res)
+    return res.status(401).json({ message: '用户状态无效，请重新登录' })
+  }
+
+  const tokenPayload = buildTokenPayload(user)
+  const accessToken = generateAccessToken(tokenPayload)
+  const nextRefreshToken = generateRefreshToken(tokenPayload)
+  setRefreshCookie(res, nextRefreshToken)
+
+  res.json({
+    accessToken,
+    token: accessToken
   })
 })
 
 // 登出
 router.post('/logout', (req, res) => {
-  res.clearCookie('jwt', { httpOnly: true })
+  clearAuthCookies(res)
   res.json({ message: 'Logged out' })
 })
 

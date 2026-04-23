@@ -7,7 +7,7 @@ const fs = require('fs')
 
 const authRoutes = require('./routes/auth.cjs')
 const usersRoutes = require('./routes/users.cjs')
-const { verifyToken } = require('./utils/jwt.cjs')
+const { verifyAccessToken } = require('./utils/jwt.cjs')
 const { extractToken } = require('./middleware/auth.cjs')
 
 const app = express()
@@ -117,7 +117,7 @@ function getUserFromToken(req) {
   if (!token) {
     return null
   }
-  return verifyToken(token)
+  return verifyAccessToken(token)
 }
 
 // 页面权限 → API 权限映射

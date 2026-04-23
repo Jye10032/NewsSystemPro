@@ -1,7 +1,7 @@
-const { verifyToken } = require('../utils/jwt.cjs')
+const { verifyAccessToken } = require('../utils/jwt.cjs')
 
 function extractToken(req) {
-  const cookieToken = req.cookies?.jwt
+  const cookieToken = req.cookies?.access_token || req.cookies?.jwt
   if (cookieToken) return cookieToken
 
   const authHeader = String(req.headers?.authorization || '')
@@ -17,7 +17,7 @@ function authMiddleware(req, res, next) {
     return res.status(401).json({ message: '未提供认证令牌' })
   }
 
-  const decoded = verifyToken(token)
+  const decoded = verifyAccessToken(token)
 
   if (!decoded) {
     return res.status(401).json({ message: '令牌无效或已过期' })
@@ -32,7 +32,7 @@ function optionalAuth(req, res, next) {
   const token = extractToken(req)
 
   if (token) {
-    const decoded = verifyToken(token)
+    const decoded = verifyAccessToken(token)
     if (decoded) {
       req.user = decoded
     }
