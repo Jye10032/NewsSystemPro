@@ -5,6 +5,7 @@ const jsonServer = require('json-server')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
+const { createCorsOptions } = require('../server/utils/cors.cjs')
 
 const app = express()
 
@@ -15,27 +16,6 @@ const ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m'
 const REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d'
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7天
 const REFRESH_COOKIE_NAME = 'refresh_token'
-
-// 允许的前端域名（可通过环境变量追加，逗号分隔）
-const DEFAULT_ORIGINS = [
-  'https://jye10032.github.io',
-  'https://news.misaka.design',
-  'http://localhost:5173',
-  'http://localhost:3000'
-]
-const EXTRA_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
-  .split(',')
-  .map(origin => origin.trim())
-  .filter(Boolean)
-const ALLOWED_ORIGINS = new Set([...DEFAULT_ORIGINS, ...EXTRA_ORIGINS])
-const GITHUB_PAGES_RE = /^https:\/\/[a-z0-9-]+\.github\.io$/i
-
-function isAllowedOrigin(origin) {
-  if (!origin) return true
-  if (ALLOWED_ORIGINS.has(origin)) return true
-  if (GITHUB_PAGES_RE.test(origin)) return true
-  return false
-}
 
 // ============ 加载数据（内存模式，刷新后重置）============
 const dbData = require('../db/db.json')
@@ -113,19 +93,7 @@ function buildHomeDashboardPayload(state, currentUser) {
 }
 
 // ============ 中间件 ============
-const corsOptions = {
-  origin: function (origin, callback) {
-    // 允许无 origin 的请求（如 Postman）或在白名单中的域名
-    if (isAllowedOrigin(origin)) {
-      callback(null, origin || true)
-    } else {
-      callback(new Error('Not allowed by CORS'))
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}
+const corsOptions = createCorsOptions()
 app.use(cors(corsOptions))
 app.options('*', cors(corsOptions))
 app.use(cookieParser())

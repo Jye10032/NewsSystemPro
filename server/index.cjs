@@ -8,16 +8,16 @@ const fs = require('fs')
 const authRoutes = require('./routes/auth.cjs')
 const usersRoutes = require('./routes/users.cjs')
 const { verifyAccessToken } = require('./utils/jwt.cjs')
+const { createCorsOptions } = require('./utils/cors.cjs')
 const { extractToken } = require('./middleware/auth.cjs')
 
 const app = express()
 const PORT = 8000
 
 // 中间件
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'],
-  credentials: true
-}))
+const corsOptions = createCorsOptions()
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 app.use(cookieParser())
 app.use(express.json())
 
